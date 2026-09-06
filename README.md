@@ -1,4 +1,10 @@
-# FMU 2.0 Co-Simulation Real-Time Runner
+# MICROHIL
+
+O projeto está sendo retomado por desenvolvimento orientado à especificação, preservando o executor de FMU existente. A revisão documental 0.2 incorpora as respostas DEC-001…012; implementação aguarda fechamento das dúvidas Q conforme solicitado pelo usuário. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões pendentes](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
+
+O código atual implementa um protótipo HOST com terminal, CSV e gnuplot. GUI Qt, DAQC, ROS 2/micro-ROS e comunicação física ainda não estão implementados. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra falhas de logging e limitações temporais; a [evidência](docs/evidence/audit-2026-09-06/README.md) não constitui validação HIL. O diretório `build/` preexistente veio de outro ambiente; o build limpo ainda depende de resolver a FMILibrary.
+
+## Existing FMU runner
 
 Modular C application for Linux that executes an **FMI 2.0 Co-Simulation FMU synchronized to wall-clock time**, with a dedicated POSIX real-time simulation thread, asynchronous CSV logging, and asynchronous live plotting through gnuplot.
 
@@ -23,7 +29,7 @@ Modular C application for Linux that executes an **FMI 2.0 Co-Simulation FMU syn
 +------------------------------------------------------------------+
 ```
 
-The real-time thread never performs file I/O and never calls gnuplot. This avoids blocking the simulation because of disk or GUI latency.
+CSV writing and gnuplot interaction run in separate consumer threads. Error paths in the FMU wrapper still write to stderr, and FMU callbacks/internal operations have not been audited for bounded execution. The current separation is useful but does not establish complete isolation from blocking I/O.
 
 ## Real-time behavior
 
@@ -34,7 +40,7 @@ For each communication step `h`:
 3. The step must complete before the absolute wall-clock deadline `t + h`.
 4. `clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, ...)` synchronizes the result with wall time and avoids cumulative drift.
 5. The sample is copied to independent SPSC queues for CSV and plotting.
-6. Deadline misses and maximum computation time are reported after the run.
+6. The current counter reports steps already late before the sleep, and maximum computation time covers the FMU step and output reads. Wakeup lateness and the complete cycle require additional instrumentation before these values can establish timing compliance.
 
 A simulation cannot be considered hard real-time merely because `SCHED_FIFO` is used. The FMU itself must have a bounded execution time smaller than the configured communication step, and the Linux kernel/platform must provide the required scheduling latency.
 
