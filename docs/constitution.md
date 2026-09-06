@@ -36,10 +36,12 @@ Inicialização, buffers e alocações devem ficar fora da fase periódica quand
 
 ## Hardware e falhas
 
-Não inventar placa, pinos, faixas, circuitos, clocks, taxa de comunicação, estado seguro ou timeout. Capacidade de chip não é capacidade simultânea do perfil DAQC. O usuário escolheu retenção do último valor válido em Stop/fim/erro/valor inválido. Isso é política funcional confirmada, não certificação de segurança de qualquer carga. Boot antes de receber modelo/valor, reset e perda de link ainda exigem detalhamento em Q-04/Q-09; não preencher com zero ou alta impedância por inferência.
+Não inventar placa, pinos, faixas, circuitos, clocks, taxa de comunicação ou estado elétrico. F-23/F-24 tratam aquisição mundo real → DAQC → USB → input FMU no host: reter último válido e, sem histórico, valor inicial válido do input. Com checkbox ativo, 100 passos inválidos consecutivos por canal encerram em Error. F-27 exige DISABLE após 60 s de streaming sem progresso de leitura confirmado pelo host, sem zeramento por amostra inválida isolada; término da execução exige zero físico. Não aplicar essas políticas automaticamente a outputs FMU/atuadores. Usar os dois núcleos ESP32, com supervisão fora da tarefa crítica, sem bloqueios ilimitados e com interferência medida.
 
 Não iniciar atuação física com perfil incompleto. Boot, reset, comunicação perdida, watchdog e recuperação devem ter critérios de bancada. Ausência de esquemático não impede trabalho HOST, modelagem ou testes simulados; limita os ensaios e drivers que dependem dele.
 
 ## Gestão de mudanças
 
 Registrar decisões confirmadas e impacto nos IDs. Propostas podem orientar análise e mocks, sem se transformar em contrato físico aprovado. Priorizar correções funcionais e reuso antes de refatorações extensas. O repositório deve ser a referência durável; conversas adicionam decisões que precisam ser refletidas aqui.
+
+Revisão 0.5: leitor USB em thread independente; consumir última atualização antes da inserção FMI; ausência conta timeout separado. Encerrar simulação zera AO/DO/PWM e encerra DATA, enquanto novo Play reaplica outputs iniciais da FMU reinicializada. Aguardar próximo instante da grade fixa após overrun, sem compensar nem alterar passos do modelo; relatório temporal somente no fim. ADC/PWM configuráveis dentro das opções explícitas do TARGET.

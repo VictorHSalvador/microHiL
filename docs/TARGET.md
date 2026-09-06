@@ -1,6 +1,6 @@
 # Alvo físico e ambiente
 
-Status: perfil inicial denominado **ESP32**, com ADC/DAC internos e disponibilização dos I/Os disponíveis confirmados pelo usuário; mapa simultâneo/faixas de aquisição ainda em detalhamento. Fonte local: [ESP32-CONTROLADOR.md](references/ESP32-CONTROLADOR.md). As alegações de fotografia/esptool são informações recebidas; foto, comando completo, versão e saída bruta não foram inspecionados nesta sessão. Nenhuma nova consulta ao dispositivo foi executada.
+Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponibilização dos I/Os disponíveis confirmados pelo usuário; mapa simultâneo/faixas de aquisição ainda em detalhamento. Fonte local: [ESP32-CONTROLADOR.md](references/ESP32-CONTROLADOR.md). As alegações de fotografia/esptool são informações recebidas; foto, comando completo, versão e saída bruta não foram inspecionados nesta sessão. Nenhuma nova consulta ao dispositivo foi executada.
 
 ## Inventário de origem
 
@@ -46,20 +46,57 @@ A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente
 
 ## Dados necessários para liberar o perfil
 
-O nome do perfil é ESP32. Disponibilizar recursos do módulo não significa configurar todos ao mesmo tempo: GPIO25, por exemplo, não é um DAC e um canal digital independente simultaneamente. A proposta de perfil usa catálogo de capacidades e impede colisões de função no mesmo pino. Q-05 fecha reservas, atenuação/unidades e inclusão de PWM/periféricos além de DI/DO/AI/AO.
+O perfil ESP32 expõe recursos configuráveis pelo usuário, respeitando exclusões por GPIO, reserva UART e compartilhamento de periféricos. ADC/PWM têm opções abaixo; SPI/I2C não receberam aplicações específicas.
 
 | Grupo de capacidade | Recurso recebido | Faixa/representação a documentar |
 |---|---|---|
 | Digital | 25 GPIOs expostos; 21 capazes de saída, 4 somente entrada | Booleano 0/1; domínio nominal 3,3 V, não tolerância a 5 V. Limiares elétricos seguem chip/circuito, não uma faixa analógica livre |
-| ADC1 | GPIO32/33/34/35/36/39 | Conversor nominal 12 bits; atenuação e faixa calibrada precisam ser escolhidas |
+| ADC1 | GPIO32/33/34/35/36/39 | Conversor nominal 12 bits; atenuação/resolução selecionáveis conforme opções abaixo; faixa calibrada identificada |
 | ADC2 | GPIO2/4/12/13/14/15/25/26/27 | Mesma decisão de faixa; conflitos de rádio/boot/função devem ser respeitados |
 | DAC | GPIO25/26, interno 8 bits confirmado | Código 0…255 corresponde nominalmente a 0…VDD3P3_RTC; tensão útil sob carga precisa ser caracterizada |
 | UART0 | GPIO1/3 | Recurso usado pela ponte CH340; não disponível como GPIO livre enquanto esse enlace estiver ativo |
-| PWM/SPI/I2C e demais funções | Capacidades multiplexadas da placa | Inclusão no primeiro perfil não deduzida de “todos”; Q-05 |
+| PWM | Inclusão confirmada em Q-05; somente pinos capazes de saída e sem conflito | Frequência, resolução, duty e timers configuráveis conforme limites abaixo |
+| SPI/I2C e demais funções | Capacidades multiplexadas da placa | Aplicações específicas não definidas; não alocar automaticamente |
 
 Não existe uma faixa única “padrão 0…3,3 V” com a mesma precisão para todo ADC ESP32. Como referência técnica, a documentação ESP-IDF 4.4.4 recomenda 150…2450 mV para maior precisão com atenuação 11 dB; isso não fixa a atenuação deste firmware. O perfil deverá informar atenuação, calibração e unidade real transportada. Fontes primárias: [ADC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/adc.html), [DAC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/dac.html). Versão documental consultada, não SDK selecionado.
 
-Para cada função habilitada: identidade, GPIO/conector, tipo/unidade, faixa e conversão, incompatibilidades, estado inicial e último válido, ciclo e procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
+Para cada função habilitada: identidade, GPIO/conector, tipo/unidade, faixa e conversão, incompatibilidades, estado físico por modo e restrições, ciclo e procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
 
-A retenção em Stop/fim/erro foi escolhida; condição antes de receber primeiro modelo e após reset continua Q-04. Histórico de pinout/foto/esptool permanece fonte recebida, não ensaio repetido. O documento está em consolidação e não autoriza implementação física nesta fase.
+F-23 retém inputs no host, sem atuar em AO/DO/PWM por amostra inválida isolada. Dados de atuação só em STREAMING. No encerramento da execução, zerar saídas e cessar DATA; restart reinicializa a FMU e aplica outputs iniciais válidos. Zero físico significa DO baixo, DAC código zero nominal e PWM duty zero com nível inativo baixo. Tensão real e transitórios de reset exigem ensaio; níveis anteriores à execução do firmware não são garantidos pelo software.
 
+
+## Representação e calibração
+
+O mapa analógico usa volts; DAC converte para código de 8 bits e nunca confunde 0…255 com volts. ADC usa calibração correspondente à atenuação/resolução. PWM usa frequência e duty, com escala de mapeamento explícita; validar os limites configurados antes de Play.
+
+## Dois núcleos e observabilidade da USB
+
+Uso dos dois núcleos confirmado. Proposta: reservar afinidade da aquisição/atuação em um núcleo e comunicação/supervisão no outro; definir números de CPU e prioridades após inspecionar tarefas/IRQs do SDK escolhido. Memória e periféricos compartilhados ainda podem produzir interferência. Ensaiar carga máxima de comunicação e supervisão concorrentes com o caminho periódico.
+
+A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. A confirmação cumulativa de leitura pelo host foi aprovada como mecanismo para F-27. Não confundir esvaziamento de FIFO UART com consumo pela aplicação. RTS/CTS/conexões não foram confirmados e não substituem por suposição essa confirmação. Layout/cadência do ACK e tolerância de supervisão permanecem no ICD.
+
+## Opções configuráveis do perfil ESP32
+
+Design autorizado pelo usuário; fontes descrevem ESP32 clássico e ESP-IDF 4.4.4 como referência técnica, sem escolher silenciosamente a versão final do firmware.
+
+| ADC — opção | Limite/condição |
+|---|---|
+| Canal | Somente GPIO ADC exposto e disponível na tabela do perfil |
+| Resolução em leitura individual | 9, 10, 11 ou 12 bits; ADC1 compartilha largura por unidade, não oferecer escolhas incompatíveis simultâneas |
+| Atenuação por canal | 0; 2,5; 6; 11 dB |
+| Faixa de referência publicada | Respectivamente 0,100–0,950; 0,100–1,250; 0,150–1,750; 0,150–2,450 V |
+| Unidade e mapa | Volts; escala/offset para unidade da entrada FMU; limites configurados compatíveis com faixa caracterizada |
+| Calibração | Identificar eFuse/curva usada; não apresentar estimativa como medição calibrada |
+
+As faixas são referências de medição, não limites absolutos elétricos nem promessa de precisão perto de zero. Sem caracterização adicional, não anunciar ADC universal de 0–3,3 V. ADC2 depende dos conflitos de rádio/SDK. Taxa de aquisição depende do conjunto de canais e do orçamento medido, não da resolução escolhida. Fonte: [ADC Espressif](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/adc.html).
+
+| PWM — opção | Limite/condição |
+|---|---|
+| Gerador do perfil | LEDC, GPIO de saída disponível; até 16 canais de hardware sujeitos a recursos livres |
+| Frequência | Inteira em Hz, 1…40.000.000 como envelope de configuração, aceitando somente pares realizáveis pelo clock/divisor/resolução; 1 Hz não é mínimo universal do silício |
+| Resolução | 1…20 bits no ESP32 clássico, limitada pela frequência e clock; mostrar opções compatíveis, não produto cartesiano irrestrito |
+| Duty | Usuário informa 0…100%; codificação normalizada 0…1 e quantização compatível; extremos 0/100% exigem tratamento correto do driver sem overflow |
+| Timer | Canais compartilhando timer compartilham frequência/resolução; rejeitar conflitos antes de Play |
+| Exemplos de restrição | 5 kHz admite até 13 bits no exemplo oficial; 40 MHz só admite 1 bit e duty oscilante fixo de 50% |
+
+Não configurar clocks/periféricos no ciclo periódico. GUI deve mostrar frequência efetiva quantizada e erro relativo antes de aplicar configuração, sem reduzir resolução silenciosamente. Fixar nível baixo no encerramento é estado de saída, não pedido de PWM de 0 Hz. Fonte: [LEDC Espressif](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/ledc.html). A faixa oferecida será intersectada com o driver/clock efetivamente selecionado e validada em bancada.

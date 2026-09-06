@@ -1,16 +1,25 @@
 # Especificação de trabalho do MICROHIL
 
-Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.2, 06.09.2026. **Estado: em elaboração, com decisões técnicas pendentes.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
+Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.6, 06.09.2026. **Estado: em elaboração, com decisões técnicas pendentes.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
 
 ## Origem e regra de leitura
 
-Os 53 IDs de origem foram preservados. Respostas DEC-001…012 atualizam os textos afetados nesta revisão, conforme [ADR-002](adrs/ADR-002-product-decisions.md). Cinco requisitos derivados foram acrescentados: F-23…26 e NF-32, totalizando 58. A [referência A](references/MICROHIL-REQ-001-A.md) continua intacta; estilo C/Python foi confirmado na [ADR-001](adrs/ADR-001-coding-style.md).
+Os 53 IDs de origem foram preservados. Respostas DEC-001…012 atualizam os textos afetados nesta revisão, conforme [ADR-002](adrs/ADR-002-product-decisions.md). Seis requisitos derivados foram acrescentados: F-23…27 e NF-32, totalizando 59. Respostas Q-01…09 refinam esta revisão. A [referência A](references/MICROHIL-REQ-001-A.md) continua intacta; estilo C/Python foi confirmado na [ADR-001](adrs/ADR-001-coding-style.md).
 
 **Texto vigente:** exigência recebida ou alteração confirmada; detalhes ambíguos não foram inventados. **Critério de aceitação proposto:** refinamento para teste, não evidência executada. **Pendência:** DEC/Q identifica o que falta fechar, não anula respostas já dadas. A implementação permanece suspensa por solicitação do usuário até consolidar os Markdown.
 
 Confirmados: Qt 6 desacoplado/terminal debug, Bulk/libusb + micro-ROS com arquitetura a detalhar, perfil ESP32/ADC-DAC internos, Pi 4/2 GB após Linux inicial, logging binário de saídas/CSV posterior, retenção de último válido, meta 100 Hz/timeout USB até 5 ms, continuar após overrun e gráficos até 10 Hz. Perguntas restantes em [decisions.md](decisions.md).
 
 Comentários de todo código próprio devem estar em inglês, ser breves e úteis, conforme [constituição](constitution.md). Não quebrar parâmetros por estética; quebrar apenas linhas extremamente longas. Essas regras são instruções confirmadas do usuário, aplicáveis a todos os incrementos, sem criar funcionalidades ou mecanismos de hardware adicionais.
+
+## Direção dos sinais — terminologia normativa
+
+| Caminho | Significado |
+|---|---|
+| Mundo real → entradas físicas DAQC (AI/DI) → USB → host → inputs FMU | Aquisição. O dado transmitido pela DAQC é uma entrada física adquirida e alimenta uma entrada do modelo |
+| Outputs FMU → host → USB → saídas físicas DAQC (AO/DO/PWM) → mundo real | Atuação. Saída física da DAQC sempre significa sinal entregue ao mundo real |
+
+A retenção de F-23 e a contagem de F-24 pertencem à aquisição no host. A mensagem identifica canal DAQC e input FMU. Amostra inválida isolada não manda zero aos atuadores; quando a simulação termina (fim, Stop ou Error), as saídas físicas são zeradas e o envio de dados é encerrado. Novo Play reinicializa a FMU e aplica os outputs iniciais válidos, sem reutilizar outputs da execução anterior.
 
 ## Requisitos funcionais
 
@@ -20,13 +29,13 @@ A plataforma deve permitir importar modelos FMU 2.0 Co-Simulation sem depender d
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-01; HOST):** Importar fixtures de diferentes modelos/tipos; identificar FMI/kind, nomes, tipos e arquitetura. Rejeitar arquivo incompatível com causa explícita. Q-08 fecha capacidades especiais, sem restringir silenciosamente o produto à FMU de exemplo.
+**Critério de aceitação proposto (V-F-01; HOST):** Importar fixtures de diferentes modelos/tipos; identificar FMI/kind, nomes, tipos e arquitetura. Rejeitar arquivo incompatível com causa explícita. Q-08 autoriza diagnosticar capacidades não suportadas, sem restringir silenciosamente o produto à FMU de exemplo.
 
-**Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003. **Pendência:** DEC-011; Q-08.
+**Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003. **Pendência:** Matriz de capacidades por incremento; política Q-08 resolvida.
 
 ### REQ-F-02 — Configuração de Entradas e Saídas
 
-A plataforma deve permitir associar inputs/outputs da FMU aos recursos do perfil DAQC selecionado, iniciando pelo perfil ESP32. O mapa deve respeitar tipo, direção, unidade/faixa e exclusividade de funções dos pinos; capacidades multiplexadas não são canais simultâneos independentes.
+A plataforma deve permitir associar inputs/outputs da FMU aos recursos do perfil DAQC selecionado, iniciando pelo perfil ESP32. O mapa deve respeitar tipo, direção, unidade/faixa e exclusividade de funções dos pinos; capacidades multiplexadas não são canais simultâneos independentes. ADC e PWM devem ser configuráveis pelo usuário com opções e limites explícitos do TARGET; rejeitar pares frequência/resolução e recursos incompatíveis antes de Play.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
@@ -62,7 +71,7 @@ GUI e terminal debug devem permitir definir passo e duração da simulação, ma
 
 **Critério de aceitação proposto (V-F-05; HOST + GUI):** NaN/Inf/zero/negativo/overflow rejeitados; passo e duração configurados são usados. Verificar último passo parcial e capacidades da FMU sem fixar o modelo de exemplo como única planta.
 
-**Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003, TASK-009. **Pendência:** DEC-004/011; Q-06/Q-08.
+**Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003, TASK-009. **Pendência:** DEC-004/011; Q-06.
 
 ### REQ-F-06 — Início da Simulação
 
@@ -74,33 +83,33 @@ A plataforma deve iniciar a execução da simulação quando o usuário acionar 
 
 ### REQ-F-07 — Parada da Simulação
 
-Stop deve interromper a execução de modo consistente, finalizar os registros até o último ciclo concluído quando o destino estiver disponível e manter nas saídas a referência do último valor válido. Falha de armazenamento ou entrega deve ser indicada, sem fabricar confirmação física.
+Stop deve interromper a execução consistentemente, finalizar registros disponíveis, zerar as saídas físicas DAQC e encerrar envio de DATA. O zero de encerramento é independente da retenção dos inputs no host. Novo Play reinicializa a FMU e aplica seus outputs iniciais válidos antes de continuar a simulação. Confirmar atuação/encerramento pelo contrato, sem alegar entrega após falha do enlace.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-07; HOST + HIL):** Stop durante execução preserva ordem e dados finais, retém valor aceitável e permite nova execução. Distinguir parada da simulação, estado DAQC e falha de entrega/registro; limites pendentes no ICD.
+**Critério de aceitação proposto (V-F-07; HOST + HIL):** Em Stop, fim e Error, verificar zero nos canais de saída e cessação de DATA; rejeitar atualização antiga posterior ao encerramento. Repetir Play com FMU reinicializada e verificar outputs iniciais da nova execução. Falha de entrega gera diagnóstico, não confirmação fictícia.
 
-**Design:** ARCH-STATE / IF-LOG. **Execução:** TASK-002, TASK-003, TASK-009. **Pendência:** DEC-005; Q-04/Q-07/Q-09.
+**Design:** ARCH-STATE / IF-LOG. **Execução:** TASK-002, TASK-003, TASK-009. **Pendência:** DEC-005; Q-07/Q-09.
 
 ### REQ-F-08 — Indicação do Estado da Simulação
 
-A interface deve indicar pelo menos Idle, Running, Error, Stopped e Finished. Não há pausa manual requerida; proteção automática por excesso de inválidos precisa indicar sua condição, com pausa recuperável versus término em Error ainda a esclarecer.
+A interface deve indicar pelo menos Idle, Running, Error, Stopped e Finished. Não há pausa manual requerida; proteção automática por excesso de inválidos precisa indicar sua condição, com término em Error, identificação dos canais DAQC/inputs FMU afetados e possibilidade de novo Play (Q-03).
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-08; HOST + GUI):** Exercitar estados mínimos, fechamento de workers e nova execução; não declarar Finished antes de agregar resultado. Teste da proteção segue Q-03 sem criar Paused oficial por inferência.
+**Critério de aceitação proposto (V-F-08; HOST + GUI):** Exercitar estados mínimos, fechamento de workers e nova execução; não declarar Finished antes de agregar resultado. Testar proteção em Error e novo Play; não há estado Paused requerido.
 
-**Design:** ARCH-STATE. **Execução:** TASK-003, TASK-009. **Pendência:** DEC-005/009; Q-03/Q-07.
+**Design:** ARCH-STATE. **Execução:** TASK-003, TASK-009. **Pendência:** DEC-005/009; Q-07.
 
 ### REQ-F-09 — Apresentação de Falhas
 
-Falhas detectadas no código, FMU ou comunicação devem ser apresentadas na GUI com descrição específica e estado coerente. Reter a referência do último valor válido nas saídas, permitir recuperação para nova execução e não depender de prints de terminal para comunicar erro.
+Falhas detectadas no código, FMU ou comunicação devem ser apresentadas na GUI com descrição e estado coerentes. Para dado de aquisição inválido, aplicar F-23/F-24 no host e indicar canal DAQC/input FMU. Recuperação permite nova execução; não depender de prints. Falha da FMU/atuação é outra classe de erro e não herda automaticamente o contador de aquisição.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-09; HOST + HIL):** Injetar falha de FMU/código/link/log; GUI recebe causa, valor inválido não é enviado e repetição de run é possível após revalidação. Debug desligado não suprime diagnóstico GUI.
+**Critério de aceitação proposto (V-F-09; HOST + HIL):** Injetar falha de FMU/código/link/log; GUI recebe causa, dado adquirido inválido não é inserido na FMU e repetição de run é possível após revalidação. Debug desligado não suprime diagnóstico GUI.
 
-**Design:** ARCH-STATE / IF-LOG. **Execução:** TASK-002, TASK-003, TASK-009. **Pendência:** DEC-005; Q-03/Q-04/Q-07/Q-09.
+**Design:** ARCH-STATE / IF-LOG. **Execução:** TASK-002, TASK-003, TASK-009. **Pendência:** DEC-005; Q-07/Q-09.
 
 ### REQ-F-10 — Habilitação do Logging
 
@@ -114,11 +123,11 @@ A interface deve permitir habilitar/desabilitar logging binário dos valores fin
 
 ### REQ-F-11 — Registro Temporal das Saídas
 
-Com logging habilitado, registrar o valor final de cada saída selecionada correspondente à entrega de cada passo, com associação temporal identificável. Não registrar cada subpasso interno da FMU. Definição de valor bruto versus aceito e representação de tempo/ordem ficam explícitas no contrato de arquivo.
+Com logging habilitado, registrar o valor final de cada saída selecionada correspondente à entrega de cada passo, com associação temporal identificável. Não registrar cada subpasso interno da FMU. Registrar o valor bruto da FMU, sem confundir com os inputs DAQC filtrados no host; inválidos usam NaN ou zero conforme representação tipada a fechar em IF-LOG. Falha de logging gera aviso de registro incompleto e a simulação continua.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-11; HOST + HIL):** Confrontar passos concluídos e registros finais por saída; detectar perda e amostra final ausente. Q-07 fecha valor/tempo/metadados sem preencher lacunas com dados fictícios.
+**Critério de aceitação proposto (V-F-11; HOST + HIL):** Confrontar passos concluídos e registros finais por saída; detectar perda e amostra final ausente. Testar outputs registrados sem substituição por inputs retidos e falha de sink sem parar a simulação; Q-07 fecha representação tipada e metadados.
 
 **Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** DEC-008; Q-07.
 
@@ -180,23 +189,23 @@ A janela de simulação deve disponibilizar controles de entradas virtuais adequ
 
 ### REQ-F-18 — Comunicação de Configuração com a DAQC
 
-A plataforma deve suportar CONFIG no protocolo próprio, com SYNC de dois bytes 0x7259, MID 0x01 e COMMAND de um byte. No retorno ESP32→host existe STATUS para informar o estado efetivo, cuja codificação/tamanho ainda precisam da confirmação Q-02.
+A plataforma deve suportar CONFIG no protocolo próprio, com SYNC de dois bytes 0x7259, MID 0x01 e COMMAND de um byte. No retorno ESP32→host existe STATUS para informar o estado efetivo, com códigos iguais aos COMMAND (01/02/03); STATUS uint8 somente no retorno CONFIG; ordem little-endian conforme reuso RaspDAQ em ADR-003.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-18; HOST + bancada):** Vetores CONFIG com SYNC/MID/COMMAND definidos; confirmar bytes de SYNC, STATUS e fragmentação antes de teste de interoperabilidade. Não aceitar MID como codificação de três estados sem esclarecimento.
+**Critério de aceitação proposto (V-F-18; HOST + bancada):** Vetores CONFIG com SYNC/MID/COMMAND definidos; usar bytes SYNC 59 72, COMMAND/STATUS uint8 e quadros base 4/5 bytes; testar extensões separadamente. STATUS usa códigos COMMAND, não MID.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** DEC-012; Q-01/Q-02/Q-09.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** DEC-012; Q-01/Q-09 para extensões; base Q-02 consolidada.
 
 ### REQ-F-19 — Comunicação de Streaming com a DAQC
 
-A plataforma deve suportar DATA com SYNC=0x7259, MID=0x02 e até 256 bytes de payload organizado por I/O do perfil. Não é obrigatório usar todos os bytes. STATUS só pode ocorrer no sentido ESP32→host; sua presença no DATA e o mecanismo de comprimento ainda precisam de Q-02.
+A plataforma deve suportar DATA com SYNC=0x7259, MID=0x02 e até 256 bytes de payload organizado por I/O do perfil. Não é obrigatório usar todos os bytes. Na base derivada do serviço RaspDAQ, STATUS aparece somente em CONFIG de retorno. DATA usa SEQ uint16 e comprimento N fixo por perfil/direção, little-endian, sem preenchimento obrigatório. Extensões de sessão/ACK/XRCE/integridade não são fornecidas pela base e estão discriminadas no ICD.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-19; HOST + HIL):** Testar perfis/layout, frames parciais/agregados e limite do payload. Payload contendo os bytes de SYNC não pode ser truncado por busca ingênua; tamanho/STATUS definidos antes do parser definitivo.
+**Critério de aceitação proposto (V-F-19; HOST + HIL):** Testar perfis/layout, frames parciais/agregados e limite do payload. Payload contendo os bytes de SYNC não pode ser truncado por busca ingênua; base fixa 5+N bytes e STATUS fora do DATA; extensão integrada deve ser validada antes do parser definitivo.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** DEC-012; Q-01/Q-02/Q-05.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** DEC-012; Q-01/Q-05 para extensão/perfil; base Q-02 consolidada.
 
 ### REQ-F-20 — Controle de Estado da DAQC
 
@@ -216,7 +225,7 @@ Antes de executar, validar FMU, passo/duração, perfil DAQC, mapeamento I/O e c
 
 **Critério de aceitação proposto (V-F-21; HOST):** Carregar configurações com variável removida, tipo alterado, perfil divergente, função GPIO em conflito e timing inválido; obter diagnóstico específico antes de atuar.
 
-**Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003, TASK-006. **Pendência:** DEC-011; Q-04/Q-05/Q-08/Q-09.
+**Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003, TASK-006. **Pendência:** DEC-011; Q-05/Q-09.
 
 ### REQ-F-22 — Finalização Consistente do Logging
 
@@ -227,25 +236,25 @@ Ao finalizar uma simulação por término normal, Stop ou erro recuperável, a p
 **Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** DEC-008.
 
 
-### REQ-F-23 — Inicialização e retenção do último valor válido
+### REQ-F-23 — Retenção no host das entradas provenientes da DAQC
 
-A saída deve usar o valor inicial/start do modelo na inicialização pretendida e reter o último valor aceitável em Stop, fim, erro e valor inválido. NaN/Inf e outros valores inválidos não devem ser enviados. Boot físico sem modelo/valor e start ausente/calculado são casos pendentes explícitos, não preenchidos com zero.
+O host deve validar cada canal adquirido pela DAQC antes de inseri-lo no input FMU mapeado. NaN/Inf ou outro dado inválido é ignorado e não substitui o último valor válido desse canal. Reutilizar esse último valor na entrada do modelo; valor constante válido continua válido. Não zerar saídas físicas da DAQC por essa ocorrência. Antes do primeiro valor válido adquirido, usar o valor inicial da entrada FMU correspondente, desde que válido. Não substituir automaticamente por zero se essa referência não existir ou for inválida; validar a inicialização antes de executar a etapa dependente. Dados de processo continuam restritos ao Play/STREAMING; ausência de start literal não impede o lifecycle FMI quando a inicialização for calculada.
 
-**Origem 0.2:** comportamento novo solicitado nas respostas DEC; ID acrescentado sem renumerar requisitos originais.
+**Atualização 0.4:** correção explícita do usuário sobre direção dos sinais, retenção no host e supervisão de leitura.
 
-**Critério de aceitação proposto (V-F-23; HOST + bancada/HIL):** Testar start válido, outputs calculados sem start, NaN/Inf/faixa e repetição de run. Verificar retenção por canal sem declarar entrega física se o link falhar.
+**Critério de aceitação proposto (V-F-23; HOST + integração):** Enviar válido A, NaN, Inf, dado fora do contrato e válido B por canal: FMU deve consumir A,A,A,A,B. Um canal inválido não altera o valor válido de outro. Não emitir comando de zeramento físico como efeito do filtro. Testar primeira amostra inválida usando referência inicial válida da entrada FMU; referência inicial ausente/inválida não pode ser apresentada como último dado DAQC válido.
 
-**Design:** ARCH-STATE / IF-SAMPLE. **Execução:** TASK-003, TASK-006, TASK-008. **Pendência:** DEC-005; Q-04/Q-05/Q-09.
+**Design:** ARCH-CORE / ARCH-IO / IF-SAMPLE. **Execução:** TASK-003, TASK-006, TASK-007. **Pendência:** Q-05 para limites do mapa; referência inicial definida em Q-04.
 
-### REQ-F-24 — Proteção configurável contra valores inválidos consecutivos
+### REQ-F-24 — Parada por 100 passos consecutivos com aquisição inválida
 
-GUI deve disponibilizar checkbox que habilita proteção ao ocorrerem mais de 100 valores inválidos consecutivos, com mensagem específica. O usuário pediu pausa automática e ausência de pausa manual; a ação pausa recuperável versus término em Error e o escopo do contador ficam pendentes em Q-03.
+A proteção deve contar passos da simulação consecutivos com dado inválido recebido da DAQC, separadamente por canal mapeado para input FMU. Com checkbox habilitado, no 100º passo inválido consecutivo de qualquer canal, encerrar em Error, identificar todos os canais que atingiram o limite e seus inputs FMU, permitir novo Play após revalidação. Não contar pacotes como passos, nem subpassos internos da FMU. Valor válido quebra a sequência, inclusive se constante; novo run reinicia contadores. O checkbox permanece: desligado, a proteção não encerra a simulação, mas o host continua ignorando inválidos e retendo a referência válida. Ao encerrar em Error, executar o zeramento físico e cessação de DATA de F-07.
 
-**Origem 0.2:** comportamento novo solicitado nas respostas DEC; ID acrescentado sem renumerar requisitos originais.
+**Atualização 0.4:** correção explícita do usuário sobre direção dos sinais, retenção no host e supervisão de leitura.
 
-**Critério de aceitação proposto (V-F-24; HOST + GUI):** Casos 100 e 101 inválidos, checkbox ligado/desligado e retorno a válido; verificar mensagem e retenção. Contagem e transição finais só após Q-03, sem inventar Paused oficial.
+**Critério de aceitação proposto (V-F-24; HOST + integração):** Conferir 99 passos sem disparo e Error no 100º; múltiplos pacotes em um passo contam no máximo uma vez por canal. Testar canais independentes e vários atingindo limite no mesmo passo, válido que interrompe sequência, Error e novo Play. Sem nova amostra, timeout é separado e não incrementa inválidos; conferir seleção da última atualização na inserção FMI.
 
-**Design:** ARCH-STATE / IF-SAMPLE. **Execução:** TASK-003, TASK-009. **Pendência:** DEC-005/009; Q-03.
+**Design:** ARCH-CORE / ARCH-STATE / IF-SAMPLE. **Execução:** TASK-003, TASK-006, TASK-007, TASK-009. **Pendência:** Seleção/ausência/checkbox confirmados; correlação de pacotes no ICD.
 
 ### REQ-F-25 — Modo debug e diagnóstico desacoplado
 
@@ -263,9 +272,19 @@ A plataforma deve disponibilizar conversão do binário de saídas para CSV some
 
 **Origem 0.2:** comportamento novo solicitado nas respostas DEC; ID acrescentado sem renumerar requisitos originais.
 
-**Critério de aceitação proposto (V-F-26; HOST + GUI):** Converter depois de Finished/Stopped conforme contrato, bloquear conversão durante Running e rejeitar FMU incompatível. Comparar valores tipados do binário/CSV sem depender da ordem presumida do XML.
+**Critério de aceitação proposto (V-F-26; HOST + GUI):** Converter depois de Finished/Stopped conforme contrato, bloquear conversão durante Running e rejeitar FMU incompatível. Comparar valores tipados do binário/CSV usando a ordem explicitamente registrada e conferida contra os metadados XML.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** DEC-002/008; Q-07/Q-08.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** DEC-002/008; Q-07.
+
+### REQ-F-27 — DISABLE após 60 segundos de streaming sem leitura pelo host
+
+Enquanto estiver em STREAMING, a DAQC deve entrar automaticamente em DISABLE ao completar 60 segundos contínuos sem o host ler os dados transmitidos. Não há etapa anterior de zeramento das saídas. A confirmação cumulativa do último pacote lido, enviada pela thread de comunicação host e vinculada à sessão, é o mecanismo aprovado. A condição é ausência de progresso de leitura, não ausência de mudança no valor adquirido nem simples ausência de heartbeat. Interromper streaming e manter recepção CONFIG disponível. O firmware deve usar os dois núcleos para separar tarefas críticas e supervisão, com comunicação limitada e sem espera bloqueante na aquisição/atuação; medir interferência antes de validar tempo real.
+
+**Atualização 0.4:** correção explícita do usuário sobre direção dos sinais, retenção no host e supervisão de leitura.
+
+**Critério de aceitação proposto (V-F-27; HOST + bancada/HIL):** Simular falta de leitura desde entrada em STREAMING e depois de leitura efetiva: não desabilitar antes de 60 s, solicitar transição ao atingir 60 s e medir atraso da supervisão/transição contra orçamento ainda a definir. Leitura de valores constantes renova progresso; heartbeat sem leitura não renova. Ensaio deve suspender o consumidor preservando outros serviços, verificar buffers limitados, CONFIG responsivo e novo Play. Distinguir DISABLE por falta de leitura de encerramento coordenado com zero.
+
+**Design:** ARCH-FW / IF-DAQ. **Execução:** TASK-006, TASK-007, TASK-008, TASK-010. **Pendência:** Q-09 para layout/periodicidade da confirmação, sessão e tolerância de detecção; detalhes de entrega/encerramento no TARGET.
 
 ## Requisitos não funcionais
 
@@ -297,9 +316,9 @@ O loop principal de simulação deve ser executado em thread dedicada, utilizand
 
 ### REQ-NF-04 — Thread de Leitura USB
 
-A leitura USB deve ser executada em thread dedicada de alta prioridade, de forma contínua enquanto a DAQC estiver habilitada e houver variáveis da FMU mapeadas para entradas provenientes da DAQC.
+A leitura USB deve ser executada em thread dedicada de alta prioridade, para dados de processo durante STREAMING iniciado por Play, quando houver inputs mapeados. Recepção de controle/status continua disponível fora de STREAMING.
 
-**Critério de aceitação proposto (V-NF-04; HOST + alvo):** Com DAQC habilitada e entradas mapeadas, leitura ocorre em thread dedicada prioritária conforme redação vigente; desabilitação encerra leitura sem bloqueio ilimitado. Revisar teste se transporte mudar.
+**Critério de aceitação proposto (V-NF-04; HOST + alvo):** Com DAQC em STREAMING e entradas mapeadas, leitura ocorre em thread dedicada prioritária conforme redação vigente; desabilitação encerra leitura sem bloqueio ilimitado. Revisar teste se transporte mudar.
 
 **Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** DEC-001/004/007.
 
@@ -371,7 +390,7 @@ GUI deve utilizar Qt 6/C++, desacoplada do núcleo C, que pode operar pelo termi
 
 **Critério de aceitação proposto (V-NF-12; HOST + GUI):** Executar cenário pelo núcleo sem GUI e pela GUI; conferir controles/cor e baixa prioridade, sem dependência de widgets no núcleo. Cores específicas são design proposto, não tokens oficiais Mint exigidos.
 
-**Design:** ARCH-GUI. **Execução:** TASK-009. **Pendência:** Nenhuma escolha de toolkit/estilo pendente; detalhes de GUI em Q-03/Q-07.
+**Design:** ARCH-GUI. **Execução:** TASK-009. **Pendência:** Nenhuma escolha de toolkit/estilo pendente; detalhes de GUI em Q-07.
 
 ### REQ-NF-13 — Biblioteca FMI
 
@@ -399,7 +418,7 @@ O software deve ser estruturado em módulos separados, no mínimo, para interfac
 
 ### REQ-NF-16 — Extensibilidade de Perfis de DAQC
 
-Características DAQC devem ser modulares por perfil; o primeiro chama-se ESP32 e disponibiliza recursos do módulo informado com ADC/DAC internos e restrições de pinagem/multiplexação. Novos perfis não exigem alteração extensiva do núcleo.
+Características DAQC devem ser modulares por perfil; o primeiro chama-se ESP32 e disponibiliza ADC/DAC internos, digital e PWM, com reservas UART e exclusão de funções incompatíveis por pino. O mapa analógico trabalha em volts; código DAC 0…255 é conversão de representação, não faixa em volts. Novos perfis não exigem alteração extensiva do núcleo.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
@@ -449,11 +468,11 @@ A organização das variáveis no PAYLOAD USB deve ser definida pelo perfil da D
 
 ### REQ-NF-22 — Campos de Sincronização do Protocolo
 
-Protocolo deve usar SYNC fixo de dois bytes 0x7259 e MID de um byte, CONFIG=0x01 e DATA/PAYLOAD=0x02. A ordem dos bytes de SYNC deve ser definida explicitamente no ICD, não inferida da arquitetura do processador.
+Protocolo deve usar SYNC fixo de dois bytes 0x7259 e MID de um byte, CONFIG=0x01 e DATA/PAYLOAD=0x02. Ordem little-endian adotada do RaspDAQ: SYNC no fio 59 72, independente da arquitetura do processador.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-NF-22; HOST + bancada):** Vetores usam novo SYNC e MIDs exatos; confirmar ordem no fio em Q-02. BB77 permanece somente na referência histórica, não é o SYNC vigente.
+**Critério de aceitação proposto (V-NF-22; HOST + bancada):** Vetores usam novo SYNC e MIDs exatos; conferir ordem 59 72 no fio, definida pela ADR-003. BB77 permanece somente na referência histórica, não é o SYNC vigente.
 
 **Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** DEC-012; Q-02.
 
@@ -507,17 +526,17 @@ Nos componentes Python próprios, variáveis, funções e métodos devem utiliza
 
 ### REQ-NF-28 — Detecção de Deadline
 
-Núcleo deve medir ciclo e perdas de deadline, continuar a simulação quando ocorrer perda, contar ocorrências e informar pior atraso observado ao final. Duração do trabalho e atraso de entrega/despertar precisam ser distinguíveis; agenda após atraso deve ser explicitada.
+Núcleo deve medir perdas e continuar sem compensação: manter grade fixa de liberações do relógio real, h e sequência da FMU. Após ultrapassar uma liberação, aguardar próximo instante fixo; nunca saltar etapa FMI nem executar rajadas para recuperar. Após a execução, informar deadlines de etapas perdidos, instantes da grade não utilizados e pior atraso de entrega, sem confundir instantes perdidos com etapas FMI omitidas.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-NF-28; HOST + alvo):** Clock controlado produz perda conhecida e run continua; conferir contador e pior atraso e não confundir máximo computacional com lateness. Q-06 fecha agenda/cálculo operacional.
+**Critério de aceitação proposto (V-NF-28; HOST + alvo):** Clock controlado com h=10 ms e etapa 0→12 ms: próximo início em 20 ms, h inalterado e sequência FMI contínua; uma entrega atrasada, uma liberação perdida e worst case 2 ms. Testar término exato no limite e atraso de várias liberações; nenhum print temporal no ciclo.
 
-**Design:** ARCH-TIME. **Execução:** TASK-004. **Pendência:** DEC-004/007; Q-06.
+**Design:** ARCH-TIME. **Execução:** TASK-004. **Pendência:** Política temporal confirmada; fronteira de entrega e tolerâncias de ensaio no ICD/plano de verificação.
 
 ### REQ-NF-29 — Detecção de Timeout USB
 
-Comunicação deve ter timeout configurado positivo de no máximo 5 ms, detectar/contabilizar falhas de leitura/escrita sem bloquear indefinidamente a thread de simulação. Escopo por transferência ou por troca completa deve ser fechado em Q-06; valor infinito não atende.
+Cada transferência USB deve ter timeout positivo de no máximo 5 ms. Descartar pacote atrasado e usar último dado válido disponível na entrega do passo, reutilizável até fim da execução; contar timeouts. Valor constante não é dado inválido nem evidência de host morto. A simulação não espera indefinidamente pelo enlace. Identificação/expiração de pacote no fio permanece Q-06; streaming sem leitura durante 60 s segue F-27.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
@@ -549,13 +568,13 @@ A plataforma deve ter como meta executar simulações a pelo menos 100 Hz (passo
 
 **Critério de aceitação proposto (V-NF-32; HOST + HIL):** Ensaiar fixtures documentadas a 100 Hz, medir ciclo completo, perda/pior atraso e comunicação. Informar duração/carga e critérios de desempenho pendentes, sem aprovar meta só por configurar h=0,01.
 
-**Design:** ARCH-TIME. **Execução:** TASK-004, TASK-010. **Pendência:** DEC-004; Q-06/Q-08.
+**Design:** ARCH-TIME. **Execução:** TASK-004, TASK-010. **Pendência:** DEC-004; Q-06.
 
 ## Critérios transversais e lacunas
 
-Implementação não iniciada: resolver Q-01…09 antes de avançar para código conforme instrução do usuário. Confirmações de formato/produto já estão aplicadas; arquitetura XRCE, STATUS/comprimento, boot sem start, pausa automática, recursos simultâneos, timing pós-atraso e falha de log não são fechados por suposição.
+Implementação não iniciada. Respostas 1…5 consolidadas: ausência separada, último snapshot na inserção, zero no fim/restart inicializado, ADC/PWM configuráveis e grade fixa sem compensação. Restam detalhamento do ICD/XRCE/ACK/log, versões reproduzíveis e critérios de bancada. Nenhuma proposta de bytes ou limite de ensaio é aprovação implícita.
 
-Suporte geral FMI exige distinguir metadados/tipos, capacidades e binário de execução da meta de desempenho. Timestamps/ordem do binário não se inferem apenas da FMU. A retenção do último válido não fabrica um valor antes do primeiro modelo nem prova entrega após desconexão. Valores didáticos não são usados como limites do produto.
+Suporte geral FMI exige distinguir metadados, capacidades e binário de execução da meta de desempenho. O log é de outputs da FMU; retenção/counter de aquisição é nos inputs da FMU. A ausência de histórico válido não autoriza inventar zero. F-27 não exige zerar saídas físicas. Valores didáticos não definem limites do produto.
 
 ## Histórico de trabalho
 
@@ -564,3 +583,8 @@ Suporte geral FMI exige distinguir metadados/tipos, capacidades e binário de ex
 | 0.1 | 53 requisitos importados; NF-26/27 revisados; critérios propostos | Instrução inicial e ADR-001 |
 | 0.2 | Respostas DEC aplicadas, cinco IDs derivados, novos SYNC/limite payload/teto gráfico/log | Instrução explícita do usuário e ADR-002 |
 | 0.2 | Lacunas Q mantidas, sem implementação nem aprovação de testes | Consolidação documental em andamento |
+| 0.3 | Q incorporadas, boot zero, Error por saída, log bruto/aviso, timeout por transferência, PWM e novo F-27; inspeção RaspDAQ | Documentação; sem implementação ou ensaio físico |
+| 0.4 | Correção da direção de aquisição/atuação; retenção no host, 100 passos por canal, 60 s sem leitura e uso dos dois núcleos | Instrução explícita; detalhes de mecanismo ainda propostos |
+
+| 0.5 | Última atualização na inserção FMI, ausência separada, zero físico no fim/restart pela FMU, ADC/PWM configuráveis e proibição de compensação temporal | Respostas 1…5 e grade fixa confirmada |
+| 0.6 | Reuso RaspDAQ: little-endian, CONFIG 4/5, STATUS somente CONFIG, SEQ/schema fixo, estados/ownership; limites e extensões identificados | Instrução de usar a referência e ADR-003; sem teste de produto |

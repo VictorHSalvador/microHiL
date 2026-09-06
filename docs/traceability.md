@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade
 
-Revisão 0.2. [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…26/NF-32 (58 requisitos). Decisões confirmadas não alteram o estado de implementação: fontes continuam no estado auditado em `c788a4283cf81f17e9a2956ae258487c7931590a`.
+Revisão 0.6. [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). Decisões confirmadas não alteram o estado de implementação: fontes continuam no estado auditado em `c788a4283cf81f17e9a2956ae258487c7931590a`.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Todos os V-* permanecem planejados. Evidências históricas não aprovam as exigências revisadas nem foram executadas novamente.
 
@@ -28,10 +28,11 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-20 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-F-20 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-F-21 | ARCH-CORE / IF-CORE | TASK-003, TASK-006 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-21 / HOST | Sem execução do caso de aceitação |
 | REQ-F-22 | ARCH-LOG / IF-LOG | TASK-002 | src/csv_logger.c; src/sample_queue.c | P | V-F-22 / HOST | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
-| REQ-F-23 | ARCH-STATE / IF-SAMPLE | TASK-003, TASK-006, TASK-008 | Não implementado | A | V-F-23 / HOST + bancada/HIL | Sem execução |
-| REQ-F-24 | ARCH-STATE / IF-SAMPLE | TASK-003, TASK-009 | Não implementado | A | V-F-24 / HOST + GUI | Sem execução |
+| REQ-F-23 | ARCH-CORE / ARCH-IO / IF-SAMPLE | TASK-003, TASK-006, TASK-007 | Não implementado para inputs DAQC | A | V-F-23 / HOST + integração | Sem execução da revisão 0.4 |
+| REQ-F-24 | ARCH-CORE / ARCH-STATE / IF-SAMPLE | TASK-003, TASK-006, TASK-007, TASK-009 | Não implementado para inputs DAQC | A | V-F-24 / HOST + integração | Sem execução da revisão 0.4 |
 | REQ-F-25 | ARCH-STATE / ARCH-LOG | TASK-002, TASK-003, TASK-009 | src/main.c e wrapper: terminal sem gate debug | P | V-F-25 / HOST + GUI | Sem execução |
 | REQ-F-26 | ARCH-LOG / IF-LOG | TASK-002, TASK-009 | Não implementado | A | V-F-26 / HOST + GUI | Sem execução |
+| REQ-F-27 | ARCH-FW / IF-DAQ | TASK-006, TASK-007, TASK-008, TASK-010 | Não implementado | A | V-F-27 / HOST + bancada/HIL | Sem execução; 60 s definidos; layout/cadência/tolerância Q-09 pendentes |
 | REQ-NF-01 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | P | V-NF-01 / HOST + alvo | [EV-AUD-01](evidence/audit-2026-09-06/README.md): configuração integral bloqueada |
 | REQ-NF-02 | ARCH-IO | TASK-007 | Não implementado | A | V-NF-02 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-03 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-03 / HOST + alvo | Sem execução do caso de aceitação |

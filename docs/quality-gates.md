@@ -33,13 +33,15 @@ Ausência de pinagem não reprova uma correção isolada de logger. Campo de for
 - [ ] Perfil físico, pinos, circuitos, unidades, faixas e cargas confirmados.
 - [ ] Layout, versão, sessão, sequência, timeout, estados e erro completos.
 - [ ] SDK/toolchain/firmware e host identificados, incluindo domínio de relógios.
-- [ ] Estado seguro por canal e procedimento de ensaio aprovados para a bancada.
+- [ ] Política elétrica de AO/DO/PWM especificada separadamente da retenção de inputs no host; procedimento de bancada aprovado.
+- [ ] Confirmação cumulativa de leitura/sessão/buffers definidos; DISABLE em 60 s sem progresso, sem presumir observação direta do endpoint pelo ESP32.
 
 ## G-TIMING-HIL — Antes de alegar desempenho integrado
 
 - [ ] Passo, jitter, deadline, timeout, duração/carga de teste e limites aprovados.
 - [ ] Medições no alvo e dados brutos identificam scheduler, configuração e instrumentos.
 - [ ] Malha, saturação, dados inválidos/antigos, reset, desconexão e recuperação exercitados.
+- [ ] Interferência da supervisão/comunicação entre os dois núcleos medida sob carga e fila cheia, sem bloqueio ilimitado na aquisição/atuação.
 - [ ] Limitações e resultados reprovados preservados; nenhum dado fictício substitui ensaio.
 
 Após G-CONSOLIDACAO, falha de um gate específico mantém aberta a tarefa dependente sem bloquear automaticamente incrementos independentes. “Gates definidos” e “gates aprovados” são estados diferentes.

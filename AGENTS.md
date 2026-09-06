@@ -22,4 +22,10 @@ Leia [índice documental](docs/README.md), [constituição](docs/constitution.md
 
 ## Escopo atual
 
-O usuário determinou concluir os esclarecimentos e atualizar os Markdown antes de começar a implementação, inclusive correções HOST. Continuar somente revisão documental e consultas necessárias nesta fase. Respostas DEC-001…012 estão registradas em docs/decisions.md; não reabrir decisões confirmadas, apenas suas lacunas Q-01…09. Código de produção continua preservado.
+O usuário determinou concluir os esclarecimentos e atualizar os Markdown antes de começar a implementação, inclusive correções HOST. Continuar somente revisão documental e consultas necessárias nesta fase. Respostas DEC-001…012 e Q-01…09 estão registradas em docs/decisions.md; Q-03/Q-04/Q-08 resolvidas. Não reabrir decisões confirmadas; consultar apenas os subitens restantes de Q-01/02/05/06/07/09. RaspDAQ em Projects/OT1-HiLInfrastructure é referência estática de reuso, não especificação oficial do ESP32. Código de produção continua preservado.
+
+Correção de direção (revisão 0.4): mundo real → entradas DAQC → USB → inputs FMU; F-23/F-24 retêm/contam no host, sem zerar atuadores por amostra inválida isolada; término da execução zera saídas físicas. Checkbox mantido, limite 100 passos consecutivos por canal; sem histórico, valor inicial válido do input FMU. F-27: 60 s de STREAMING sem avanço da confirmação cumulativa de leitura host → DISABLE. Usar ambos os núcleos ESP32 com supervisão desacoplada; não confundir UART transmitida com DATA lido pelo host.
+
+Revisão 0.5 prevalece: zero físico ao encerrar simulação (fim/Stop/Error), restart pela FMU reinicializada. Ausência de pacote separada de invalidade; último snapshot antes de inserir na FMU, leitor USB em thread distinta. Após overrun, aguardar próximo instante da grade fixa, sem saltar etapas FMI/alterar h/compensar; métricas no fim. ADC/PWM configuráveis segundo TARGET.
+
+Revisão 0.6: usar ADR-003/ICD para o reuso RaspDAQ. Base little-endian, SYNC 59 72, STATUS uint8 só CONFIG; códigos e teto de payload MICROHIL preservados. Distinguir recursos observados da referência de extensões de sessão/ACK/CRC/XRCE e de formatos binários propostos. Não reabrir perguntas resolvidas pela inspeção nem afirmar que recursos ausentes existem.

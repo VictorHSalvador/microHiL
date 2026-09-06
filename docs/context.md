@@ -6,7 +6,7 @@ O MICROHIL é a etapa inicial de uma plataforma HiL de baixo custo que poderá e
 
 Primeiro host: máquina Linux Ubuntu 22.04 com ROS 2 Humble, conforme usuário. Alvo posterior: Raspberry Pi 4 de 2 GB. Produto genérico para FMUs FMI 2.0 Co-Simulation, sem planta fixa; núcleo C/FMILibrary, GUI Qt 6/C++ desacoplada e terminal debug. Bulk/libusb e micro-ROS na DAQC são escolhas confirmadas; sua arquitetura conjunta com CH340/protocolo próprio ainda precisa ser fechada. Meta: pelo menos 100 Hz para modelos compatíveis com o orçamento medido, sem garantia universal de tempo real.
 
-O operador importa FMU, escolhe perfil DAQC ou execução sem hardware, configura I/O e execução, inicia/para, acompanha gráficos e inspeciona registros. O hardware troca sinais com o sistema sob teste. Registro e gráficos permanecem desacoplados da simulação. Configuração em binário; logging binário somente de saídas finais por passo; exportação CSV após término, interpretando tipos pela FMU. GUI de baixa prioridade inspirada no Linux Mint; no máximo 10 Hz de renderização. Perfil de DAQC inicial denominado ESP32, com ADC/DAC internos aceitos.
+O operador importa FMU, escolhe perfil DAQC ou execução sem hardware, configura I/O e execução, inicia/para, acompanha gráficos e inspeciona registros. O hardware troca sinais com o sistema sob teste. Registro e gráficos permanecem desacoplados da simulação. Configuração em binário; logging binário somente de saídas finais por passo; exportação CSV após término, interpretando tipos pela FMU. GUI de baixa prioridade inspirada no Linux Mint; no máximo 10 Hz de renderização. Perfil de DAQC inicial denominado ESP32, com ADC/DAC internos e PWM. Aquisição: mundo real → entradas DAQC → USB → host → inputs FMU; host retém último válido ou referência inicial válida do input. Com checkbox, 100 passos inválidos consecutivos por canal encerram em Error. Atuação: outputs FMU → saídas DAQC → mundo real. Streaming sem progresso de leitura confirmado por 60 s exige DISABLE, sem zeramento. Firmware usa dois núcleos, com supervisão desacoplada da aquisição/atuação. Log registra saída bruta da FMU; falha de gravação gera aviso e não interrompe execução.
 
 ## Fronteiras
 
@@ -23,7 +23,7 @@ PIHIL, certificação, novos periféricos sem requisito e exemplos ESP8266/DS18B
 
 ## Estado observado
 
-O commit `c788a4283cf81f17e9a2956ae258487c7931590a` contém sete módulos C, sete headers, CMake, menu terminal, CSV e gnuplot. Não há ROS, firmware, perfil DAQC, GUI Qt ou testes de aceitação implementados. A [avaliação inicial](avaliacao-sdd-2026-09-06.md) detalha as divergências e permanece válida para esse código. Esta revisão incorpora as respostas DEC-001…012, sem corrigir os defeitos de código ali registrados. O usuário condicionou a implementação ao fechamento documental.
+O commit `c788a4283cf81f17e9a2956ae258487c7931590a` contém sete módulos C, sete headers, CMake, menu terminal, CSV e gnuplot. Não há ROS, firmware, perfil DAQC, GUI Qt ou testes de aceitação implementados. A [avaliação inicial](avaliacao-sdd-2026-09-06.md) detalha as divergências e permanece válida para esse código. Esta revisão incorpora as respostas DEC-001…012 e Q-01…09, sem corrigir os defeitos de código ali registrados. O usuário condicionou a implementação ao fechamento documental.
 
 A [auditoria HOST](evidence/audit-2026-09-06/README.md) identificou ausência da dependência FMILibrary na configuração limpa, testou a fila sequencialmente e reproduziu falha de escrita escondida pelo logger. Nenhuma FMU ou hardware foi executado nessa auditoria. A FMU presente tem binário x86-64 e somente outputs, portanto não basta como fixture de entrada nem para demonstrar Raspberry Pi.
 
@@ -41,3 +41,9 @@ A [auditoria HOST](evidence/audit-2026-09-06/README.md) identificou ausência da
 | Informação fornecida | Relato/documento do usuário preservado com origem, sem alegar repetição do ensaio |
 | Proposta | Design ou critério sugerido ainda não confirmado |
 | Pendente | Informação/decisão necessária para o escopo indicado |
+
+## Referência RaspDAQ inspecionada
+
+OT1-HiLInfrastructure está disponível em Projects. Foram lidos serviço/launcher, raspdaq_main, raspdaq_ffs, raspdaq_node e shared_daq_state. Seu padrão de processo único e snapshots imutáveis é reutilizável no design; FunctionFS é do lado dispositivo Linux e seu protocolo difere do MICROHIL. Nenhum serviço foi executado e esse código não valida o ESP32. [Registro estático](evidence/q-review-2026-09-06.md).
+
+Revisão 0.5: leitor USB em thread independente; consumir última atualização antes da inserção FMI; ausência conta timeout separado. Encerrar simulação zera AO/DO/PWM e encerra DATA, enquanto novo Play reaplica outputs iniciais da FMU reinicializada. Aguardar próximo instante da grade fixa após overrun, sem compensar nem alterar passos do modelo; relatório temporal somente no fim. ADC/PWM configuráveis dentro das opções explícitas do TARGET.

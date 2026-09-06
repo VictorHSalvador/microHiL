@@ -1,10 +1,10 @@
 # Arquitetura de software
 
-Revisão 0.2: código atual, decisões confirmadas e detalhes de design propostos. Implementação suspensa até concluir esclarecimentos, conforme usuário. Requisitos em [spec.md](spec.md); decisões não resolvidas em [decisions.md](decisions.md). Não há implementação dos módulos futuros apenas porque aparecem neste documento.
+Revisão 0.6: código atual, decisões confirmadas e detalhes de design propostos. Implementação suspensa até concluir esclarecimentos, conforme usuário. Requisitos em [spec.md](spec.md); decisões não resolvidas em [decisions.md](decisions.md). Não há implementação dos módulos futuros apenas porque aparecem neste documento.
 
 ## ARCH-CORE — Núcleo, FMU e configuração
 
-Preservar `src/fmu_model.c`, `src/rt_simulation.c`, `src/app_config.c` e headers como base. O wrapper já importa FMI 2.0 CS, enumera outputs e encapsula instância. Deve evoluir para validar inputs, tipos, unidades e mapeamento antes de executar. A capacidade de último passo variável precisa ser considerada: o exemplo permite, mas o loader aceita outros modelos. A meta é interpretar qualquer FMU 2.0 CS; Q-08 precisa definir tratamento de capacidades como Pending e tipos String. Não declarar suporte universal enquanto o wrapper os rejeita ou ignora. Formato compatível não comprova binário compatível com CPU nem custo computacional dentro do passo.
+Preservar `src/fmu_model.c`, `src/rt_simulation.c`, `src/app_config.c` e headers como base. O wrapper já importa FMI 2.0 CS, enumera outputs e encapsula instância. Deve evoluir para validar inputs, tipos, unidades e mapeamento antes de executar. A capacidade de último passo variável precisa ser considerada: o exemplo permite, mas o loader aceita outros modelos. A meta é interpretar qualquer FMU 2.0 CS; Q-08 autoriza reconhecer e diagnosticar capacidades não suportadas, como Pending/String quando fora do incremento. Não declarar suporte universal enquanto o wrapper os rejeita ou ignora. Formato compatível não comprova binário compatível com CPU nem custo computacional dentro do passo.
 
 Qt e terminal debug desacoplados do núcleo foram confirmados. Proposta de implementação: separar a orquestração hoje contida em `main.c` em serviço testável, reutilizado por ambos. Um proprietário coordena inicialização, execução, parada e resultado final. Configuração é validada e congelada por execução; controles virtuais chegam por comando e são aplicados na fronteira de ciclo. Nenhum callback GUI/ROS chama a FMU diretamente.
 
@@ -24,41 +24,42 @@ Estados host e estados DAQC são máquinas distintas. Host preserva Idle/Running
 
 | Evento | Comportamento confirmado | Detalhe ainda aberto |
 |---|---|---|
-| Carregar FMU | Botão/diálogo próprio; validar FMI 2.0 CS e analisar nomes/tipos | Capacidades suportadas, Q-08 |
+| Carregar FMU | Botão/diálogo próprio; validar FMI 2.0 CS e analisar nomes/tipos | Matriz de capacidades do incremento; diagnóstico autorizado em Q-08 |
 | Carregar configuração | Outro botão; comparar FMU/DAQ/mapa e parâmetros, listar divergências | Identidade/versão no arquivo, Q-07/Q-09 |
-| Play | Inicializar pela FMU/start e executar com mapa válido | Saída calculada/ausência de start e DAQC antes de configurar, Q-04 |
+| Play | Inicializar FMI com mapa válido; referência inicial válida de input FMU até aquisição válida; DATA somente após Play; ausência de start literal não impede inicialização | Falha de lifecycle produz Error; amostras inválidas seguem F-24 |
 | Running + deadline perdido | Continuar, contar e guardar pior atraso | Agenda posterior, Q-06 |
-| Stop/fim normal/erro | Último valor válido permanece como referência de saída; indicar motivo e permitir novo run | Aplicação elétrica sob link perdido/reset, Q-09 |
-| NaN/Inf/outro inválido | Não enviar valor inválido; usar último aceitável | Definição de faixa após conversão e ausência de qualquer aceitável, Q-04/Q-05 |
-| Mais de 100 inválidos consecutivos + checkbox | Acionar proteção e mensagem GUI no 101º inválido | Pausa automática versus encerramento Error, contador por saída/global e retomada, Q-03 |
+| Stop/fim normal/erro | Zerar saídas físicas e encerrar DATA; preservar registros disponíveis | Falha de entrega deve ser diagnosticada; novo Play reinicializa outputs pela FMU |
+| Aquisição DAQC inválida | Host ignora o bruto inválido e retém último válido no input FMU | Antes do histórico, usar valor inicial válido do input FMU; não zerar atuadores |
+| 100 passos consecutivos de aquisição inválida + checkbox | Terminar em Error no 100º, identificar canais DAQC/inputs FMU afetados e permitir novo Play | Contagem por canal e por passo, não por pacote; válido quebra sequência |
 | Fechar aplicação normalmente | DAQC deve aceitar DISABLE mesmo em STREAMING e liberar fluxo | Prazo/ack e falha na confirmação, Q-09 |
-| Processo morto/reset da DAQC | Não foi definido completamente | Não há garantia de envio de DISABLE por processo morto; retenção após reset depende de política, Q-04/Q-09 |
+| STREAMING sem progresso de leitura host por 60 s | DAQC entra em DISABLE automaticamente, sem etapa de zero | Confirmação cumulativa aprovada; layout, periodicidade e tolerância em Q-09 |
+| Boot/reset DAQC | Não transmitir DATA até Play; reinicializar sessão | Não deduzir estado elétrico da retenção no host; TARGET trata atuadores |
 
-Não há botão de pausa manual requerido. O estado Paused não é inventado até Q-03 resolver a pausa automática solicitada. Ao repetir a simulação, reinicializar lifecycle/configuração e não herdar contadores e resultados sem contrato explícito.
+Não há pausa manual nem automática: Q-03 escolheu Error e novo Play. Ao repetir a simulação, reinicializar lifecycle/configuração e não herdar contadores e resultados sem contrato explícito.
 
-Proposta: manter por saída último valor aceitável e qualidade, separados do valor bruto FMU e do último valor confirmado/aplicado no dispositivo. Uma chamada de escrita bem-sucedida no host não prova atuação física. O escritor final do atuador deve ser único, inclusive na aplicação do valor retido.
+Manter no host, por canal de aquisição, valor bruto/qualidade e último válido utilizado no input FMU. Antes da primeira aquisição válida, usar valor inicial válido desse input. Snapshot deve associar esses dados de modo coerente. Falha de aquisição não manda zero ao mundo real. Outputs FMU e AO/DO/PWM seguem caminho e contrato próprios; não confundir leitura USB com confirmação de atuação.
 
 Diagnósticos próprios e callbacks de erro da FMU são encaminhados à GUI fora do caminho crítico. Terminal só em debug, também por consumidor não crítico; nenhum printf por ciclo. Código legado contém stderr e ainda será corrigido. Mensagens emitidas diretamente por binário externo não são automaticamente controladas pelo flag do aplicativo.
 
-Observação de arquivo: a FMU atual tem 14 outputs e 12 não possuem start explícito no XML (inspeção sem execução). Ler start literal não é suficiente para inicializar todos os modelos. O [schema FMI 2.0.4](https://raw.githubusercontent.com/modelica/fmi-standard/v2.0.4/schema/fmi2ScalarVariable.xsd) distingue inicialização exact/approx/calculated. Proposta: usar valor pós-inicialização quando calculado, sujeito a Q-04.
+Observação de arquivo: a FMU atual tem 14 outputs e 12 não possuem start explícito no XML (inspeção sem execução). Ler start literal não é suficiente para inicializar todos os modelos. O [schema FMI 2.0.4](https://raw.githubusercontent.com/modelica/fmi-standard/v2.0.4/schema/fmi2ScalarVariable.xsd) distingue inicialização exact/approx/calculated. Q-04 confirma permitir inicialização sem start literal; usar valor calculado válido após lifecycle e Play. Erro retornado pela API FMI não pode ser ignorado para continuar doStep.
 
 ## ARCH-TIME — Ciclo e orçamento temporal
 
 Meta confirmada: operar pelo menos a 100 Hz para modelos cujo custo caiba no alvo, sem fixar planta; passo e duração vêm da GUI/terminal. 100 Hz corresponde a 10 ms. Não prometer 100 Hz para toda FMU importável. Ter fixtures de benchmark para ensaio não restringe o produto a uma planta.
 
-Fluxo de design: snapshot consistente → aplicar inputs → um doStep → ler/validar outputs → selecionar último valor aceitável → publicar saída do ciclo → enfileirar uma amostra final por passo → agendamento. Leituras assíncronas/snapshots devem evitar duas esperas sequenciais de comunicação no orçamento; sincronização e validade ainda precisam de Q-06. Saída bruta versus aceita no log ainda Q-07.
+Fluxo de design: receber snapshot DAQC → selecionar/validar candidato por canal e atualizar contador uma vez por passo → usar último válido ou referência inicial válida no input FMU → verificar proteção → aplicar inputs → doStep → ler outputs FMU → publicar atuação conforme contrato próprio → enfileirar outputs para log → agendar. A aquisição USB é assíncrona; não esperar confirmação de leitura dentro do núcleo. O contador e o snapshot exigem trabalho limitado proporcional ao número de canais configurados, sem I/O textual ou alocação por ciclo.
 
-Definições propostas a confirmar: agenda ideal `deadline_n = t0 + (n+1)*h`; atraso de entrega `max(0, entrega_n - deadline_n)` e contagem de ciclos com atraso. Medir também duração de trabalho e atraso de despertar, pois uma tarefa que trabalhou menos de h pode ter sido liberada tarde. Q-06 define se a agenda é mantida para recuperação ou deslocada após perdas. Não pular etapas da FMU silenciosamente.
+Confirmado: grade fixa de liberações no relógio real; preservar h e a sequência do tempo simulado, sem saltar etapas FMI, sem compensar em rajadas e sem deslocar a origem da grade. Se o cálculo atravessar uma liberação, aguardar o próximo instante fixo disponível. Exemplo aprovado: h=10 ms, etapa iniciada em 0 e concluída em 12 ms → próxima etapa em 20 ms. Não iniciar em 12 ms para compensar nem mudar h. O tempo simulado pode ficar atrás do relógio real; não ocultar essa diferença.
 
 | Item | Confirmado ou pendente |
 |---|---|
 | Passo e duração | Configuráveis; positivos/finitos, coerentes com capacidades da FMU |
 | Referência de desempenho | 100 Hz / 10 ms; não é passo fixo obrigatório |
-| Overrun | Continuar; exibir contagem e pior perda, além das estatísticas F-13 |
-| Timeout USB | Máximo 5 ms; Q-06 define por transferência ou troca completa. API configurada não prova limite real sob scheduler |
+| Overrun | Aguardar próximo instante da grade fixa, sem saltar etapas FMI; perdas e pior atraso exibidos após execução |
+| Timeout USB | Máximo 5 ms por transferência, confirmado em Q-06. API configurada não prova limite real sob scheduler |
 | Renderização | Até 10 Hz, desacoplada; frames gráficos podem ser coalescidos sem descartar amostras do log |
-| SCHED_FIFO | Continua requisito; permitir fallback de diagnóstico ainda Q-06 |
-| Idade de entrada/cadência de aquisição | Não derivar do timeout USB nem do teto gráfico; Q-06 |
+| SCHED_FIFO | Obrigatório; verificar retorno e política efetiva. Proposta: falha impede Play HiL, com diagnóstico e sem fallback silencioso |
+| Idade de entrada/cadência de aquisição | Último dado válido reutilizável até fim; valor constante é válido. Cadência de aquisição ainda a dimensionar; 60 s sem leitura host seguem F-27 |
 | Jitter aceitável/duração/carga de ensaio | Detalhar na verificação; limites não vieram do Demo |
 
 Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. Para serial 8N1, se selecionada, 259 bytes em 115200 baud exigem aproximadamente 22,48 ms apenas no fio. É exemplo aritmético, não baud rate adotado ou medição. Maximizar taxa significa medir o maior ajuste estável do caminho completo, não usar taxa nominal USB como prova.
@@ -69,13 +70,13 @@ Coletar médias/máximos de ciclo, FMU e leitura/escrita, contagem de timeouts e
 
 Bulk/libusb e micro-ROS no ESP32 permanecem confirmados. A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. Libusb pode ser parte de acesso direto à ponte, mas precisa de controle/configuração do dispositivo, exclusividade frente ao driver e integração XRCE explicitamente desenhada. Nenhuma dessas partes está implementada.
 
-RaspDAQ foi descrito como serviço com USB/nó ROS e snapshots sob mutex no mesmo processo. Não localizado por busca de nomes nas pastas Projects/Downloads; código não revisado. Esse padrão pode evitar IPC para o estado do serviço, mas não demonstra que o nó ROS substitua o agente exigido pelo cliente micro-ROS no ESP32.
+RaspDAQ foi localizado em Projects/OT1-HiLInfrastructure e inspecionado: raspdaq_main cria uma única SharedDaqState, passada ao runtime FunctionFS e ao nó rclpy. Snapshots imutáveis são substituídos sob RLock; o objeto compartilhado/nó permanece. Reaproveitar ownership, troca de snapshots e coordenação de encerramento, sem copiar endpoints Linux FunctionFS para ESP32. A camada micro-ROS/XRCE continua necessária. [Inspeção estática](evidence/q-review-2026-09-06.md).
 
-Q-01 define agente/transporte e multiplexação ou canal separado para XRCE. O protocolo CONFIG/DATA sozinho transporta I/O, não torna micro-ROS interoperável. Não deixar libusb e agente TTY lerem concorrentemente a mesma porta. NF-06 continua C/libusb até decidir papel de Python; possibilidade de wrapper Python não revoga a camada C por inferência.
+ADR-003 usa a referência para definir dono único e snapshots; E-XRCE no ICD propõe callbacks cliente/agente para a lacuna não coberta pelo RaspDAQ. O protocolo CONFIG/DATA sozinho transporta I/O, não torna micro-ROS interoperável. Não deixar libusb e agente TTY lerem concorrentemente a mesma porta. NF-06 continua C/libusb até decidir papel de Python; possibilidade de wrapper Python não revoga a camada C por inferência.
 
 Proposta: dono único do enlace, demultiplexação no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço. Recriar objeto no serviço não requer recriá-lo por passo na thread C.
 
-Perfil ESP32 é catálogo de recursos com exclusões de função, não soma de todas as capacidades simultâneas. No mapa, DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
+Perfil ESP32 é catálogo de recursos com exclusões de função, não soma de todas as capacidades simultâneas. No mapa, DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO/PWM. O mapa analógico usa volts; DAC converte explicitamente para 0…255. PWM tem frequência e duty próprios, ainda a detalhar. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
 
 ## ARCH-GUI — Interface e persistência
 
@@ -104,14 +105,16 @@ Log binário de saídas finais por passo; conversão CSV após encerramento, uti
 |---|---|---|
 | Configuração validada e mapa | Controlador da execução | Imutável durante run; cópia/configuração versionada |
 | Instância e tempo FMU | Thread de simulação | Chamadas exclusivas durante run; lifecycle serializado |
-| Input snapshot | Adaptador de entrada | Snapshot completo, geração, sequência e qualidade; mecanismo conforme NF-08/DEC-001 |
+| Input snapshot | Adaptador USB host | Candidato bruto, qualidade e último válido por canal, geração/seq coerentes; simulação consome sem esperar I/O |
+| Contadores de aquisição inválida | Thread de simulação no host | Atualiza uma vez por passo por canal; publica erro para consumidor GUI |
+| Progresso de leitura | Thread de comunicação host confirma; firmware supervisiona | Sequência cumulativa por sessão, independente de valor numérico/constância |
 | Comandos virtuais | Controlador aceita; simulação aplica | Publicação limitada e confirmação de aplicação na fronteira de ciclo |
 | Output snapshot | Simulação | Cópias para adaptador de saída/telemetria; sem ponteiros mutáveis para widgets |
 | Filas log/plot | Simulação produz, um consumidor por fila | SPSC enquanto topologia for exatamente essa; não adicionar consumidor à mesma fila sem revisão |
 | Estado público | Controlador da execução | Eventos ordenados e snapshots; erro dos workers propagado |
-| Retenção/estado de saída físico | Supervisor local DAQC | Atuador com escritor final único; não competir PWM/DAC entre tarefas |
+| Atuação física AO/DO/PWM | Tarefa DAQC com escritor final único | Dados somente STREAMING; encerramento aplica zero e cessa DATA; novo run aplica outputs iniciais da FMU |
 
-Históricos gráficos são limitados à janela e à vida do gráfico; renderizações podem ser coalescidas. Fila de log implica integridade de registro e exige Q-07 para reação à falha. Essa diferença precisa de contrato, sem espera ilimitada na simulação. Encerramento deve drenar após observar fim de produção e verificar novamente a fila; erro de escrita/close deve chegar ao resultado agregado.
+Históricos gráficos são limitados à janela e à vida do gráfico; renderizações podem ser coalescidas. Q-07 determina continuar a simulação com aviso e registro incompleto quando o logger falhar. Contabilizar descartes detectáveis; falha de escrita pode deixar persistência final indeterminada, nunca alegar gravação integral. Essa diferença precisa de contrato, sem espera ilimitada na simulação. Encerramento deve drenar após observar fim de produção e verificar novamente a fila; erro de escrita/close deve chegar ao resultado agregado.
 
 No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O histórico de plot tem 5000 amostras. Dimensionar buffers, pilhas e atomics no alvo, com limites que ainda não existem; não inferir orçamento do firmware a partir dessa alocação Linux.
 
@@ -119,7 +122,31 @@ No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O
 
 Firmware ainda ausente; não será implementado antes de fechar os Markdown. ADC/DAC internos confirmados, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos.
 
-Separar aquisição/aplicação, parser, controle de estado, diagnóstico e integração micro-ROS. Tarefas, prioridades, clocks, RTOS e versões serão definidos com o contrato fechado; não copiar ESP32-S3 do Demo. Atualização de saída tem escritor final único e retém último valor aceitável nas condições já definidas. Reset sem último valor e estado elétrico antes da configuração continuam Q-04; desconexão/fechamento abrupto Q-09.
+Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
 
 UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga; prazo e semântica de confirmação são parte do ICD pendente.
 
+
+### Supervisão de leitura e concorrência no firmware
+
+F-27 usa 60 s sem avanço de confirmação cumulativa de leitura pelo host, mecanismo aprovado pelo usuário. Confirmações são emitidas pela thread de comunicação, nunca exigidas sincronicamente por doStep. Progresso é independente do valor lido: NaN lido também comprova leitura, embora alimente a proteção no host. Heartbeat simples não substitui confirmação de DATA.
+
+A tarefa de supervisão deve usar relógio monotônico e espera por evento/prazo, sem busy loop. Parser atualiza progresso por sessão mediante operação curta; supervisor não segura mutex durante I/O e solicita DISABLE por transição coordenada, sem competir com escritor dos atuadores. TX e filas têm capacidade limitada, sem espera ilimitada que paralise RX/CONFIG. Frequência da supervisão e tolerância entre atingir 60 s e concluir DISABLE ainda devem ser dimensionadas. Comparar carga/timing com e sem supervisão e sob fila cheia, incluindo interferência entre núcleos.
+
+ESP-IDF oferece afinidade de tarefas entre os dois núcleos; a documentação consultada não fixa o SDK do projeto. Fonte: [FreeRTOS ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/system/freertos.html). A inferência de design é separar responsabilidades; cumprimento temporal depende de medições.
+
+A thread USB é distinta da thread de simulação. O snapshot usado é o da última atualização anterior à inserção FMI; timeout sem pacote não incrementa invalidade numérica. Proposta de contador: ausência preserva contagem; amostra válida zera, inválida incrementa uma vez por passo.
+
+### Relógio e métricas de perdas — design da regra aprovada
+
+Separar índice k da etapa FMI e índice j da liberação física. Para passo regular h, grade G(j)=T0+j*h; etapa FMI usa t(k)=t_start+k*h. Após terminar, executar próxima etapa na primeira liberação da grade não anterior ao término, sem sobreposição de doStep. Incrementar k somente por etapa concluída; liberações não usadas incrementam contador próprio. Caso de término exatamente na liberação não é perda dessa liberação. Validação do último passo parcial considera capacidades FMI e não deve alterar passos anteriores para compensar atraso.
+
+Deadline da etapa liberada em G(j): D=G(j)+h. Atraso de conclusão=max(0,C−D), incluindo atraso de despertar. Registrar número de etapas entregues após D, número de instantes da grade não utilizados e maior atraso de conclusão, todos separados. Exemplo 0→12 ms, h=10 ms: uma entrega atrasada em 2 ms e uma liberação não usada em 10 ms; próximo doStep em 20 ms. Não somar esses dois contadores e chamar o resultado de etapas FMI descartadas. Se o próprio despertar perder uma liberação, medir o atraso e aplicar a mesma política de grade; não recuperar em rajadas.
+
+Resultados temporais são apresentados após Finished/Stopped/Error, fora da thread crítica; somente contadores/relógio limitados no ciclo. Definir no teste qual fronteira é “entrega” (publicação host versus aplicação física confirmada); não apresentar enqueue USB como atuação observada. A duração configurada refere-se ao tempo do modelo; sem compensação, duração de parede pode aumentar.
+
+## Reuso RaspDAQ — revisão 0.6
+
+Base de serialização no ICD: little-endian, SYNC 59 72, CONFIG request/response 4/5 bytes e STATUS só em CONFIG. DATA base carrega SEQ uint16 e schema posicional fixo N≤256, preservando MID02 nos dois sentidos. A versão integrada precisará de extensões de sessão/ACK/integridade/XRCE: não considerar a base pronta para atuação só porque há vetores.
+
+Reusar ordem de controle antes de DATA e rechecagem de estado no escritor. Não copiar write_full bloqueante, locks durante I/O, prints incondicionais, defaults zero para campos ausentes ou reajuste de origem temporal do TX de referência. Uso de fila de controle reservada e última atualização DATA no MICROHIL preserva o propósito sem herdar bloqueios ilimitados.

@@ -1,6 +1,6 @@
 # Documentação de desenvolvimento do MICROHIL
 
-Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada incremental do software existente. A base está **em elaboração**, com requisitos recebidos preservados e decisões pendentes explícitas. As respostas DEC-001…012 já definem várias escolhas; dúvidas restantes estão identificadas por Q-01…09. Implementação aguarda consolidação documental por instrução explícita do usuário.
+Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada incremental do software existente. A base está **em elaboração**, com requisitos recebidos preservados e decisões pendentes explícitas. As respostas DEC-001…012 e Q-01…09 foram incorporadas; Q-03/Q-04/Q-08 resolvidas e subitens restantes em decisions.md. Implementação aguarda consolidação documental por instrução explícita do usuário.
 
 ## Leitura e responsabilidade
 
@@ -9,7 +9,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [constitution.md](constitution.md) | Regras permanentes, comentários e convenções de código |
 | [context.md](context.md) | Objetivo, fronteiras, fontes e situação do protótipo |
 | [TARGET.md](TARGET.md) | Hardware fornecido, reservas e lacunas do perfil físico |
-| [spec.md](spec.md) | Especificação de trabalho, 53 IDs de origem preservados e cinco derivados, com critérios de aceitação propostos |
+| [spec.md](spec.md) | Especificação de trabalho, 53 IDs de origem preservados e seis derivados, com critérios de aceitação propostos |
 | [architecture.md](architecture.md) | Arquitetura atual, evolução, estados e concorrência |
 | [contracts/interfaces.md](contracts/interfaces.md) | Contratos internos e campos pendentes do ICD host–DAQC |
 | [decisions.md](decisions.md) | Questões, alternativas, impacto e quem precisa responder |
@@ -33,10 +33,20 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Revisão 0.2 incorpora: perfil ESP32/ADC-DAC internos, futuro Pi 4/2 GB, Qt desacoplado/Mint/debug, log binário de saídas/CSV posterior, retenção/checkbox de inválidos, 100 Hz como meta/timeout até 5 ms/continuar após overrun, gráfico até 10 Hz com ciclo de vida definido e novo protocolo 0x7259. Status/bytes/tamanho, micro-ROS/frames próprios, boot e proteção ainda têm dúvidas localizadas. Achados de código anteriores permanecem abertos; nenhum código de produção foi modificado.
+Revisão 0.6 corrige a direção dos sinais: retenção no host dos inputs adquiridos pela DAQC, valor inicial válido do input FMU antes do primeiro dado válido, Error no 100º passo inválido consecutivo por canal com checkbox. F-27 passa a DISABLE após 60 s sem progresso de leitura, comprovado por confirmação cumulativa aprovada, sem zeramento por amostra inválida isolada; término da execução exige zero físico. Firmware deve usar os dois núcleos com supervisão desacoplada e interferência medida. Os detalhes restantes estão em decisions.md; código de produção preservado.
 
 Os testes de aceitação descritos em `spec.md` e na matriz estão **planejados**. Somente o registro HOST de auditoria contém verificações já executadas. CONOPS, apresentação, foto, log bruto esptool e PDF 3.0 referido no texto ESP32 não foram recebidos nesta etapa.
 
 A [revisão documental desta sessão](evidence/document-review-2026-09-06.md) registra a conferência dos IDs, textos, referências e links. Ela valida a estrutura dos documentos, sem aprovar requisitos de produto ou ensaios ainda pendentes.
 
 A [verificação da revisão 0.2](evidence/decision-review-2026-09-06.md) registra as respostas DEC incorporadas, 58 requisitos rastreados e a inspeção adicional de start na FMU. Não contém teste de execução ou validação de hardware.
+
+A [revisão Q e inspeção RaspDAQ](evidence/q-review-2026-09-06.md) registra as fontes consultadas e a verificação documental de 59 requisitos. Nenhum serviço/firmware foi executado nesta revisão.
+
+A [verificação da correção de direção](evidence/direction-review-2026-09-06.md) registra a revisão 0.4. Evidências anteriores são históricas e não substituem os requisitos corrigidos.
+
+Revisão 0.6: leitor USB em thread independente; consumir última atualização antes da inserção FMI; ausência conta timeout separado. Encerrar simulação zera AO/DO/PWM e encerra DATA, enquanto novo Play reaplica outputs iniciais da FMU reinicializada. Aguardar próximo instante da grade fixa após overrun, sem compensar nem alterar passos do modelo; relatório temporal somente no fim. ADC/PWM configuráveis dentro das opções explícitas do TARGET.
+
+[Verificação da revisão 0.5](evidence/config-timing-review-2026-09-06.md): configuração ADC/PWM, encerramento físico e grade fixa sem compensação.
+
+[ADR-003: reuso RaspDAQ](adrs/ADR-003-raspdaq-icd.md) e [verificação 0.6](evidence/raspdaq-icd-review-2026-09-06.md): base do ICD consolidada pela referência, extensões não existentes nela explicitadas.
