@@ -4,7 +4,7 @@ O MICROHIL é a etapa inicial de uma plataforma HiL de baixo custo que poderá e
 
 ## Produto pretendido
 
-Primeiro host: máquina Linux Ubuntu 22.04 com ROS 2 Humble, conforme usuário. Alvo posterior: Raspberry Pi 4 de 2 GB. Produto genérico para FMUs FMI 2.0 Co-Simulation, sem planta fixa; núcleo C/FMILibrary, GUI Qt 6/C++ desacoplada e terminal debug. Bulk/libusb e micro-ROS na DAQC são escolhas confirmadas; sua arquitetura conjunta com CH340/protocolo próprio ainda precisa ser fechada. Meta: pelo menos 100 Hz para modelos compatíveis com o orçamento medido, sem garantia universal de tempo real.
+Primeiro host: máquina Linux Ubuntu 22.04 com ROS 2 Humble, conforme usuário. Alvo posterior: Raspberry Pi 4 de 2 GB. Produto genérico para FMUs FMI 2.0 Co-Simulation, sem planta fixa; núcleo C/FMILibrary, GUI Qt 6/C++ desacoplada e terminal debug. Bulk/libusb e micro-ROS na DAQC compartilham um coordenador único no host; CONFIG/DATA/READ_ACK/XRCE são multiplexados sobre CH340/UART conforme o ICD. Meta: pelo menos 100 Hz para modelos compatíveis com o orçamento medido, sem garantia universal de tempo real.
 
 O operador importa FMU, escolhe perfil DAQC ou execução sem hardware, configura I/O e execução, inicia/para, acompanha gráficos e inspeciona registros. O hardware troca sinais com o sistema sob teste. Registro e gráficos permanecem desacoplados da simulação. Configuração em binário; logging binário somente de saídas finais por passo; exportação CSV após término, interpretando tipos pela FMU. GUI de baixa prioridade inspirada no Linux Mint; no máximo 10 Hz de renderização. Perfil de DAQC inicial denominado ESP32, com ADC/DAC internos e PWM. Aquisição: mundo real → entradas DAQC → USB → host → inputs FMU; host retém último válido ou referência inicial válida do input. Com checkbox, 100 passos inválidos consecutivos por canal encerram em Error. Atuação: outputs FMU → saídas DAQC → mundo real. Streaming sem progresso de leitura confirmado por 60 s exige DISABLE, sem zeramento. Firmware usa dois núcleos, com supervisão desacoplada da aquisição/atuação. Log registra saída bruta da FMU; falha de gravação gera aviso e não interrompe execução.
 
@@ -16,7 +16,7 @@ O operador importa FMU, escolhe perfil DAQC ou execução sem hardware, configur
 | FMU | Modelo e solver de co-simulação; seus tempos internos e dependências precisam ser medidos |
 | DAQC | Aquisição/atuação e resposta local a falhas, segundo perfil a definir |
 | Circuitos externos | Condicionamento, proteção, faixas, drivers e carga; não inferidos do firmware |
-| Operador/equipe | Escolher a FMU de cada execução e seu mapa; definir limites e esclarecer políticas pendentes, sem fixar uma planta de produto |
+| Operador/equipe | Escolher a FMU de cada execução e seu mapa; fornecer hardware/carga para caracterização e aprovar limites de aceitação |
 | Ferramentas de verificação | Testes HOST, simulador, bancada e HIL com resultados distintos |
 
 PIHIL, certificação, novos periféricos sem requisito e exemplos ESP8266/DS18B20 não fazem parte do incremento atual. O Demo é um exemplo do processo SDD, não um módulo do produto.
@@ -47,3 +47,5 @@ A [auditoria HOST](evidence/audit-2026-09-06/README.md) identificou ausência da
 OT1-HiLInfrastructure está disponível em Projects. Foram lidos serviço/launcher, raspdaq_main, raspdaq_ffs, raspdaq_node e shared_daq_state. Seu padrão de processo único e snapshots imutáveis é reutilizável no design; FunctionFS é do lado dispositivo Linux e seu protocolo difere do MICROHIL. Nenhum serviço foi executado e esse código não valida o ESP32. [Registro estático](evidence/q-review-2026-09-06.md).
 
 Revisão 0.5: leitor USB em thread independente; consumir última atualização antes da inserção FMI; ausência conta timeout separado. Encerrar simulação zera AO/DO/PWM e encerra DATA, enquanto novo Play reaplica outputs iniciais da FMU reinicializada. Aguardar próximo instante da grade fixa após overrun, sem compensar nem alterar passos do modelo; relatório temporal somente no fim. ADC/PWM configuráveis dentro das opções explícitas do TARGET.
+
+Revisão 0.7: DATA real-time sem CRC, retransmissão, replay ou sessão no fio. Gap detectável é contabilizado e o pacote novo segue. READ_ACK e XRCE são extensões do MICROHIL, não recursos observados no RaspDAQ.

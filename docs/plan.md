@@ -1,6 +1,6 @@
 # Plano e backlog de retomada
 
-Revisão 0.6. Primeiro concluir os subitens restantes de Q listados em decisions.md e consolidar Markdown; somente então iniciar implementação, inclusive correções HOST, conforme instrução explícita do usuário. Plano de execução posterior, aproveitando fontes existentes. O pacote documental pode estar completo para um incremento HOST sem estar liberado para atuação física. Datas de entrega e duração de sprint não foram definidas.
+Revisão 0.7. Decisões de produto e ICD foram consolidados; concluir a verificação cruzada dos Markdown e, em seguida, iniciar implementação incremental aproveitando as fontes existentes. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
 
 ## TASK-000 — Preparar documentação
 
@@ -16,12 +16,12 @@ Escopo documental: preservar fontes, revisar os 53 IDs de origem e seis derivado
 | TASK-004 | Ciclo/métricas/recursos; F-12/13, NF-03/07/08/28/29/30/31/32 | 100 Hz como referência e timeout até 5 ms; grade fixa confirmada; correlação/aceitação no ICD | Relógio controlado cobre wakeup tardio/overrun/stop; médias/máximos consistentes; resultados de carga identificam ambiente | Planejada; parâmetros finais pendentes |
 | TASK-005 | Migração de estilo e revisão de comentários; NF-26/27 | ADR-001 já confirmada; build/testes disponíveis | Código próprio revisado, declarações/chamadas consistentes, sem renomear terceiros, sem alteração funcional ou quebras cosméticas | Planejada; pode acompanhar módulos já testados |
 | TASK-006 | Perfil abstrato, inputs virtuais e DAQC mock; F-02/03/17/21/23/24/27, NF-14/16/19/31 | Contrato interno e TASK-003; perfil sintético rotulado | Mapa tipado rejeita incompatibilidades; snapshot consistente; mock injeta idade/falha sem ser confundido com bancada | Planejada |
-| TASK-007 | Decisão e implementação host de comunicação; F-18/19/20/23/24/27, NF-02/04/05/06/07/08/18/19/20/21/22/23/24/25/29 | DEC-001/004/006/012 resolvidas e ICD liberado | Serialização/parser ou mensagens conforme decisão, frames fragmentados e recuperação; versões e testes de integração | Bloqueada apenas no transporte definitivo |
-| TASK-008 | Firmware DAQC/perfil físico; F-02/03/18/19/20/27, NF-16/17/19 | TARGET e DEC-003/004/005/006, TASK-007 | Boot, estado seguro, ADC/DAC/digital/PWM, dois núcleos e DISABLE após 60 s sem progresso de leitura, reset, timeout e reconexão em bancada com instrumentos | Bloqueada no hardware/contrato |
+| TASK-007 | Implementação host de comunicação; F-18/19/20/23/24/27, NF-02/04/05/06/07/08/18/19/20/21/22/23/24/25/29 | ICD 0.7 e DEC-001/004/006/012 | Codec/parser, frames fragmentados/agregados, gap sem retransmissão, mailboxes, READ_ACK, multiplexação XRCE e testes de integração | Pronta após G-CONSOLIDACAO |
+| TASK-008 | Firmware DAQC/perfil físico; F-02/03/18/19/20/27, NF-16/17/19 | TARGET, TASK-007 e toolchain/placa disponíveis | Boot, ADC/DAC/digital/PWM, dois núcleos, parser sem CRC, perda sem replay e DISABLE após 60 s sem READ_ACK; bancada com instrumentos | Perfil lógico pronto; validação física depende do hardware |
 | TASK-009 | GUI Qt e persistência; F-04/05/06/07/08/09/10/14/15/16/17/24/25/26, NF-09/10/12/15 | TASK-003/006; Qt/estilo/CSV posterior confirmados; Q-07 para layout do registro | Play/Stop/entradas ao vivo, gráficos individuais até 10 Hz, ticks Y e destruição/reabertura, leitura/escrita/corrupção de perfil/log, falha gráfica isolada | Planejada; detalhes pendentes |
 | TASK-010 | Integração HIL e qualificação; conjunto aplicável | TASK-004/007/008 e alvo instrumentado | Malha física e falhas sob carga, limites aprovados, evidências por requisito, nenhum resultado fictício promovido | Não iniciada |
 
-Tecnicamente TASK-002 tem partes independentes de FMILibrary/hardware, mas não serão implementadas/testadas nesta fase: o usuário pediu concluir os Markdown primeiro. A sequência posterior continua aproveitando essa independência; nenhuma pendência é respondida por suposição.
+TASK-002 tem partes independentes de FMILibrary/hardware e pode iniciar após a verificação documental. Tarefas do transporte seguem o contrato 0.7; valores de baud, MTU, filas e cadência são escolhidos por medição dentro das tarefas, sem inventar resultados.
 
 ## Estratégia de reaproveitamento
 
@@ -40,4 +40,4 @@ RaspDAQ: adaptar ownership do serviço, snapshots sob mutex curto e coordenaçã
 
 Registrar requisito/contrato, alteração, ambiente, comando, resultado observado, limitações e evidência. Atualizar [matriz](traceability.md). Um teste planejado continua sem evidência até execução. Não marcar tarefa de hardware concluída por mocks. Backlog organiza execução; não substitui a especificação nem precisa de um documento adicional de sprint nesta etapa.
 
-Consolidação 0.6: reusar base CONFIG/DATA/schema/ownership encontrada no RaspDAQ; TASK-007/008 dependem da revisão integrada E-SESSION/E-ACK/E-INTEGRITY/E-XRCE, porque a referência não implementa essas garantias. Não copiar o CLI de Sandbox como driver CH340. Arquivos binários são design próprio IF-LOG.
+Consolidação 0.7: reusar CONFIG/DATA/schema/ownership do RaspDAQ. DATA não usa CRC, sessão ou retransmissão; gap segue para o pacote novo. TASK-007/008 acrescentam READ_ACK MID 03 e XRCE MID 04, sem copiar o CLI de Sandbox como driver CH340. Arquivos binários continuam design próprio IF-LOG.

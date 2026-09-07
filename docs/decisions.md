@@ -1,37 +1,37 @@
 # Decisões e esclarecimentos da especificação
 
-Revisão 0.6. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementação suspensa por instrução do usuário até consolidar os Markdown e sanar as lacunas.** Correção mais recente e respostas complementares prevalecem: retenção nos inputs FMU do host, 100 passos com checkbox, confirmação cumulativa e 60 s sem leitura para DISABLE. O histórico de revisões anteriores permanece nas evidências; este documento registra o estado vigente. Detalhes ainda abertos não anulam respostas recebidas.
+Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementação permanece suspensa somente até concluir e verificar esta consolidação dos Markdown.** A revisão vigente acrescenta a decisão de comunicação real-time: sem CRC, retransmissão ou recuperação de DATA; perda detectável é contabilizada e o fluxo segue para o pacote novo. READ_ACK e XRCE usam MIDs próprios. O histórico anterior permanece nas evidências.
 
 ## Decisões de produto
 
 | ID | Confirmado | Detalhamento restante |
 |---|---|---|
-| DEC-001 | Bulk/libusb e micro-ROS no ESP32, USB-C da placa atual; reuso do padrão de estado compartilhado do RaspDAQ | Q-01: transporte XRCE e dono do enlace; Python continua alternativa |
-| DEC-002 | Qt 6/C++ desacoplado, terminal debug, prioridade GUI inferior ao núcleo, aparência Mint; binário e CSV posterior | Q-07: layout de arquivo e representação de inválidos |
-| DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM | Q-05: faixa ADC e configuração PWM |
-| DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; continuar após deadline, contar perdas e pior atraso; USB ≤5 ms por transferência | Q-06: agenda após atraso e identificação de pacote tardio |
-| DEC-005 | Aquisição inválida retida no host, inicial válido do input se necessário; checkbox/100 passos. Encerramento da simulação zera saídas físicas e cessa DATA; restart usa outputs iniciais da FMU reinicializada | Entrega/ordem de encerramento no ICD |
+| DEC-001 | Bulk/libusb e micro-ROS no ESP32, USB-C da placa atual; coordenador único e estado compartilhado do RaspDAQ; XRCE MID 04 | Medir MTU/custo e fixar versão do micro-ROS; Python só fora do núcleo, se útil |
+| DEC-002 | Qt 6/C++ desacoplado, terminal debug, prioridade GUI inferior ao núcleo, aparência Mint; log binário tipado e CSV posterior | Validar UX e formatos por fixtures |
+| DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM configurável | Caracterização elétrica continua requisito de bancada |
+| DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; grade fixa, sem compensação; USB ≤5 ms por transferência | Medir orçamento fim a fim por modelo/perfil |
+| DEC-005 | Aquisição inválida retida no host, inicial válido do input se necessário; checkbox/100 passos. Encerramento zera saídas físicas e cessa DATA; restart reinicializa FMU | Verificar ordem e confirmação em HIL |
 | DEC-006 | Primeiro Linux Ubuntu 22.04/ROS 2 Humble; futuro Raspberry Pi 4/2 GB | Versões reproduzíveis, kernel/arquitetura do Pi e firmware a detalhar no TARGET |
-| DEC-007 | Continuar após overrun; último dado válido pode ser reutilizado até fim da execução; saída constante não é defeito | SCHED_FIFO precisa ser confirmado pelo SO, não presumido; agenda em Q-06 |
-| DEC-008 | Saída da FMU por passo no binário, sem confundir com o input DAQC retido no host; inválidos representados por NaN ou zero; falha de gravação não interrompe simulação, mas gera aviso | Q-07: representação por tipo e metadados |
+| DEC-007 | Continuar após overrun; último dado válido pode ser reutilizado até fim; saída constante não é defeito; SCHED_FIFO deve ser verificado | Falha de configuração impede Play HiL e gera diagnóstico |
+| DEC-008 | Saída da FMU por passo no binário; Real inválido usa NaN, discreto inválido usa zero com bit de qualidade; falha de gravação gera aviso e não interrompe | Formato IF-LOG deve ser testado antes de estabilizar versão 1 |
 | DEC-009 | Sem pausa; gráfico até 10 Hz, ticks Y configuráveis, janela temporal comum deslizante; fechar destrói histórico, reabrir começa dali; configuração e abertura separadas, abertura antes de Play permitida | Sem conflito pendente com proteção: ela termina em Error |
 | DEC-010 | Preservar APIs Qt; convenção própria C++ e estilo definidos na constituição | Nenhuma decisão de toolkit reaberta |
 | DEC-011 | Importação de FMU separada da configuração binária; diagnosticar incompatibilidades específicas com FMU/DAQ/mapa | Pode identificar e informar capacidades não suportadas no incremento inicial (Q-08 resolvida) |
-| DEC-012 | SYNC 0x7259, MID CONFIG=01/DATA=02, COMMAND DISABLE=01/ENABLE=02/STREAMING=03; payload até 256 bytes; STATUS só ESP32→host usa códigos de COMMAND; CONFIG atendido em streaming | Base de bytes/STATUS/comprimento definida por ADR-003; Q-01/Q-06/Q-09: extensões e validação |
+| DEC-012 | SYNC 0x7259; MID CONFIG=01, DATA=02, READ_ACK=03, XRCE=04; COMMAND 01/02/03; payload DATA até 256; STATUS só no CONFIG ESP32→host; sem CRC/retransmissão | Cadência do ACK, MTU XRCE e prazo agregado CONFIG serão medidos |
 
 ## Respostas Q incorporadas
 
 | ID | Resposta recebida e efeito | Situação |
 |---|---|---|
-| Q-01 | Referência disponível em Projects/OT1-HiLInfrastructure; raspdaq_main, raspdaq_ffs, raspdaq_node e shared_daq_state inspecionados estaticamente | Localização resolvida; arquitetura XRCE ainda aberta |
+| Q-01 | Referência disponível em Projects/OT1-HiLInfrastructure; coordenador, RX/TX e shared state inspecionados; MID 04 reserva XRCE sob o mesmo dono do enlace | Resolvida para implementação incremental; custo/MTU dependem da versão escolhida |
 | Q-02 | Consolidado com o serviço RaspDAQ: little-endian, SYNC 59 72; CONFIG 4/5 bytes, STATUS uint8 só no retorno CONFIG; DATA base com SEQ e N fixo por direção | Base definida em ADR-003; não repetir pergunta de ordem/tamanho/STATUS. Extensões têm status próprio |
 | Q-03 | Manter checkbox. 100 passos consecutivos inválidos por canal adquirido → Error e novo Play, identificando todos os canais/input FMU que atingiram limite | Resolvida; substitui limite 101 e escopo de saída da revisão 0.3 |
 | Q-04 | Retenção no host; sem histórico DAQC válido, usar valor inicial válido da entrada FMU. Ausência de start literal não impede inicialização calculada | Resolvida; não inferir zero nos atuadores ou no input sem referência válida |
-| Q-05 | Recursos com reservas/exclusões atendem; incluir PWM; mapa em volts, menção incerta a 0…255 | Inclusão/unidade analógica resolvidas; 0…255 é código DAC, parâmetros ADC/PWM abertos |
-| Q-06 | ≤5 ms por transferência; descartar atrasado, usar último aceitável no passo até fim; não detectar falha por valor constante | Resolvido comportamento de dados; faltam agenda e mecanismo de identificação no fio |
-| Q-07 | Continuar com aviso em falha de log; registrar saída FMU, inválido NaN ou zero; usar identidade fornecida pelo modelo | Política resolvida; falta formalizar tipos/arquivo |
+| Q-05 | Recursos com reservas/exclusões atendem; ADC/PWM configuráveis conforme TARGET; mapa em volts; 0…255 é código DAC | Resolvida para configuração; exatidão/faixa útil exigem bancada |
+| Q-06 | ≤5 ms por transferência; descartar atrasado; último snapshot antes da inserção; grade fixa e SEQ no fio; sem recuperar DATA | Resolvida |
+| Q-07 | Continuar com aviso em falha de log; registrar saída FMU; identidade XML/nome/tipo/valueReference; NaN ou zero com qualidade por tipo | Resolvida em IF-LOG; validar vetores antes de congelar a versão |
 | Q-08 | Identificar e informar capacidades não suportadas | Resolvida; não declarar suporte universal nem restringir silenciosamente |
-| Q-09 | Em STREAMING, 60 s sem progresso de leitura → DISABLE, sem zeramento. Confirmar cumulativamente último pacote lido pelo host, na thread de comunicação; usar os dois núcleos do ESP32 | Limiar e mecanismo aprovados; layout/cadência/tolerância/sessão ainda abertos |
+| Q-09 | Em STREAMING, 60 s sem avanço de leitura → DISABLE, sem zeramento. READ_ACK MID 03 confirma o último SEQ consumido; dois núcleos ESP32 | Layout resolvido; cadência/tolerância são parâmetros medidos, sem sessão no fio |
 
 ## Esclarecimentos técnicos
 
@@ -45,16 +45,16 @@ Revisão 0.6. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 
 **Constância e comunicação:** um valor constante válido não incrementa inválidos e sua leitura comprova progresso. A proteção de aquisição conta passos no host; DISABLE conta 60 s sem progresso de confirmação de leitura no firmware. Um dado NaN efetivamente lido avança a confirmação, mas participa da contagem de invalidade no host. Essa separação evita desabilitar a DAQC apenas porque a medição é constante ou numericamente inválida.
 
-## Lacunas restantes, sem repetir decisões resolvidas
+## Detalhes de implementação e validação
 
-| ID | Decisão necessária | Proposta para revisão, ainda não aprovada |
+| ID | Contrato consolidado | Parâmetro/evidência restante |
 |---|---|---|
-| Q-01 | RaspDAQ tem rclpy/FunctionFS; não tem transporte micro-ROS ESP32 | E-XRCE propõe coordenador/dono único e callbacks no agente e cliente; sem atribuir implementação à referência |
+| Q-01 | RaspDAQ tem rclpy/FunctionFS; MICROHIL acrescenta MID 04 XRCE sob coordenador único | Fixar micro-ROS/agent, MTU, fragmentação, QoS e medir interferência |
 | Q-02 | Consolidado com o serviço RaspDAQ: little-endian, SYNC 59 72; CONFIG 4/5 bytes, STATUS uint8 só no retorno CONFIG; DATA base com SEQ e N fixo por direção | Base definida em ADR-003; não repetir pergunta de ordem/tamanho/STATUS. Extensões têm status próprio |
-| Q-05 | Configuração ADC/PWM pelo usuário autorizada | Opções/limites explicitados no TARGET; validar combinações e recursos antes de Play |
-| Q-06 | Última atualização na inserção FMI; leitor em thread própria; ausência separada. Após atraso, aguardar próximo instante fixo mantendo passo/sequência FMI | Comportamento confirmado; detalhar correlação no ICD e SCHED_FIFO negado |
-| Q-07 | Não há formato binário MICROHIL na referência inspecionada | IF-LOG apresenta design host tipado/versionado; CFG depende do schema integrado. Não copiar dumps/prints como log |
-| Q-09 | Layout/cadência da confirmação cumulativa, sessão, tolerância de supervisão e buffers | Leitura de DATA completo renova progresso mesmo com NaN; ACK duplicado/antigo e heartbeat sem leitura não renovam. 60 s confirmado, sem zeramento e sem armazenamento ilimitado |
+| Q-05 | Configuração ADC/PWM segundo opções/limites do TARGET e validação antes de Play | Caracterizar circuito, faixa útil e combinações no alvo |
+| Q-06 | Última atualização na inserção FMI; leitor próprio; ausência separada; próximo instante fixo; DATA perdido segue adiante | Medir scheduler, timeout e orçamento fim a fim |
+| Q-07 | IF-LOG tipado/versionado; configuração binária separada | Implementar fixtures e vetores de round-trip/corrupção |
+| Q-09 | READ_ACK 5 bytes com SEQ uint16; sem sessão/CRC/retransmissão; 60 s por relógio monotônico | Escolher cadência dentro do orçamento e medir tolerância sob saturação |
 
 Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. Restam detalhamentos do ICD, versões e critérios de ensaio; não são novas perguntas sobre escolhas já confirmadas.
 ## Correção de direção e uso dos núcleos
@@ -71,6 +71,6 @@ Aprovado usar os dois núcleos ESP32 em benefício do timing. Proposta de distri
 4. ADC e PWM configuráveis; opções e restrições explicitadas no TARGET a partir de fontes Espressif.
 5. Confirmado pelo usuário: após cálculo 0→12 ms com passo 10 ms, próxima etapa começa em 20 ms, na grade fixa. Não saltar etapas da FMU, não executar rajadas e não alterar h. Mostrar perdas de deadline, instantes de execução perdidos e worst case após a simulação.
 
-## Resultado da consulta RaspDAQ — revisão 0.6
+## Resultado da consulta RaspDAQ e fechamento 0.7
 
-Não há novas perguntas sobre o que o código já resolve. Base CONFIG/DATA, mapa posicional e ownership consolidados no ICD. Quatro ausências relevantes foram identificadas: sessão/ACK cumulativo, integridade/framing robusto UART, transporte micro-ROS/CH340 e arquivos binários MICROHIL. O ICD propõe adaptações técnicas separadas para essas lacunas, sem chamar propostas de recursos encontrados. [ADR-003](adrs/ADR-003-raspdaq-icd.md) contém resposta item a item e diferenças entre serviço e CLI de Sandbox.
+Base CONFIG/DATA, mapa posicional, sequência, ownership e workers RX/TX foram aproveitados. O MICROHIL acrescenta somente READ_ACK e XRCE para requisitos que a referência não atende. A decisão posterior remove sessão no fio, CRC e recuperação de DATA: o parser descarta o que não puder usar, conta gaps detectáveis e segue para o próximo. [ADR-003](adrs/ADR-003-raspdaq-icd.md) registra a decisão e seus limites.

@@ -31,16 +31,16 @@ Ausência de pinagem não reprova uma correção isolada de logger. Campo de for
 
 - [ ] DEC de transporte resolvida e requisitos afetados revisados.
 - [ ] Perfil físico, pinos, circuitos, unidades, faixas e cargas confirmados.
-- [ ] Layout, versão, sessão, sequência, timeout, estados e erro completos.
+- [ ] Layout, versão de perfil, sequência, timeout, estados e descarte sem retransmissão completos.
 - [ ] SDK/toolchain/firmware e host identificados, incluindo domínio de relógios.
 - [ ] Política elétrica de AO/DO/PWM especificada separadamente da retenção de inputs no host; procedimento de bancada aprovado.
-- [ ] Confirmação cumulativa de leitura/sessão/buffers definidos; DISABLE em 60 s sem progresso, sem presumir observação direta do endpoint pelo ESP32.
+- [ ] READ_ACK e buffers limitados definidos; DISABLE em 60 s sem progresso, sem presumir observação direta do endpoint pelo ESP32.
 
 ## G-TIMING-HIL — Antes de alegar desempenho integrado
 
 - [ ] Passo, jitter, deadline, timeout, duração/carga de teste e limites aprovados.
 - [ ] Medições no alvo e dados brutos identificam scheduler, configuração e instrumentos.
-- [ ] Malha, saturação, dados inválidos/antigos, reset, desconexão e recuperação exercitados.
+- [ ] Malha, saturação, dados inválidos/antigos, gaps, reset e desconexão exercitados; nenhum teste espera replay de DATA.
 - [ ] Interferência da supervisão/comunicação entre os dois núcleos medida sob carga e fila cheia, sem bloqueio ilimitado na aquisição/atuação.
 - [ ] Limitações e resultados reprovados preservados; nenhum dado fictício substitui ensaio.
 

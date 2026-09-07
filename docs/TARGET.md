@@ -40,7 +40,7 @@ Sinais externos de processo, precisão ADC, tensão útil DAC e estado das saíd
 
 ## Topologia de comunicação
 
-Para a placa descrita, o caminho a considerar é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. Bulk/libusb e micro-ROS estão mantidos por DEC-001; falta definir dono da ponte, agente XRCE e coexistência dos frames próprios. O uso de Python para leitura continua possibilidade, não troca aprovada do requisito C/libusb.
+Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. Bulk/libusb e micro-ROS estão mantidos por DEC-001. O coordenador único do host possui o enlace e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. O uso de Python fora do núcleo continua possibilidade, sem substituir a camada C/libusb exigida.
 
 A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial, o que demonstra uma alternativa a avaliar, sem fixar versões ou compatibilidade desta placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/establish-serial-connection.html), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble). Consultadas em 06.09.2026; a página ESP-IDF stable então indicava v6.1, não escolhida como SDK do produto.
 
@@ -73,7 +73,7 @@ O mapa analógico usa volts; DAC converte para código de 8 bits e nunca confund
 
 Uso dos dois núcleos confirmado. Proposta: reservar afinidade da aquisição/atuação em um núcleo e comunicação/supervisão no outro; definir números de CPU e prioridades após inspecionar tarefas/IRQs do SDK escolhido. Memória e periféricos compartilhados ainda podem produzir interferência. Ensaiar carga máxima de comunicação e supervisão concorrentes com o caminho periódico.
 
-A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. A confirmação cumulativa de leitura pelo host foi aprovada como mecanismo para F-27. Não confundir esvaziamento de FIFO UART com consumo pela aplicação. RTS/CTS/conexões não foram confirmados e não substituem por suposição essa confirmação. Layout/cadência do ACK e tolerância de supervisão permanecem no ICD.
+A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. READ_ACK MID 03 confirma cumulativamente o último SEQ DAQC→host consumido pela aplicação. Não confundir esvaziamento de FIFO UART com leitura pela aplicação. RTS/CTS/conexões não foram confirmados e não substituem essa confirmação. A cadência do ACK e a tolerância de supervisão serão dimensionadas e medidas; não há CRC ou retransmissão de DATA.
 
 ## Opções configuráveis do perfil ESP32
 

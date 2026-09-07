@@ -1,6 +1,6 @@
 # Documentação de desenvolvimento do MICROHIL
 
-Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada incremental do software existente. A base está **em elaboração**, com requisitos recebidos preservados e decisões pendentes explícitas. As respostas DEC-001…012 e Q-01…09 foram incorporadas; Q-03/Q-04/Q-08 resolvidas e subitens restantes em decisions.md. Implementação aguarda consolidação documental por instrução explícita do usuário.
+Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada incremental do software existente. As respostas DEC-001…012 e Q-01…09 foram consolidadas; decisões de produto estão registradas e parâmetros dependentes de medição permanecem explícitos. A implementação aguarda somente a verificação cruzada final desta revisão documental.
 
 ## Leitura e responsabilidade
 
@@ -11,8 +11,8 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [TARGET.md](TARGET.md) | Hardware fornecido, reservas e lacunas do perfil físico |
 | [spec.md](spec.md) | Especificação de trabalho, 53 IDs de origem preservados e seis derivados, com critérios de aceitação propostos |
 | [architecture.md](architecture.md) | Arquitetura atual, evolução, estados e concorrência |
-| [contracts/interfaces.md](contracts/interfaces.md) | Contratos internos e campos pendentes do ICD host–DAQC |
-| [decisions.md](decisions.md) | Questões, alternativas, impacto e quem precisa responder |
+| [contracts/interfaces.md](contracts/interfaces.md) | Contratos internos e ICD host–DAQC vigente |
+| [decisions.md](decisions.md) | Decisões confirmadas e parâmetros restantes de implementação/ensaio |
 | [adrs/ADR-001-coding-style.md](adrs/ADR-001-coding-style.md) | Decisão confirmada de nomenclatura e comentários |
 | [adrs/ADR-002-product-decisions.md](adrs/ADR-002-product-decisions.md) | Decisões de produto confirmadas pelas respostas DEC |
 | [plan.md](plan.md) | Backlog ordenado, dependências, tarefas e critérios de conclusão |
@@ -33,7 +33,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Revisão 0.6 corrige a direção dos sinais: retenção no host dos inputs adquiridos pela DAQC, valor inicial válido do input FMU antes do primeiro dado válido, Error no 100º passo inválido consecutivo por canal com checkbox. F-27 passa a DISABLE após 60 s sem progresso de leitura, comprovado por confirmação cumulativa aprovada, sem zeramento por amostra inválida isolada; término da execução exige zero físico. Firmware deve usar os dois núcleos com supervisão desacoplada e interferência medida. Os detalhes restantes estão em decisions.md; código de produção preservado.
+Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
 Os testes de aceitação descritos em `spec.md` e na matriz estão **planejados**. Somente o registro HOST de auditoria contém verificações já executadas. CONOPS, apresentação, foto, log bruto esptool e PDF 3.0 referido no texto ESP32 não foram recebidos nesta etapa.
 
@@ -49,4 +49,6 @@ Revisão 0.6: leitor USB em thread independente; consumir última atualização 
 
 [Verificação da revisão 0.5](evidence/config-timing-review-2026-09-06.md): configuração ADC/PWM, encerramento físico e grade fixa sem compensação.
 
-[ADR-003: reuso RaspDAQ](adrs/ADR-003-raspdaq-icd.md) e [verificação 0.6](evidence/raspdaq-icd-review-2026-09-06.md): base do ICD consolidada pela referência, extensões não existentes nela explicitadas.
+[ADR-003: reuso RaspDAQ](adrs/ADR-003-raspdaq-icd.md) e [verificação 0.6](evidence/raspdaq-icd-review-2026-09-06.md): base do ICD consolidada pela referência; a evidência 0.6 permanece histórica.
+
+Revisão 0.7: DATA real-time sem CRC, retransmissão ou sessão no fio; gaps detectáveis são contados e o pacote novo segue. READ_ACK MID 03 confirma consumo sem solicitar replay; XRCE MID 04 integra micro-ROS sob o mesmo dono do enlace. A [evidência de consolidação 0.7](evidence/realtime-loss-policy-review-2026-09-07.md) registra a verificação documental, sem alegar teste do produto.

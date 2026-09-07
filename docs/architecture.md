@@ -1,6 +1,6 @@
 # Arquitetura de software
 
-Revisão 0.6: código atual, decisões confirmadas e detalhes de design propostos. Implementação suspensa até concluir esclarecimentos, conforme usuário. Requisitos em [spec.md](spec.md); decisões não resolvidas em [decisions.md](decisions.md). Não há implementação dos módulos futuros apenas porque aparecem neste documento.
+Revisão 0.7: código atual, decisões confirmadas e design do ICD consolidado. Implementação suspensa até concluir a revisão dos Markdown, conforme usuário. Requisitos em [spec.md](spec.md); parâmetros de implementação/ensaio restantes em [decisions.md](decisions.md). Não há implementação dos módulos futuros apenas porque aparecem neste documento.
 
 ## ARCH-CORE — Núcleo, FMU e configuração
 
@@ -31,9 +31,9 @@ Estados host e estados DAQC são máquinas distintas. Host preserva Idle/Running
 | Stop/fim normal/erro | Zerar saídas físicas e encerrar DATA; preservar registros disponíveis | Falha de entrega deve ser diagnosticada; novo Play reinicializa outputs pela FMU |
 | Aquisição DAQC inválida | Host ignora o bruto inválido e retém último válido no input FMU | Antes do histórico, usar valor inicial válido do input FMU; não zerar atuadores |
 | 100 passos consecutivos de aquisição inválida + checkbox | Terminar em Error no 100º, identificar canais DAQC/inputs FMU afetados e permitir novo Play | Contagem por canal e por passo, não por pacote; válido quebra sequência |
-| Fechar aplicação normalmente | DAQC deve aceitar DISABLE mesmo em STREAMING e liberar fluxo | Prazo/ack e falha na confirmação, Q-09 |
-| STREAMING sem progresso de leitura host por 60 s | DAQC entra em DISABLE automaticamente, sem etapa de zero | Confirmação cumulativa aprovada; layout, periodicidade e tolerância em Q-09 |
-| Boot/reset DAQC | Não transmitir DATA até Play; reinicializar sessão | Não deduzir estado elétrico da retenção no host; TARGET trata atuadores |
+| Fechar aplicação normalmente | DAQC deve aceitar DISABLE mesmo em STREAMING e liberar fluxo | Prazo agregado de controle será medido |
+| STREAMING sem progresso de leitura host por 60 s | DAQC entra em DISABLE automaticamente, sem etapa de zero | READ_ACK MID 03; cadência e tolerância serão medidas |
+| Boot/reset DAQC | Não transmitir DATA até Play; limpar mailboxes e sequências | Não deduzir estado elétrico da retenção no host; TARGET trata atuadores |
 
 Não há pausa manual nem automática: Q-03 escolheu Error e novo Play. Ao repetir a simulação, reinicializar lifecycle/configuração e não herdar contadores e resultados sem contrato explícito.
 
@@ -62,7 +62,7 @@ Confirmado: grade fixa de liberações no relógio real; preservar h e a sequên
 | Idade de entrada/cadência de aquisição | Último dado válido reutilizável até fim; valor constante é válido. Cadência de aquisição ainda a dimensionar; 60 s sem leitura host seguem F-27 |
 | Jitter aceitável/duração/carga de ensaio | Detalhar na verificação; limites não vieram do Demo |
 
-Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. Para serial 8N1, se selecionada, 259 bytes em 115200 baud exigem aproximadamente 22,48 ms apenas no fio. É exemplo aritmético, não baud rate adotado ou medição. Maximizar taxa significa medir o maior ajuste estável do caminho completo, não usar taxa nominal USB como prova.
+Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. Para serial 8N1, se selecionada, 261 bytes em 115200 baud exigem aproximadamente 22,66 ms apenas no fio. É exemplo aritmético, não baud rate adotado ou medição. Maximizar taxa significa medir o maior ajuste estável do caminho completo, não usar taxa nominal USB como prova.
 
 Coletar médias/máximos de ciclo, FMU e leitura/escrita, contagem de timeouts e pior atraso para apresentação final. Esses agregados ficam separados do stream binário de saídas. Escopo exato de persistência de metadados está em IF-LOG. Não fazer I/O textual/disco/GUI/ROS síncrono no ciclo, nem alocar snapshots Python na thread crítica C por analogia com RaspDAQ.
 
@@ -72,9 +72,9 @@ Bulk/libusb e micro-ROS no ESP32 permanecem confirmados. A USB-C da placa liga h
 
 RaspDAQ foi localizado em Projects/OT1-HiLInfrastructure e inspecionado: raspdaq_main cria uma única SharedDaqState, passada ao runtime FunctionFS e ao nó rclpy. Snapshots imutáveis são substituídos sob RLock; o objeto compartilhado/nó permanece. Reaproveitar ownership, troca de snapshots e coordenação de encerramento, sem copiar endpoints Linux FunctionFS para ESP32. A camada micro-ROS/XRCE continua necessária. [Inspeção estática](evidence/q-review-2026-09-06.md).
 
-ADR-003 usa a referência para definir dono único e snapshots; E-XRCE no ICD propõe callbacks cliente/agente para a lacuna não coberta pelo RaspDAQ. O protocolo CONFIG/DATA sozinho transporta I/O, não torna micro-ROS interoperável. Não deixar libusb e agente TTY lerem concorrentemente a mesma porta. NF-06 continua C/libusb até decidir papel de Python; possibilidade de wrapper Python não revoga a camada C por inferência.
+ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A transação micro-ROS de perfil ocorre fora de STREAMING, é idempotente e precisa confirmar o hash antes de atuar. Não deixar libusb e agente TTY lerem concorrentemente a mesma porta. NF-06 continua C/libusb; um wrapper Python não revoga a camada C por inferência.
 
-Proposta: dono único do enlace, demultiplexação no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço. Recriar objeto no serviço não requer recriá-lo por passo na thread C.
+Design vigente: dono único do enlace, demultiplexação CONFIG/DATA/READ_ACK/XRCE no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. DATA usa mailbox de última atualização, sem fila crescente nem retransmissão. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço.
 
 Perfil ESP32 é catálogo de recursos com exclusões de função, não soma de todas as capacidades simultâneas. No mapa, DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO/PWM. O mapa analógico usa volts; DAC converte explicitamente para 0…255. PWM tem frequência e duty próprios, ainda a detalhar. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
 
@@ -107,7 +107,7 @@ Log binário de saídas finais por passo; conversão CSV após encerramento, uti
 | Instância e tempo FMU | Thread de simulação | Chamadas exclusivas durante run; lifecycle serializado |
 | Input snapshot | Adaptador USB host | Candidato bruto, qualidade e último válido por canal, geração/seq coerentes; simulação consome sem esperar I/O |
 | Contadores de aquisição inválida | Thread de simulação no host | Atualiza uma vez por passo por canal; publica erro para consumidor GUI |
-| Progresso de leitura | Thread de comunicação host confirma; firmware supervisiona | Sequência cumulativa por sessão, independente de valor numérico/constância |
+| Progresso de leitura | Thread de comunicação host envia READ_ACK; firmware supervisiona | Último SEQ lido no STREAMING atual, independente de valor numérico/constância |
 | Comandos virtuais | Controlador aceita; simulação aplica | Publicação limitada e confirmação de aplicação na fronteira de ciclo |
 | Output snapshot | Simulação | Cópias para adaptador de saída/telemetria; sem ponteiros mutáveis para widgets |
 | Filas log/plot | Simulação produz, um consumidor por fila | SPSC enquanto topologia for exatamente essa; não adicionar consumidor à mesma fila sem revisão |
@@ -124,14 +124,14 @@ Firmware ainda ausente; não será implementado antes de fechar os Markdown. ADC
 
 Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
 
-UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga; prazo e semântica de confirmação são parte do ICD pendente.
+UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE periódico não podem bloquear o caminho de CONFIG.
 
 
 ### Supervisão de leitura e concorrência no firmware
 
 F-27 usa 60 s sem avanço de confirmação cumulativa de leitura pelo host, mecanismo aprovado pelo usuário. Confirmações são emitidas pela thread de comunicação, nunca exigidas sincronicamente por doStep. Progresso é independente do valor lido: NaN lido também comprova leitura, embora alimente a proteção no host. Heartbeat simples não substitui confirmação de DATA.
 
-A tarefa de supervisão deve usar relógio monotônico e espera por evento/prazo, sem busy loop. Parser atualiza progresso por sessão mediante operação curta; supervisor não segura mutex durante I/O e solicita DISABLE por transição coordenada, sem competir com escritor dos atuadores. TX e filas têm capacidade limitada, sem espera ilimitada que paralise RX/CONFIG. Frequência da supervisão e tolerância entre atingir 60 s e concluir DISABLE ainda devem ser dimensionadas. Comparar carga/timing com e sem supervisão e sob fila cheia, incluindo interferência entre núcleos.
+A tarefa de supervisão deve usar relógio monotônico e espera por evento/prazo, sem busy loop. Parser atualiza progresso quando READ_ACK avança no STREAMING atual; supervisor não segura mutex durante I/O e solicita DISABLE por transição coordenada, sem competir com escritor dos atuadores. TX usa mailboxes/filas limitadas, sem espera que paralise RX/CONFIG. Frequência da supervisão e tolerância entre atingir 60 s e concluir DISABLE devem ser dimensionadas. Comparar carga/timing com e sem supervisão e sob saturação, incluindo interferência entre núcleos.
 
 ESP-IDF oferece afinidade de tarefas entre os dois núcleos; a documentação consultada não fixa o SDK do projeto. Fonte: [FreeRTOS ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/system/freertos.html). A inferência de design é separar responsabilidades; cumprimento temporal depende de medições.
 
@@ -145,8 +145,8 @@ Deadline da etapa liberada em G(j): D=G(j)+h. Atraso de conclusão=max(0,C−D),
 
 Resultados temporais são apresentados após Finished/Stopped/Error, fora da thread crítica; somente contadores/relógio limitados no ciclo. Definir no teste qual fronteira é “entrega” (publicação host versus aplicação física confirmada); não apresentar enqueue USB como atuação observada. A duração configurada refere-se ao tempo do modelo; sem compensação, duração de parede pode aumentar.
 
-## Reuso RaspDAQ — revisão 0.6
+## Reuso RaspDAQ — revisão 0.7
 
-Base de serialização no ICD: little-endian, SYNC 59 72, CONFIG request/response 4/5 bytes e STATUS só em CONFIG. DATA base carrega SEQ uint16 e schema posicional fixo N≤256, preservando MID02 nos dois sentidos. A versão integrada precisará de extensões de sessão/ACK/integridade/XRCE: não considerar a base pronta para atuação só porque há vetores.
+Base de serialização no ICD: little-endian, SYNC 59 72, CONFIG request/response 4/5 bytes e STATUS só em CONFIG. DATA carrega SEQ uint16 e schema posicional fixo N≤256, preservando MID 02 nos dois sentidos. Não há CRC, retransmissão ou sessão no fio. READ_ACK usa MID 03; XRCE usa MID 04 com entrega best effort no caminho periódico.
 
-Reusar ordem de controle antes de DATA e rechecagem de estado no escritor. Não copiar write_full bloqueante, locks durante I/O, prints incondicionais, defaults zero para campos ausentes ou reajuste de origem temporal do TX de referência. Uso de fila de controle reservada e última atualização DATA no MICROHIL preserva o propósito sem herdar bloqueios ilimitados.
+Reusar ordem de controle antes de DATA, rechecagem de estado no escritor, snapshots e sequência. Não copiar write_full bloqueante, locks durante I/O, prints incondicionais, defaults zero para campos ausentes ou reajuste de origem temporal do TX de referência. Controle reservado e mailbox de última atualização DATA preservam o fluxo real-time; perda detectada é contabilizada e o pacote novo segue.

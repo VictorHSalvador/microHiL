@@ -45,3 +45,5 @@ Não iniciar atuação física com perfil incompleto. Boot, reset, comunicação
 Registrar decisões confirmadas e impacto nos IDs. Propostas podem orientar análise e mocks, sem se transformar em contrato físico aprovado. Priorizar correções funcionais e reuso antes de refatorações extensas. O repositório deve ser a referência durável; conversas adicionam decisões que precisam ser refletidas aqui.
 
 Revisão 0.5: leitor USB em thread independente; consumir última atualização antes da inserção FMI; ausência conta timeout separado. Encerrar simulação zera AO/DO/PWM e encerra DATA, enquanto novo Play reaplica outputs iniciais da FMU reinicializada. Aguardar próximo instante da grade fixa após overrun, sem compensar nem alterar passos do modelo; relatório temporal somente no fim. ADC/PWM configuráveis dentro das opções explícitas do TARGET.
+
+Revisão 0.7: comunicação DATA é best effort, sem CRC ou recuperação de pacote. Não adicionar retransmissão, replay ou fila crescente ao caminho de tempo real. CONFIG/READ_ACK/XRCE permanecem separados e não podem bloquear a simulação.
