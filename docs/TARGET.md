@@ -19,6 +19,12 @@ Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponi
 | Host auditado | Ubuntu 22.04.5, x86-64, kernel 6.8.0-138-generic | Não representa o alvo Raspberry Pi |
 | Software alvo | ROS 2 Humble, FMILibrary, Qt 6 conforme requisitos | Fixar versões/revisões, toolchain, ESP-IDF, micro-ROS e RTOS efetivos |
 
+## Evidência do host de build
+
+Em 07.09.2026, a TASK-001 foi executada em Ubuntu 22.04 com GCC 11.4.0 e CMake disponível, no diretório `/home/linuxvh/Projects/microHiL`; cada build usou um diretório temporário limpo em `/tmp`. A FMILibrary oficial usada para o runner foi a 3.0.4, na revisão fixa `4a4b21ec10a632b2768a604c2330c54204919644`. O registro completo, inclusive os comandos e limitações, está em [host-build-foundation-2026-09-07.md](evidence/host-build-foundation-2026-09-07.md).
+
+Esse host de build não representa nem qualifica o Raspberry Pi 4. A instalação externa exercitada em `/home/linuxvh/Projects/asturian-software/dev/external/include` e `/home/linuxvh/Projects/asturian-software/release/external/lib/libfmilib.a` comprovou somente a rota explícita de configuração sem download: sua versão não foi comprovada e não é baseline do produto.
+
 ## Recursos e reservas para planejamento
 
 O documento recebido lista 25 GPIOs expostos: 21 capazes de saída e quatro somente entrada. Isso não autoriza 25 canais livres simultâneos. A tabela abaixo preserva capacidades e restrições, sem atribuir nomes de canais do produto.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# executar-tarefas.sh — gerado por `onp-spec plano host-build-foundation` em 2026-09-08 00:20
+# executar-tarefas.sh — gerado por `onp-spec plano host-build-foundation` em 2026-09-08 00:41
 # NÃO edite à mão: mudou tasks.md ou a config, regenere o plano.
 #
 # uso:
@@ -14,7 +14,7 @@
 set -u
 set -o pipefail
 
-RUN_ID='microHiL-host-build-foundation-mtrxb8wb'
+RUN_ID='microHiL-host-build-foundation-mtry2itc'
 FEATURE='host-build-foundation'
 BASE_BRANCH='spec/host-build-foundation'
 ENGINE='/home/linuxvh/.agents/skills/onp-spec-driven/scripts/onp-spec.mjs'
@@ -168,70 +168,6 @@ iniciar_resumos() {
   trap 'parar_resumos; node "$ENGINE" resumo "$FEATURE" --gravar >/dev/null 2>&1 || true' EXIT
 }
 
-# ── sequencial T-002 (ordem do tasks.md) ──
-executar_seq_T_002() {
-  info 'sequencial T-002 — Separar o build independente e integrar a dependência fixa'
-  if rodar_tarefa seq 'T-002' 'Você executa UMA tarefa da feature "host-build-foundation" (fluxo onp-spec, spec-anchored).
-Leia primeiro: .spec/features/host-build-foundation/spec.md, .spec/features/host-build-foundation/tasks.md e .spec/constituicao.md.
-
-Sua tarefa (somente ela):
-T-002 — "Separar o build independente e integrar a dependência fixa"
-  critérios/refs: AC-007 (O build independente configura em diretório limpo), AC-008 (Os componentes independentes compilam com os avisos do projeto), AC-010 (A ausência da dependência é informada somente quando necessária), AC-011 (A versão oficial selecionada é imutável para o build), AC-012 (Uma instalação explícita continua suportada)
-  arquivos permitidos (e seus testes): CMakeLists.txt, cmake/fmilib.cmake
-  mensagem de commit: "T-002 host-build-foundation: Separar o build independente e integrar a dependência fixa"
-
-Regras inegociáveis:
-- Todo critério de aceite referenciado vira teste com @spec:AC-xxx no título.
-- NUNCA enfraqueça, pule (skip/todo) ou apague um teste para passar — teste pulado não é prova e o audit acusa.
-- Rode os testes localmente com `node test/sdd-versioning.spec.test.js` até passarem.
-- NÃO edite tasks.md, NÃO rode onp-spec verify/audit e NÃO toque em outras tarefas — o orquestrador cuida disso.
-- Ao final de CADA tarefa: `git add` só no que você tocou e um commit próprio.' 'gpt-5.6-terra' high >> "$LOG_DIR/seq.log" 2>&1; then
-    # commit de segurança se o agente esqueceu (rastreabilidade > perfeição)
-    if [ -n "$(git status --porcelain)" ]; then
-      git add -A && git commit -q -m 'T-002 host-build-foundation: Separar o build independente e integrar a dependência fixa (auto-commit do plano)'
-    fi
-    marcar_concluidas T-002
-    verde "✔ T-002 concluída"
-    return 0
-  fi
-  vermelho "✘ T-002 falhou (log: $LOG_DIR/seq.log)"
-  amarelo "  reexecute só ela: bash .spec/features/host-build-foundation/executar-tarefas.sh --seq T-002"
-  FALHAS="$FALHAS T-002"
-  return 1
-}
-
-# ── sequencial T-003 (ordem do tasks.md) ──
-executar_seq_T_003() {
-  info 'sequencial T-003 — Criar o harness CTest e os testes da fila'
-  if rodar_tarefa seq 'T-003' 'Você executa UMA tarefa da feature "host-build-foundation" (fluxo onp-spec, spec-anchored).
-Leia primeiro: .spec/features/host-build-foundation/spec.md, .spec/features/host-build-foundation/tasks.md e .spec/constituicao.md.
-
-Sua tarefa (somente ela):
-T-003 — "Criar o harness CTest e os testes da fila"
-  critérios/refs: AC-007 (O build independente configura em diretório limpo), AC-008 (Os componentes independentes compilam com os avisos do projeto), AC-009 (Os testes HOST são descobertos e executados)
-  arquivos permitidos (e seus testes): CMakeLists.txt, tests/CMakeLists.txt, tests/test_sample_queue.c, test/run_spec_tests.js, onpspec.config.json
-  mensagem de commit: "T-003 host-build-foundation: Criar o harness CTest e os testes da fila"
-
-Regras inegociáveis:
-- Todo critério de aceite referenciado vira teste com @spec:AC-xxx no título.
-- NUNCA enfraqueça, pule (skip/todo) ou apague um teste para passar — teste pulado não é prova e o audit acusa.
-- Rode os testes localmente com `node test/sdd-versioning.spec.test.js` até passarem.
-- NÃO edite tasks.md, NÃO rode onp-spec verify/audit e NÃO toque em outras tarefas — o orquestrador cuida disso.
-- Ao final de CADA tarefa: `git add` só no que você tocou e um commit próprio.' 'gpt-5.6-terra' high >> "$LOG_DIR/seq.log" 2>&1; then
-    # commit de segurança se o agente esqueceu (rastreabilidade > perfeição)
-    if [ -n "$(git status --porcelain)" ]; then
-      git add -A && git commit -q -m 'T-003 host-build-foundation: Criar o harness CTest e os testes da fila (auto-commit do plano)'
-    fi
-    marcar_concluidas T-003
-    verde "✔ T-003 concluída"
-    return 0
-  fi
-  vermelho "✘ T-003 falhou (log: $LOG_DIR/seq.log)"
-  amarelo "  reexecute só ela: bash .spec/features/host-build-foundation/executar-tarefas.sh --seq T-003"
-  FALHAS="$FALHAS T-003"
-  return 1
-}
-
 # ── sequencial T-004 (ordem do tasks.md) ──
 executar_seq_T_004() {
   info 'sequencial T-004 — Documentar, evidenciar e rastrear a TASK-001'
@@ -241,13 +177,13 @@ Leia primeiro: .spec/features/host-build-foundation/spec.md, .spec/features/host
 Sua tarefa (somente ela):
 T-004 — "Documentar, evidenciar e rastrear a TASK-001"
   critérios/refs: AC-010 (A ausência da dependência é informada somente quando necessária), AC-011 (A versão oficial selecionada é imutável para o build), AC-012 (Uma instalação explícita continua suportada), AC-013 (A documentação permite repetir os builds), AC-014 (O SDD reflete o estado observado)
-  arquivos permitidos (e seus testes): README.md, docs/README.md, docs/TARGET.md, docs/plan.md, docs/tasks/TASK-001.md, docs/traceability.md, docs/quality-gates.md, docs/sdd-versions.md, docs/evidence/host-build-foundation-2026-09-07.md, .spec/features/host-build-foundation/spec.md, .spec/features/host-build-foundation/tasks.md
+  arquivos permitidos (e seus testes): README.md, docs/README.md, docs/TARGET.md, docs/plan.md, docs/tasks/TASK-001.md, docs/traceability.md, docs/quality-gates.md, docs/sdd-versions.md, docs/evidence/host-build-foundation-2026-09-07.md, .spec/features/host-build-foundation/spec.md, .spec/features/host-build-foundation/tasks.md, test/sdd-versioning.spec.test.js, onpspec.config.json
   mensagem de commit: "T-004 host-build-foundation: Documentar, evidenciar e rastrear a TASK-001"
 
 Regras inegociáveis:
 - Todo critério de aceite referenciado vira teste com @spec:AC-xxx no título.
 - NUNCA enfraqueça, pule (skip/todo) ou apague um teste para passar — teste pulado não é prova e o audit acusa.
-- Rode os testes localmente com `node test/sdd-versioning.spec.test.js` até passarem.
+- Rode os testes localmente com `node test/run_spec_tests.js` até passarem.
 - NÃO edite tasks.md, NÃO rode onp-spec verify/audit e NÃO toque em outras tarefas — o orquestrador cuida disso.
 - Ao final de CADA tarefa: `git add` só no que você tocou e um commit próprio.' 'gpt-5.6-terra' high >> "$LOG_DIR/seq.log" 2>&1; then
     # commit de segurança se o agente esqueceu (rastreabilidade > perfeição)
@@ -317,16 +253,12 @@ executar_tudo() {
   iniciar_resumos
   info "logs em: $LOG_DIR"
   info "resumo geral de andamento: a cada 1 min aqui no terminal (e via: onp-spec resumo)"
-  executar_seq_T_002 || true
-  executar_seq_T_003 || true
   executar_seq_T_004 || true
   encerrar tudo
 }
 
 listar() {
   echo "execução: $RUN_ID (feature $FEATURE, branch $BASE_BRANCH)"
-  echo "  seq       T-002 (sequencial)"
-  echo "  seq       T-003 (sequencial)"
   echo "  seq       T-004 (sequencial)"
   echo
   echo "reexecutar uma faixa:    --faixa <id>"
@@ -362,8 +294,6 @@ case "$MODO" in
     esac ;;
   seq)
     case "$ALVO" in
-      T-002) evento --tipo inicio --escopo "seq:T-002"; iniciar_resumos; executar_seq_T_002 || true; encerrar "seq:T-002" ;;
-      T-003) evento --tipo inicio --escopo "seq:T-003"; iniciar_resumos; executar_seq_T_003 || true; encerrar "seq:T-003" ;;
       T-004) evento --tipo inicio --escopo "seq:T-004"; iniciar_resumos; executar_seq_T_004 || true; encerrar "seq:T-004" ;;
       *) falhar "tarefa sequencial desconhecida: '$ALVO' — veja as disponíveis com --listar" ;;
     esac ;;

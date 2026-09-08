@@ -1,6 +1,6 @@
 # Plano e backlog de retomada
 
-Revisão 0.7. Decisões de produto e ICD foram consolidados; concluir a verificação cruzada dos Markdown e, em seguida, iniciar implementação incremental aproveitando as fontes existentes. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
+Baseline 0.7.2. Decisões de produto e ICD foram consolidados; a TASK-001 concluiu a fundação de build HOST com evidência limitada ao host. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
 
 ## TASK-000 — Preparar documentação
 
@@ -10,7 +10,7 @@ Escopo documental: preservar fontes, revisar os 53 IDs de origem e seis derivado
 
 | Tarefa | Entrega e requisitos | Dependências | Verificação/critério de pronto | Estado |
 |---|---|---|---|---|
-| TASK-001 | Build reproduzível e harness HOST; NF-01/11/13/18 | Versão/origem FMILibrary a identificar; sem hardware | Build limpo e versões registradas, testes HOST descobertos; falha de integração declarada se dependência faltar | Preparada em [ficha](tasks/TASK-001.md); não executada |
+| TASK-001 | Build reproduzível e harness HOST; NF-01/11/13/18 | Sem hardware; instalação externa requer comprovação de versão pelo integrador | Build limpo independente, CTest com três testes, diagnóstico sem dependência e runner compilado com FMILibrary oficial fixa e instalação externa | Concluída e auditada em [ficha](tasks/TASK-001.md) e [evidência](evidence/host-build-foundation-2026-09-07.md); sem execução de FMU ou qualificação de produto |
 | TASK-002 | Sink binário, fila, CSV posterior e resultado; F-07/09/11/12/22/25/26, NF-30 | Contrato de erro independente do formato; DEC-008 para política operacional | Falha de log mantém run com aviso de incompletude; erros abertura/escrita/close visíveis; última amostra preservada sob interleaving controlado; ordem e contador sob concorrência | Planejada; correções HOST independentes |
 | TASK-003 | Validação, FMU, retenção de inputs DAQC no host, proteção por passo e estados; F-01/05/06/07/08/09/21/23/24/25, NF-14 | TASK-001 para integração; DEC-011 para fixtures/suporte | Inputs inválidos rejeitados antes de threads, initialize/run/stop/restart/error e outputs iniciais/zero de encerramento testados, sem sucesso de zero passos por NaN | Planejada |
 | TASK-004 | Ciclo/métricas/recursos; F-12/13, NF-03/07/08/28/29/30/31/32 | 100 Hz como referência e timeout até 5 ms; grade fixa confirmada; correlação/aceitação no ICD | Relógio controlado cobre wakeup tardio/overrun/stop; médias/máximos consistentes; resultados de carga identificam ambiente | Planejada; parâmetros finais pendentes |

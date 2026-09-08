@@ -9,10 +9,19 @@
     "__tests__/**"
   ],
   "srcGlobs": [
+    "CMakeLists.txt",
+    "cmake/**",
+    "README.md",
     "docs/sdd-versions.md",
     "docs/README.md",
     "docs/spec.md",
+    "docs/TARGET.md",
+    "docs/plan.md",
+    "docs/tasks/TASK-001.md",
     "docs/traceability.md",
-    "docs/quality-gates.md"
+    "docs/quality-gates.md",
+    "docs/evidence/host-build-foundation-2026-09-07.md",
+    ".spec/features/host-build-foundation/spec.md",
+    ".spec/features/host-build-foundation/tasks.md"
   ]
 }

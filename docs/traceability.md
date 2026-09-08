@@ -1,8 +1,8 @@
 # Matriz de rastreabilidade
 
-Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.1](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). Decisões confirmadas não alteram o estado de implementação: fontes continuam no estado auditado em `c788a4283cf81f17e9a2956ae258487c7931590a`.
+Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.2](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A TASK-001 avançou somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, concorrência real ou deadlines.
 
-I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Todos os V-* permanecem planejados. Evidências históricas não aprovam as exigências revisadas nem foram executadas novamente.
+I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; a evidência da TASK-001 demonstra apenas build e testes HOST delimitados.
 
 | Requisito | Design/contrato | Tarefa | Código observado | Estado | Teste planejado / ambiente | Evidência disponível |
 |---|---|---|---|---|---|---|
@@ -33,7 +33,7 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-25 | ARCH-STATE / ARCH-LOG | TASK-002, TASK-003, TASK-009 | src/main.c e wrapper: terminal sem gate debug | P | V-F-25 / HOST + GUI | Sem execução |
 | REQ-F-26 | ARCH-LOG / IF-LOG | TASK-002, TASK-009 | Não implementado | A | V-F-26 / HOST + GUI | Sem execução |
 | REQ-F-27 | ARCH-FW / IF-READ-PROGRESS | TASK-006, TASK-007, TASK-008, TASK-010 | Não implementado | A | V-F-27 / HOST + bancada/HIL | Sem execução; READ_ACK definido, cadência/tolerância dependem de medição |
-| REQ-NF-01 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | P | V-NF-01 / HOST + alvo | [EV-AUD-01](evidence/audit-2026-09-06/README.md): configuração integral bloqueada |
+| REQ-NF-01 | ARCH-CORE | TASK-001 | Build HOST independente e runner compilados em Ubuntu 22.04 | P | V-NF-01 / HOST + alvo | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): host demonstrado; Raspberry Pi não validado |
 | REQ-NF-02 | ARCH-IO | TASK-007 | Não implementado | A | V-NF-02 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-03 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-03 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-04 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-04 / HOST + alvo | Sem execução do caso de aceitação |
@@ -43,14 +43,14 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-NF-08 | ARCH-IO / IF-SAMPLE | TASK-004, TASK-007 | Não implementado | A | V-NF-08 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-09 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-NF-09 / GUI + alvo | Sem execução do caso de aceitação |
 | REQ-NF-10 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-NF-10 / HOST + alvo | Sem execução do caso de aceitação |
-| REQ-NF-11 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | I | V-NF-11 / HOST | Inspeção das fontes C; build integral pendente |
+| REQ-NF-11 | ARCH-CORE | TASK-001 | Componentes HOST e `fmu_rt_runner` em C compilados | P | V-NF-11 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): compilação, sem execução de FMU |
 | REQ-NF-12 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-NF-12 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-NF-13 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | I | V-NF-13 / HOST | [EV-AUD-01](evidence/audit-2026-09-06/README.md): configuração integral bloqueada |
+| REQ-NF-13 | ARCH-CORE | TASK-001 | Runner compilado com FMILibrary 3.0.4/revisão fixa e instalação explícita | P | V-NF-13 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): sem fixture ou execução de FMU; artefato externo sem versão comprovada |
 | REQ-NF-14 | ARCH-CORE / IF-CORE | TASK-003, TASK-006 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-NF-14 / HOST | Sem execução do caso de aceitação |
 | REQ-NF-15 | ARCH-CORE / ARCH-IO / ARCH-GUI | TASK-003, TASK-007, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-NF-15 / HOST | Sem execução do caso de aceitação |
 | REQ-NF-16 | ARCH-IO / IF-CORE | TASK-006, TASK-008 | Não implementado | A | V-NF-16 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-17 | ARCH-FW / IF-DAQ | TASK-008 | Não implementado | A | V-NF-17 / Bancada + HIL | Sem execução do caso de aceitação |
-| REQ-NF-18 | ARCH-IO | TASK-001, TASK-007 | Não implementado | A | V-NF-18 / HOST | Sem execução do caso de aceitação |
+| REQ-NF-18 | ARCH-IO | TASK-001, TASK-007 | Separação modular do build HOST/runner, sem componentes ROS ainda | I | V-NF-18 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): preparação modular, não organização ROS validada |
 | REQ-NF-19 | ARCH-IO / IF-DAQ | TASK-006, TASK-007, TASK-008 | Não implementado | A | V-NF-19 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-20 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-20 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-21 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-21 / HOST + HIL | Sem execução do caso de aceitação |

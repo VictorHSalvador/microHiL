@@ -1,8 +1,8 @@
 # MICROHIL
 
-O projeto está sendo retomado por desenvolvimento orientado à especificação, preservando o executor de FMU existente. A revisão documental 0.2 incorpora as respostas DEC-001…012; implementação aguarda fechamento das dúvidas Q conforme solicitado pelo usuário. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões pendentes](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
+O projeto está sendo retomado por desenvolvimento orientado à especificação, preservando o executor de FMU existente. A baseline vigente é a SDD-MICROHIL 0.7.2: a fundação de build HOST da TASK-001 foi implementada, evidenciada e auditada. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
 
-O código atual implementa um protótipo HOST com terminal, CSV e gnuplot. GUI Qt, DAQC, ROS 2/micro-ROS e comunicação física ainda não estão implementados. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra falhas de logging e limitações temporais; a [evidência](docs/evidence/audit-2026-09-06/README.md) não constitui validação HIL. O diretório `build/` preexistente veio de outro ambiente; o build limpo ainda depende de resolver a FMILibrary.
+O código atual implementa um protótipo HOST com terminal, CSV e gnuplot. GUI Qt, DAQC, ROS 2/micro-ROS e comunicação física ainda não estão implementados. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra falhas de logging e limitações temporais; a [evidência](docs/evidence/audit-2026-09-06/README.md) não constitui validação HIL. Não reutilize o diretório `build/` preexistente: os comandos abaixo usam diretórios limpos e os resultados executados estão na [evidência da fundação HOST](docs/evidence/host-build-foundation-2026-09-07.md).
 
 ## Existing FMU runner
 
@@ -53,26 +53,37 @@ sudo apt update
 sudo apt install build-essential cmake git gnuplot-qt libcap2-bin
 ```
 
-### Build FMI Library
+## Build HOST
 
-FMI Library is an open-source C importer for FMI 1.0, 2.0 and 3.0. Example installation under `$HOME/.local/fmilib`:
-
-```bash
-git clone https://github.com/modelon-community/fmi-library.git
-cmake -S fmi-library -B fmi-library/build \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=$HOME/.local/fmilib
-cmake --build fmi-library/build -j
-cmake --install fmi-library/build
-```
-
-## Build this project
+Use sempre um diretório novo. O build independente não procura a FMILibrary e permite compilar os componentes HOST e executar a suíte CTest:
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
-  -DFMILIB_ROOT=$HOME/.local/fmilib
-cmake --build build -j
+cmake -S . -B /tmp/microhil-host-independent \
+  -DMICROHIL_BUILD_RUNNER=OFF -DBUILD_TESTING=ON
+cmake --build /tmp/microhil-host-independent
+ctest --test-dir /tmp/microhil-host-independent -N
+ctest --test-dir /tmp/microhil-host-independent --output-on-failure
 ```
+
+Para o runner completo, a obtenção oficial é opt-in e fixa a FMILibrary 3.0.4 na revisão `4a4b21ec10a632b2768a604c2330c54204919644`:
+
+```bash
+cmake -S . -B /tmp/microhil-runner-fetch \
+  -DMICROHIL_BUILD_RUNNER=ON -DMICROHIL_FETCH_FMILIB=ON
+cmake --build /tmp/microhil-runner-fetch --target fmu_rt_runner
+```
+
+Uma instalação fornecida pelo integrador também pode ser usada sem download; a versão e a compatibilidade desse artefato são responsabilidade do integrador:
+
+```bash
+cmake -S . -B /tmp/microhil-runner-external \
+  -DMICROHIL_BUILD_RUNNER=ON \
+  -DFMILIB_INCLUDE_DIR=/caminho/para/include \
+  -DFMILIB_LIBRARY=/caminho/para/libfmilib.a
+cmake --build /tmp/microhil-runner-external --target fmu_rt_runner
+```
+
+Se o runner for solicitado sem uma dependência encontrada, o diagnóstico informa as três alternativas: `FMILIB_ROOT`, `FMILIB_INCLUDE_DIR` com `FMILIB_LIBRARY`, ou `MICROHIL_FETCH_FMILIB=ON`. Compilar o runner não executa uma FMU nem comprova comportamento FMI, Raspberry Pi, DAQC, USB, ROS, GUI, concorrência real ou deadlines.
 
 Run:
 

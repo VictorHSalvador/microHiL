@@ -1,11 +1,11 @@
 {
   "feature": "sdd-versioning",
-  "timestamp": "2026-09-08T00:03:13.812Z",
-  "gitRev": "4020de9",
-  "command": "node test/sdd-versioning.spec.test.js",
+  "timestamp": "2026-09-08T00:53:31.811Z",
+  "gitRev": "9ac1509",
+  "command": "node test/run_spec_tests.js",
   "reporter": "tap",
   "exitCode": 0,
-  "testsParsed": 9,
+  "testsParsed": 17,
   "results": {
     "AC-001": {
       "status": "pass",

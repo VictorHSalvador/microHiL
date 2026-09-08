@@ -1,18 +1,18 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.7.1**, de 07.09.2026.
+Versão vigente: **SDD-MICROHIL 0.7.2**, de 07.09.2026.
 
-Status da versão: **baseline documental consolidada e auditável; implementação do produto pendente**.
+Status da versão: **baseline documental consolidada; fundação HOST da TASK-001 implementada, evidenciada e auditada; validação do produto pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.7.1 | Evidência/limite |
+| Eixo | Estado em 0.7.2 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
-| Implementação | Código de protótipo preservado no baseline auditado; requisitos novos ainda não implementados | Último commit anterior a esta governança: 4020de9; não inferir conformidade do código |
-| Verificação | Auditoria documental executável para versionamento, IDs, matriz, links e autoridade normativa | Não executa FMU, ROS, USB, firmware, GUI, bancada ou HIL |
+| Implementação | Fundação de build HOST da TASK-001 concluída; demais requisitos de produto seguem pendentes | Build independente e runner compilados; não inferir execução de FMU ou conformidade integral |
+| Verificação | Agregador 17/17, verify 8/8 para a fundação HOST e auditoria final limpa | Não executa FMU, ROS, USB, firmware, GUI, bancada ou HIL |
 
 ## Esquema de versão
 
@@ -38,6 +38,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.6.0 | 06.09.2026 | MINOR | Inspeção do RaspDAQ e consolidação da base little-endian, CONFIG/DATA, SEQ e ownership | ADR-003, contracts, architecture, decisions | raspdaq-icd-review-2026-09-06 | f8eeff3 |
 | 0.7.0 | 07.09.2026 | MINOR | DATA sem CRC/retransmissão/sessão no fio; READ_ACK MID 03; XRCE MID 04; perda segue para o próximo pacote | ADR-003, spec, contracts, architecture, plan, verification | realtime-loss-policy-review-2026-09-07 | 4020de9 |
 | 0.7.1 | 07.09.2026 | PATCH | Registro único de versões e auditoria mecânica da governança documental | sdd-versions, README, .spec, teste documental e quality-gates | onp-spec verify/audit desta feature | alterações locais; registrar commit quando criado |
+| 0.7.2 | 07.09.2026 | PATCH | Fundação de build HOST, testes, rastreabilidade e evidência da TASK-001 sem alterar comportamento aprovado do produto | README, TARGET, plano, tarefa, matriz, gates, evidence, .spec e teste documental | host-build-foundation-2026-09-07; verify 8/8; audit limpo | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

@@ -70,7 +70,7 @@ RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
   const version_files = fs.readdirSync(path.join(ROOT, 'docs')).filter((name) => /^sdd-versions\.md$/.test(name));
   assert.deepEqual(version_files, ['sdd-versions.md']);
   assert.match(index, /\[sdd-versions\.md\]\(sdd-versions\.md\)/);
-  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.7\.1\*\*, de 07\.09\.2026/);
+  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.7\.2\*\*, de 07\.09\.2026/);
   assert.match(versioning, /Status da versão:/);
 });
 
@@ -84,12 +84,12 @@ RegisterTest('AC-002: O estado separa especificação, implementação e verific
 
 RegisterTest('AC-003: Cada revisão possui metadados mínimos @spec:AC-003', () => {
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
-  assert.equal(rows.length, 8);
+  assert.equal(rows.length, 9);
   for (const row of rows) {
     assert.equal(row.length, 7);
     assert.ok(row.every((cell) => cell.length > 0));
   }
-  assert.deepEqual(rows.map((row) => row[0]), ['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0', '0.6.0', '0.7.0', '0.7.1']);
+  assert.deepEqual(rows.map((row) => row[0]), ['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0', '0.6.0', '0.7.0', '0.7.1', '0.7.2']);
 });
 
 RegisterTest('AC-004: O procedimento de atualização é explícito @spec:AC-004', () => {
@@ -131,7 +131,7 @@ RegisterTest('P-002: Existe uma única especificação normativa do produto @pri
 
 RegisterTest('P-003: Estado documental não é estado de implementação @principle:P-003', () => {
   const versioning = Read('docs/sdd-versions.md');
-  assert.match(versioning, /baseline documental consolidada e auditável; implementação do produto pendente/);
+  assert.match(versioning, /fundação HOST da TASK-001 implementada, evidenciada e auditada; validação do produto pendente/);
   assert.match(versioning, /Aprovação documental não significa implementação/);
 });
 
@@ -227,6 +227,35 @@ RegisterTest('AC-012: Uma instalação explícita continua suportada @spec:AC-01
   assert.match(cmake, /IMPORTED_LOCATION "\$\{FMILIB_LIBRARY\}"/);
   assert.match(cmake, /INTERFACE_INCLUDE_DIRECTORIES "\$\{FMILIB_INCLUDE_DIR\}"/);
   assert.match(cmake, /integrator must prove its version and compatibility/);
+});
+
+RegisterTest('AC-013: A documentação permite repetir os builds @spec:AC-013', () => {
+  const readme = Read('README.md');
+  const evidence = Read('docs/evidence/host-build-foundation-2026-09-07.md');
+  assert.match(readme, /-DMICROHIL_BUILD_RUNNER=OFF -DBUILD_TESTING=ON/);
+  assert.match(readme, /-DMICROHIL_BUILD_RUNNER=ON -DMICROHIL_FETCH_FMILIB=ON/);
+  assert.match(readme, /ctest --test-dir \/tmp\/microhil-host-independent --output-on-failure/);
+  assert.match(evidence, /Ubuntu 22\.04, GCC 11\.4\.0/);
+  assert.match(evidence, /FMILibrary 3\.0\.4, revisão imutável `4a4b21ec10a632b2768a604c2330c54204919644`/);
+  assert.match(evidence, /17\/17 testes com sucesso/);
+  assert.match(evidence, /Nenhuma FMU foi executada/);
+});
+
+RegisterTest('AC-014: O SDD reflete o estado observado @spec:AC-014', () => {
+  const plan = Read('docs/plan.md');
+  const task = Read('docs/tasks/TASK-001.md');
+  const traceability = Read('docs/traceability.md');
+  const gates = Read('docs/quality-gates.md');
+  const versioning = Read('docs/sdd-versions.md');
+  assert.match(plan, /Baseline 0\.7\.2/);
+  assert.match(task, /Status: concluída, evidenciada e auditada/);
+  assert.match(task, /Executar uma FMU/);
+  for (const requirement_id of ['REQ-NF-01', 'REQ-NF-11', 'REQ-NF-13', 'REQ-NF-18']) {
+    const row = traceability.split(/\r?\n/).find((line) => line.startsWith('| ' + requirement_id + ' |'));
+    assert.ok(row && row.includes('host-build-foundation-2026-09-07.md'));
+  }
+  assert.match(gates, /- \[ \] Resultado agregado e integridade de dados coerentes/);
+  assert.match(versioning, /\| 0\.7\.2 \| 07\.09\.2026 \| PATCH \|/);
 });
 
 console.log('TAP version 13');

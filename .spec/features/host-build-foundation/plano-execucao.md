@@ -1,11 +1,11 @@
 # Plano de execução — host-build-foundation
 
-> gerado por `onp-spec plano` em 2026-09-08 00:20 — NÃO edite à mão;
+> gerado por `onp-spec plano` em 2026-09-08 00:41 — NÃO edite à mão;
 > mudou tasks.md ou a config? Regenere: `onp-spec plano host-build-foundation --sequencial --modelo gpt-5.6-terra --esforco high`
 
 ## Resumo — o que vai acontecer
 
-- **modo SEQUENCIAL (escolha do usuário)**: 3 tarefa(s) pendente(s), UMA APÓS A OUTRA, na árvore principal
+- **modo SEQUENCIAL (escolha do usuário)**: 1 tarefa(s) pendente(s), UMA APÓS A OUTRA, na árvore principal (2 já concluída(s): T-002, T-003)
 - sem worktrees e sem paralelismo — cada tarefa roda numa janela de contexto limpa, na ordem do tasks.md
 - **custo travado pelo usuário**: modelo `gpt-5.6-terra` · esforço `high` em TODAS as tarefas (vence tasks.md e config)
 - tudo acontece na branch de trabalho `spec/host-build-foundation`; levar para a main é decisão sua
@@ -14,8 +14,6 @@
 
 | tarefa | título | modelo | esforço |
 |---|---|---|---|
-| T-002 | Separar o build independente e integrar a dependência fixa | `gpt-5.6-terra` | high |
-| T-003 | Criar o harness CTest e os testes da fila | `gpt-5.6-terra` | high |
 | T-004 | Documentar, evidenciar e rastrear a TASK-001 | `gpt-5.6-terra` | high |
 
 ## Gestão de branches e commits

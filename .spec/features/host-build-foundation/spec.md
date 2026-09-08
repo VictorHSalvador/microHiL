@@ -1,7 +1,7 @@
 # Spec: Fundação de build HOST
 
 > feature: host-build-foundation
-> status: pronta
+> status: auditada
 
 ## Contexto
 
@@ -77,7 +77,7 @@ Como responsável técnico, quero registrar comandos, ambiente, resultados e lim
 
 ## Suposições
 
-Nenhuma. A FMILibrary 3.0.4 foi selecionada a partir da release oficial e sua compatibilidade declarada com FMI 2.0 será verificada pelo build, não tratada como resultado antecipado.
+Nenhuma. A FMILibrary 3.0.4 foi selecionada a partir da release oficial e sua integração de build foi observada; isso não é execução de FMU nem prova antecipada de compatibilidade funcional com FMI 2.0.
 
 ## Perguntas em aberto
 

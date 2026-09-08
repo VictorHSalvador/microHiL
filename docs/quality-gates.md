@@ -10,22 +10,24 @@ Status: G-CONSOLIDACAO aprovado em 07.09.2026; liberação de produto não reali
 
 Esse gate reflete a instrução específica do usuário de só começar desenvolvimento após sanear os Markdown. A aprovação se apoia na [revisão da política de perda](evidence/realtime-loss-policy-review-2026-09-07.md) e na [prova mecânica do versionamento](../.spec/verification/sdd-versioning.json). Ela libera a implementação incremental prevista no plano, sem aprovar os gates HOST, ICD/TARGET ou TIMING/HIL. Parâmetros explicitamente atribuídos à implementação, seleção de versões ou medição continuam sob os gates correspondentes.
 
-## G-DOC-HOST — Antes de implementação independente do hardware
+## G-DOC-HOST — Fundação HOST documentada
 
-- [ ] Requisitos do incremento identificados e comportamento/testes definidos.
-- [ ] Dependências e decisões que afetam esse incremento resolvidas ou excluídas explicitamente do escopo.
-- [ ] Código a reaproveitar, erros conhecidos e limitações de evidência identificados.
-- [ ] Regras de estilo vigentes e interfaces afetadas compreendidas.
+- [x] Requisitos do incremento identificados e comportamento/testes definidos.
+- [x] Dependências e decisões que afetam esse incremento resolvidas ou excluídas explicitamente do escopo.
+- [x] Código a reaproveitar, erros conhecidos e limitações de evidência identificados.
+- [x] Regras de estilo vigentes e interfaces afetadas compreendidas.
 
 Ausência de pinagem não reprova uma correção isolada de logger. Campo de formato ou política em aberto pode bloquear sua integração operacional, sem impedir testar propagação de erro.
 
-## G-HOST — Antes de concluir tarefa de software no host
+## G-HOST — TASK-001 no host
 
-- [ ] Build limpo dos alvos declarados, com versões e warnings revisados.
-- [ ] Testes de comportamento e falha executados; nenhum “zero testes” apresentado como suíte aprovada.
+- [x] Build limpo dos alvos declarados, com versões e warnings revisados.
+- [x] Testes de comportamento e falha executados; nenhum “zero testes” apresentado como suíte aprovada.
 - [ ] Resultado agregado e integridade de dados coerentes, incluindo falhas.
 - [ ] Comentários/nomenclatura do escopo atendem ADR-001; APIs externas preservadas.
-- [ ] Evidência e matriz atualizadas, sem apresentar teste parcial como produto validado.
+- [x] Evidência e matriz atualizadas, sem apresentar teste parcial como produto validado.
+
+Os itens marcados foram demonstrados pela [evidência da TASK-001](evidence/host-build-foundation-2026-09-07.md): build independente, três testes CTest, diagnóstico da dependência e compilação do runner pelas duas rotas. Os dois itens restantes não foram demonstrados neste escopo; em especial, não houve execução de FMU, validação de integridade de dados em execução, revisão global de estilo nem teste de hardware/tempo real.
 
 ## G-ICD-TARGET — Antes de driver definitivo e atuação
 
