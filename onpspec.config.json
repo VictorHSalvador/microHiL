@@ -1,5 +1,5 @@
 {
-  "testCommand": "node test/sdd-versioning.spec.test.js",
+  "testCommand": "node test/run_spec_tests.js",
   "reporter": "tap",
   "testGlobs": [
     "test/**",

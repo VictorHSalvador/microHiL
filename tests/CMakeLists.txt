@@ -1,0 +1,6 @@
+add_executable(test_sample_queue test_sample_queue.c)
+target_link_libraries(test_sample_queue PRIVATE microhil_host_components)
+
+add_test(NAME sample_queue_spsc_order COMMAND test_sample_queue order)
+add_test(NAME sample_queue_spsc_wrap COMMAND test_sample_queue wrap)
+add_test(NAME sample_queue_spsc_saturation COMMAND test_sample_queue saturation)
