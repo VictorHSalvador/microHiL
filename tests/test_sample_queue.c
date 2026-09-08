@@ -1,10 +1,21 @@
 #include <stdbool.h>
+#include <pthread.h>
+#include <sched.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "sample_queue.h"
+
+typedef struct {
+    SampleQueue *queue;
+    size_t sample_count;
+    _Atomic size_t consumed;
+    _Atomic bool producer_done;
+    _Atomic bool order_failed;
+} concurrent_queue_context_t;
 
 static void Require(bool condition, const char *message) {
     if (!condition) {
@@ -108,9 +119,69 @@ static void TestSaturation(void) {
     Require(sample_queue_dropped(&queue) == UINT64_C(1), "pop changed the dropped-sample count");
 }
 
+static void *ProduceConcurrentSamples(void *argument) {
+    concurrent_queue_context_t *context = argument;
+    const size_t batch_size = SAMPLE_QUEUE_CAPACITY / 2U;
+    size_t produced = 0U;
+
+    while (produced < context->sample_count) {
+        const size_t batch_end = produced + batch_size < context->sample_count ? produced + batch_size : context->sample_count;
+
+        while (produced < batch_end) {
+            const SimulationSample sample = MakeSample((uint64_t)produced);
+
+            if (!sample_queue_push(context->queue, &sample)) atomic_store_explicit(&context->order_failed, true, memory_order_relaxed);
+            ++produced;
+        }
+        while (atomic_load_explicit(&context->consumed, memory_order_acquire) < produced) sched_yield();
+    }
+    atomic_store_explicit(&context->producer_done, true, memory_order_release);
+    return NULL;
+}
+
+static void *ConsumeConcurrentSamples(void *argument) {
+    concurrent_queue_context_t *context = argument;
+    uint64_t expected_sequence = 0U;
+
+    for (;;) {
+        SimulationSample sample;
+
+        if (sample_queue_pop(context->queue, &sample)) {
+            if (sample.sequence != expected_sequence) atomic_store_explicit(&context->order_failed, true, memory_order_relaxed);
+            ++expected_sequence;
+            atomic_fetch_add_explicit(&context->consumed, 1U, memory_order_release);
+            continue;
+        }
+        if (atomic_load_explicit(&context->producer_done, memory_order_acquire)) break;
+        sched_yield();
+    }
+    return NULL;
+}
+
+/* @spec:AC-021 */
+static void TestConcurrentWrap(void) {
+    SampleQueue queue;
+    const size_t sample_count = SAMPLE_QUEUE_CAPACITY * 3U + 17U;
+    concurrent_queue_context_t context = {.queue = &queue, .sample_count = sample_count};
+    pthread_t producer_thread;
+    pthread_t consumer_thread;
+
+    sample_queue_init(&queue);
+    atomic_init(&context.consumed, 0U);
+    atomic_init(&context.producer_done, false);
+    atomic_init(&context.order_failed, false);
+    Require(pthread_create(&consumer_thread, NULL, ConsumeConcurrentSamples, &context) == 0, "could not start queue consumer");
+    Require(pthread_create(&producer_thread, NULL, ProduceConcurrentSamples, &context) == 0, "could not start queue producer");
+    Require(pthread_join(producer_thread, NULL) == 0, "could not join queue producer");
+    Require(pthread_join(consumer_thread, NULL) == 0, "could not join queue consumer");
+    Require(!atomic_load_explicit(&context.order_failed, memory_order_relaxed), "concurrent queue lost order or saturated");
+    Require(atomic_load_explicit(&context.consumed, memory_order_relaxed) == sample_count, "concurrent queue did not consume every sample");
+    Require(sample_queue_dropped(&queue) == UINT64_C(0), "concurrent queue reported dropped samples");
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "usage: %s <order|wrap|saturation>\n", argv[0]);
+        fprintf(stderr, "usage: %s <order|wrap|saturation|concurrent>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -120,6 +191,8 @@ int main(int argc, char *argv[]) {
         TestWrap();
     } else if (strcmp(argv[1], "saturation") == 0) {
         TestSaturation();
+    } else if (strcmp(argv[1], "concurrent") == 0) {
+        TestConcurrentWrap();
     } else {
         fprintf(stderr, "unknown test: %s\n", argv[1]);
         return EXIT_FAILURE;
