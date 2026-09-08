@@ -1,7 +1,7 @@
 {
   "feature": "host-build-foundation",
-  "timestamp": "2026-09-08T00:53:30.474Z",
-  "gitRev": "9ac1509",
+  "timestamp": "2026-09-08T00:56:30.324Z",
+  "gitRev": "fb04b98",
   "command": "node test/run_spec_tests.js",
   "reporter": "tap",
   "exitCode": 0,

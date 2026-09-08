@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "proximoId": 3,
+  "licoes": [
+    {
+      "id": "L-001",
+      "texto": "Antes de concluir uma tarefa, confirme que cada critério citado em Refs possui um teste anotado próprio.",
+      "chave": "AC_SEM_TESTE::antes de concluir uma tarefa confirme que cada criterio citado em refs possui um teste anotado proprio",
+      "sinal": "AC_SEM_TESTE",
+      "escopo": "sdd",
+      "status": "candidata",
+      "recorrencia": 1,
+      "features": [
+        "host-build-foundation"
+      ],
+      "evidencias": [
+        {
+          "fonte": "AC-013",
+          "feature": "host-build-foundation",
+          "quando": "2026-09-08T00:55:09.216Z",
+          "gitRev": "9ac1509"
+        }
+      ],
+      "penalidades": 0,
+      "criadaEm": "2026-09-08T00:55:09.216Z",
+      "ultimaVez": "2026-09-08T00:55:09.216Z"
+    },
+    {
+      "id": "L-002",
+      "texto": "Após alterar testes ou documentos compartilhados, execute verify novamente para todas as features afetadas antes da auditoria final.",
+      "chave": "AC_SEM_PROVA::apos alterar testes ou documentos compartilhados execute verify novamente para todas as features afetadas antes da auditoria final",
+      "sinal": "AC_SEM_PROVA",
+      "escopo": "sdd",
+      "status": "candidata",
+      "recorrencia": 1,
+      "features": [
+        "host-build-foundation"
+      ],
+      "evidencias": [
+        {
+          "fonte": "AC-007",
+          "feature": "host-build-foundation",
+          "quando": "2026-09-08T00:55:25.246Z",
+          "gitRev": "2b4e78f"
+        }
+      ],
+      "penalidades": 0,
+      "criadaEm": "2026-09-08T00:55:25.246Z",
+      "ultimaVez": "2026-09-08T00:55:25.246Z"
+    }
+  ]
+}

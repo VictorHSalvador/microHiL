@@ -1,7 +1,7 @@
 {
   "feature": "sdd-versioning",
-  "timestamp": "2026-09-08T00:53:31.811Z",
-  "gitRev": "9ac1509",
+  "timestamp": "2026-09-08T00:56:31.616Z",
+  "gitRev": "fb04b98",
   "command": "node test/run_spec_tests.js",
   "reporter": "tap",
   "exitCode": 0,

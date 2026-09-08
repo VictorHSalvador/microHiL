@@ -37,8 +37,8 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.5.0 | 06.09.2026 | MINOR | Último snapshot antes da FMU, zero físico no fim, configuração ADC/PWM e grade temporal fixa | spec, architecture, contracts, TARGET, verification | config-timing-review-2026-09-06 | f8eeff3, revisão agrupada |
 | 0.6.0 | 06.09.2026 | MINOR | Inspeção do RaspDAQ e consolidação da base little-endian, CONFIG/DATA, SEQ e ownership | ADR-003, contracts, architecture, decisions | raspdaq-icd-review-2026-09-06 | f8eeff3 |
 | 0.7.0 | 07.09.2026 | MINOR | DATA sem CRC/retransmissão/sessão no fio; READ_ACK MID 03; XRCE MID 04; perda segue para o próximo pacote | ADR-003, spec, contracts, architecture, plan, verification | realtime-loss-policy-review-2026-09-07 | 4020de9 |
-| 0.7.1 | 07.09.2026 | PATCH | Registro único de versões e auditoria mecânica da governança documental | sdd-versions, README, .spec, teste documental e quality-gates | onp-spec verify/audit desta feature | alterações locais; registrar commit quando criado |
-| 0.7.2 | 07.09.2026 | PATCH | Fundação de build HOST, testes, rastreabilidade e evidência da TASK-001 sem alterar comportamento aprovado do produto | README, TARGET, plano, tarefa, matriz, gates, evidence, .spec e teste documental | host-build-foundation-2026-09-07; verify 8/8; audit limpo | alterações locais; registrar commit quando criado |
+| 0.7.1 | 07.09.2026 | PATCH | Registro único de versões e auditoria mecânica da governança documental | sdd-versions, README, .spec, teste documental e quality-gates | onp-spec verify/audit desta feature | 61feaa9 |
+| 0.7.2 | 07.09.2026 | PATCH | Fundação de build HOST, testes, rastreabilidade e evidência da TASK-001 sem alterar comportamento aprovado do produto | README, TARGET, plano, tarefa, matriz, gates, evidence, .spec e teste documental | host-build-foundation-2026-09-07; verify 8/8; audit limpo | fb04b98 |
 
 ## Procedimento de atualização
 
@@ -46,7 +46,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 2. Atualizar primeiro o artefato responsável: requisito em spec, decisão em ADR/decisions, interface no ICD, alvo em TARGET ou regra permanente na constituição.
 3. Sincronizar arquitetura, plano, tarefa, verificação e traceability quando forem afetados.
 4. Criar uma nova evidência para verificações executadas; não reescrever evidência histórica para adequá-la à decisão atual.
-5. Acrescentar uma linha neste histórico com versão, data, natureza, resumo, artefatos, evidência e commit. Durante trabalho local, usar “alterações locais” e substituir pelo hash depois do commit.
+5. Acrescentar uma linha neste histórico com versão, data, natureza, resumo, artefatos, evidência e commit. Durante trabalho local, usar “alterações locais; registrar commit quando criado” e substituir pelo hash depois do commit.
 6. Executar o teste documental, onp-spec verify e onp-spec audit --ci. Registrar falhas como falhas; somente exit code zero libera a versão documental.
 7. Atualizar a versão vigente e o índice docs/README.md somente depois de o gate documental passar.
 
