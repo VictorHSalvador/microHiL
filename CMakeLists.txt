@@ -23,6 +23,7 @@ target_compile_options(microhil_project_warnings INTERFACE
 add_library(microhil_host_components STATIC
     src/app_config.c
     src/binary_logger.c
+    src/log_converter.c
     src/log_format.c
     src/sample_queue.c
     src/csv_logger.c
