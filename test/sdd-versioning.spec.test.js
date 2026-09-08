@@ -1,5 +1,7 @@
 const assert = require('node:assert/strict');
+const child_process = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const tests = [];
 
@@ -43,6 +45,23 @@ function BrokenLocalLinks(files) {
 
 function RegisterTest(title, body) {
   tests.push({ title, body });
+}
+
+function WithTemporaryBuild(label, body) {
+  const build_directory = fs.mkdtempSync(path.join(os.tmpdir(), label + '-'));
+  try {
+    return body(build_directory);
+  } finally {
+    fs.rmSync(build_directory, { recursive: true, force: true });
+  }
+}
+
+function RunCmake(arguments_list, environment = process.env) {
+  return child_process.spawnSync('cmake', arguments_list, {
+    cwd: ROOT,
+    encoding: 'utf8',
+    env: environment,
+  });
 }
 
 RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
@@ -120,6 +139,94 @@ RegisterTest('P-004: Toda revisão do SDD é rastreável @principle:P-004', () =
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
   assert.ok(rows.length > 0);
   assert.ok(rows.every((row) => row.length === 7 && row.every(Boolean)));
+});
+
+RegisterTest('AC-007: O build independente configura em diretório limpo @spec:AC-007', () => {
+  WithTemporaryBuild('microhil-ac-007', (build_directory) => {
+    const result = RunCmake([
+      '-S', ROOT,
+      '-B', build_directory,
+      '-DMICROHIL_BUILD_RUNNER=OFF',
+      '-DBUILD_TESTING=ON',
+    ]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.ok(fs.existsSync(path.join(build_directory, 'CMakeCache.txt')));
+
+    const targets = RunCmake(['--build', build_directory, '--target', 'help']);
+    assert.equal(targets.status, 0, targets.stdout + targets.stderr);
+    assert.match(targets.stdout, /microhil_host_components/);
+  });
+});
+
+RegisterTest('AC-008: Os componentes independentes compilam com os avisos do projeto @spec:AC-008', () => {
+  WithTemporaryBuild('microhil-ac-008', (build_directory) => {
+    const configure = RunCmake([
+      '-S', ROOT,
+      '-B', build_directory,
+      '-DMICROHIL_BUILD_RUNNER=OFF',
+      '-DBUILD_TESTING=ON',
+      '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
+    ]);
+    assert.equal(configure.status, 0, configure.stdout + configure.stderr);
+
+    const build = RunCmake(['--build', build_directory, '--target', 'microhil_host_components']);
+    assert.equal(build.status, 0, build.stdout + build.stderr);
+
+    const commands = JSON.parse(fs.readFileSync(path.join(build_directory, 'compile_commands.json'), 'utf8'));
+    const own_sources = commands.filter((entry) => entry.file.startsWith(path.join(ROOT, 'src') + path.sep));
+    assert.ok(own_sources.length >= 4);
+    for (const command of own_sources) {
+      assert.match(command.command, /-Wall/);
+      assert.match(command.command, /-Wextra/);
+      assert.match(command.command, /-Wpedantic/);
+      assert.match(command.command, /-Wshadow/);
+      assert.match(command.command, /-Wconversion/);
+    }
+  });
+});
+
+RegisterTest('AC-010: A ausência da dependência é informada somente quando necessária @spec:AC-010', () => {
+  WithTemporaryBuild('microhil-ac-010', (build_directory) => {
+    const environment = { ...process.env };
+    delete environment.FMILIB_ROOT;
+    const result = RunCmake([
+      '-S', ROOT,
+      '-B', build_directory,
+      '-DMICROHIL_BUILD_RUNNER=ON',
+      '-DBUILD_TESTING=OFF',
+      '-DFMILIB_INCLUDE_DIR=FMILIB_INCLUDE_DIR-NOTFOUND',
+      '-DFMILIB_LIBRARY=FMILIB_LIBRARY-NOTFOUND',
+      '-DCMAKE_FIND_ROOT_PATH=' + path.join(build_directory, 'no-fmilib'),
+      '-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY',
+      '-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY',
+    ], environment);
+    assert.notEqual(result.status, 0);
+    const output = result.stdout + result.stderr;
+    assert.match(output, /MICROHIL_BUILD_RUNNER=ON/);
+    assert.match(output, /-DFMILIB_ROOT=<prefix>/);
+    assert.match(output, /-DMICROHIL_FETCH_FMILIB=ON/);
+  });
+});
+
+RegisterTest('AC-011: A versão oficial selecionada é imutável para o build @spec:AC-011', () => {
+  const cmake = Read('cmake/fmilib.cmake');
+  assert.match(cmake, /set\(MICROHIL_FMILIB_VERSION "3\.0\.4"\)/);
+  assert.match(cmake, /set\(MICROHIL_FMILIB_REVISION "[0-9a-f]{40}"\)/);
+  assert.match(cmake, /GIT_REPOSITORY https:\/\/github\.com\/modelon-community\/fmi-library\.git/);
+  assert.match(cmake, /GIT_TAG \$\{MICROHIL_FMILIB_REVISION\}/);
+  assert.match(cmake, /FetchContent_MakeAvailable\(microhil_fmilib\)/);
+  assert.match(cmake, /set\(\$\{result_target\} fmilib_shared PARENT_SCOPE\)/);
+});
+
+RegisterTest('AC-012: Uma instalação explícita continua suportada @spec:AC-012', () => {
+  const cmake = Read('cmake/fmilib.cmake');
+  assert.match(cmake, /set\(FMILIB_ROOT "" CACHE PATH/);
+  assert.match(cmake, /set\(FMILIB_INCLUDE_DIR "" CACHE PATH/);
+  assert.match(cmake, /set\(FMILIB_LIBRARY "" CACHE FILEPATH/);
+  assert.match(cmake, /if\(FMILIB_INCLUDE_DIR AND FMILIB_LIBRARY\)/);
+  assert.match(cmake, /IMPORTED_LOCATION "\$\{FMILIB_LIBRARY\}"/);
+  assert.match(cmake, /INTERFACE_INCLUDE_DIRECTORIES "\$\{FMILIB_INCLUDE_DIR\}"/);
+  assert.match(cmake, /integrator must prove its version and compatibility/);
 });
 
 console.log('TAP version 13');

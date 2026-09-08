@@ -5,33 +5,53 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
-set(FMILIB_ROOT "" CACHE PATH "FMI Library installation prefix")
-
-find_path(FMILIB_INCLUDE_DIR
-    NAMES fmilib.h
-    HINTS ${FMILIB_ROOT}/include $ENV{FMILIB_ROOT}/include
-)
-find_library(FMILIB_LIBRARY
-    NAMES fmilib fmilib_shared
-    HINTS ${FMILIB_ROOT}/lib ${FMILIB_ROOT}/lib64 $ENV{FMILIB_ROOT}/lib $ENV{FMILIB_ROOT}/lib64
-)
-
-if(NOT FMILIB_INCLUDE_DIR OR NOT FMILIB_LIBRARY)
-    message(FATAL_ERROR "FMI Library not found. Set -DFMILIB_ROOT=/path/to/fmilib/install")
-endif()
-
+include(CTest)
 find_package(Threads REQUIRED)
 
-add_executable(fmu_rt_runner
-    src/main.c
+option(MICROHIL_BUILD_RUNNER "Build the FMILibrary-based runner" ON)
+option(MICROHIL_FETCH_FMILIB "Fetch the pinned FMILibrary release for the runner" OFF)
+
+add_library(microhil_project_warnings INTERFACE)
+target_compile_options(microhil_project_warnings INTERFACE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wshadow
+    -Wconversion
+)
+
+add_library(microhil_host_components STATIC
     src/app_config.c
     src/sample_queue.c
-    src/fmu_model.c
-    src/rt_simulation.c
     src/csv_logger.c
     src/plotter.c
 )
+target_include_directories(microhil_host_components PUBLIC include)
+target_link_libraries(microhil_host_components PUBLIC
+    microhil_project_warnings
+    Threads::Threads
+)
 
-target_include_directories(fmu_rt_runner PRIVATE include ${FMILIB_INCLUDE_DIR})
-target_compile_options(fmu_rt_runner PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion)
-target_link_libraries(fmu_rt_runner PRIVATE ${FMILIB_LIBRARY} Threads::Threads dl m)
+if(MICROHIL_BUILD_RUNNER)
+    include(cmake/fmilib.cmake)
+    microhil_resolve_fmilib(MICROHIL_FMILIB_TARGET)
+
+    add_executable(fmu_rt_runner
+        src/main.c
+        src/fmu_model.c
+        src/rt_simulation.c
+    )
+    target_include_directories(fmu_rt_runner PRIVATE include)
+    target_link_libraries(fmu_rt_runner PRIVATE
+        microhil_project_warnings
+        microhil_host_components
+        ${MICROHIL_FMILIB_TARGET}
+        Threads::Threads
+        dl
+        m
+    )
+endif()
+
+if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+    add_subdirectory(tests)
+endif()
