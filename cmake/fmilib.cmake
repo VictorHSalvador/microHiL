@@ -51,6 +51,9 @@ function(microhil_resolve_fmilib result_target)
         )
         FetchContent_MakeAvailable(microhil_fmilib)
 
+        # FMILibrary configures bundled dependencies as external projects and expects a cache file in its own binary directory.
+        file(TOUCH "${microhil_fmilib_BINARY_DIR}/CMakeCache.txt")
+
         if(NOT TARGET fmilib_shared)
             message(FATAL_ERROR
                 "Pinned FMILibrary ${MICROHIL_FMILIB_VERSION} (${MICROHIL_FMILIB_REVISION}) did not provide fmilib_shared."
