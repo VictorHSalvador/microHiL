@@ -302,10 +302,10 @@
       "codigo": "VERIFY_OBSOLETO",
       "feature": "sdd-versioning",
       "ref": "—",
-      "ocorrencias": 2,
+      "ocorrencias": 3,
       "primeiraVez": "2026-09-08T00:30:39.454Z",
-      "ultimaVez": "2026-09-08T00:49:19.336Z",
-      "gitRev": "9ac1509"
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
     },
     "TASK_CONCLUIDA_SEM_PROVA::host-build-foundation::T-004": {
       "codigo": "TASK_CONCLUIDA_SEM_PROVA",
@@ -333,6 +333,168 @@
       "primeiraVez": "2026-09-08T00:56:00.677Z",
       "ultimaVez": "2026-09-08T00:56:00.677Z",
       "gitRev": "fb04b98"
+    },
+    "VERIFY_OBSOLETO::host-build-foundation::—": {
+      "codigo": "VERIFY_OBSOLETO",
+      "feature": "host-build-foundation",
+      "ref": "—",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "ARQUIVO_INEXISTENTE::host-run-logging::T-005": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-run-logging",
+      "ref": "T-005",
+      "ocorrencias": 3,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "ARQUIVO_INEXISTENTE::host-run-logging::T-006": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-run-logging",
+      "ref": "T-006",
+      "ocorrencias": 3,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "ARQUIVO_INEXISTENTE::host-run-logging::T-007": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-run-logging",
+      "ref": "T-007",
+      "ocorrencias": 3,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "ARQUIVO_INEXISTENTE::host-run-logging::T-008": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-run-logging",
+      "ref": "T-008",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "ARQUIVO_INEXISTENTE::host-run-logging::T-009": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-run-logging",
+      "ref": "T-009",
+      "ocorrencias": 2,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-015": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-015",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-016": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-016",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-017": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-017",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-018": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-018",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-019": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-019",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-020": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-020",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-021": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-021",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-022": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-022",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-023": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-023",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-024": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-024",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-025": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-025",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
+    },
+    "AC_SEM_PROVA::host-run-logging::AC-026": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "host-run-logging",
+      "ref": "AC-026",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T01:05:02.295Z",
+      "ultimaVez": "2026-09-08T01:05:02.295Z",
+      "gitRev": "208e100"
     }
   }
 }
