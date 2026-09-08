@@ -144,6 +144,114 @@
       "primeiraVez": "2026-09-07T23:57:37.770Z",
       "ultimaVez": "2026-09-07T23:57:37.770Z",
       "gitRev": "4020de9"
+    },
+    "STATUS_INVALIDO::host-build-foundation::.spec/features/host-build-foundation/spec.md": {
+      "codigo": "STATUS_INVALIDO",
+      "feature": "host-build-foundation",
+      "ref": ".spec/features/host-build-foundation/spec.md",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "ARQUIVO_INEXISTENTE::host-build-foundation::T-002": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-build-foundation",
+      "ref": "T-002",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "ARQUIVO_INEXISTENTE::host-build-foundation::T-003": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-build-foundation",
+      "ref": "T-003",
+      "ocorrencias": 3,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "ARQUIVO_INEXISTENTE::host-build-foundation::T-004": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "host-build-foundation",
+      "ref": "T-004",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-007": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-007",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-008": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-008",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-009": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-009",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-010": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-010",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-011": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-011",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-012": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-012",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-013": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-013",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
+    },
+    "AC_SEM_TESTE::host-build-foundation::AC-014": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "host-build-foundation",
+      "ref": "AC-014",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-08T00:16:33.722Z",
+      "ultimaVez": "2026-09-08T00:16:33.722Z",
+      "gitRev": "61feaa9"
     }
   }
 }
