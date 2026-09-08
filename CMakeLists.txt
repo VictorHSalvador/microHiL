@@ -25,8 +25,10 @@ add_library(microhil_host_components STATIC
     src/binary_logger.c
     src/log_converter.c
     src/log_format.c
+    src/run_logging.c
+    src/run_result.c
     src/sample_queue.c
-    src/csv_logger.c
+    src/sha256.c
     src/plotter.c
 )
 target_include_directories(microhil_host_components PUBLIC include)

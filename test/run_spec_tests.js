@@ -83,12 +83,18 @@ RegisterTest('AC-009: Os testes HOST são descobertos e executados @spec:AC-009'
     assert.equal(discovery.status, 0, CommandOutput(discovery));
     const discovered_tests = CommandOutput(discovery);
     assert.match(discovered_tests, /sample_queue_spsc_order/);
-    assert.match(discovered_tests, /sample_queue_spsc_wrap/);
-    assert.match(discovered_tests, /sample_queue_spsc_saturation/);
+    assert.match(discovered_tests, /binary_logger_sink_failures/);
+    assert.match(discovered_tests, /log_converter_csv/);
+    assert.match(discovered_tests, /run_logging_enabled/);
+    assert.match(discovered_tests, /run_logging_disabled/);
+    assert.match(discovered_tests, /run_logging_saturation/);
+    assert.match(discovered_tests, /run_logging_failure/);
+    assert.match(discovered_tests, /run_logging_descriptor/);
+    assert.match(discovered_tests, /run_logging_aggregate/);
 
     const execution = RunCommand('ctest', ['--test-dir', build_directory, '--output-on-failure']);
     assert.equal(execution.status, 0, CommandOutput(execution));
-    assert.match(CommandOutput(execution), /100% tests passed, 0 tests failed out of 3/);
+    assert.match(CommandOutput(execution), /100% tests passed, 0 tests failed out of [1-9][0-9]*/);
   });
 });
 

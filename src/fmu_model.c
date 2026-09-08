@@ -136,6 +136,7 @@ size_t fmu_model_list_numeric_outputs(FmuModel *model, OutputVariable *outputs, 
 
         if (outputs && count < capacity) {
             snprintf(outputs[count].name, sizeof(outputs[count].name), "%s", fmi2_import_get_variable_name(var));
+            outputs[count].xml_index = (uint32_t)(i + 1U);
             outputs[count].value_reference = (uint32_t)fmi2_import_get_variable_vr(var);
             outputs[count].type = map_numeric_type(type);
         }
@@ -194,7 +195,7 @@ int fmu_model_do_step(FmuModel *model, double current_time_s, double step_size_s
     return 0;
 }
 
-int fmu_model_read_outputs(FmuModel *model, const OutputVariable *outputs, size_t count, double *values) {
+int fmu_model_read_outputs(FmuModel *model, const OutputVariable *outputs, size_t count, log_value_t *values) {
     for (size_t i = 0; i < count; ++i) {
         fmi2_value_reference_t vr = (fmi2_value_reference_t)outputs[i].value_reference;
         fmi2_status_t status;
@@ -203,20 +204,20 @@ int fmu_model_read_outputs(FmuModel *model, const OutputVariable *outputs, size_
             case NUMERIC_REAL: {
                 fmi2_real_t value = 0.0;
                 status = fmi2_import_get_real(model->fmu, &vr, 1, &value);
-                values[i] = (double)value;
+                values[i].real_value = (double)value;
                 break;
             }
             case NUMERIC_INTEGER:
             case NUMERIC_ENUMERATION: {
                 fmi2_integer_t value = 0;
                 status = fmi2_import_get_integer(model->fmu, &vr, 1, &value);
-                values[i] = (double)value;
+                values[i].discrete_value = (int64_t)value;
                 break;
             }
             case NUMERIC_BOOLEAN: {
                 fmi2_boolean_t value = fmi2_false;
                 status = fmi2_import_get_boolean(model->fmu, &vr, 1, &value);
-                values[i] = value ? 1.0 : 0.0;
+                values[i].boolean_value = value == fmi2_false ? 0U : value == fmi2_true ? 1U : 2U;
                 break;
             }
             default:

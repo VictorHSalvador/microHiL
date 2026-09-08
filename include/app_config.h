@@ -12,8 +12,8 @@ typedef struct {
     int rt_priority;
     int cpu_core;
     bool strict_realtime;
-    bool csv_enabled;
-    char csv_path[PATH_LEN];
+    bool binary_log_enabled;
+    char binary_log_path[PATH_LEN];
     bool plot_enabled;
     double plot_window_s;
     double plot_refresh_s;
@@ -23,5 +23,6 @@ typedef struct {
 
 void app_config_set_defaults(AppConfig *config);
 void app_config_print(const AppConfig *config);
+int app_config_normalize_outputs(AppConfig *config);
 
 #endif

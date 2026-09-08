@@ -1,9 +1,11 @@
 #define _POSIX_C_SOURCE 200809L
 #include "app_config.h"
-#include "csv_logger.h"
 #include "fmu_model.h"
+#include "log_converter.h"
 #include "plotter.h"
 #include "rt_simulation.h"
+#include "run_logging.h"
+#include "run_result.h"
 #include "sample_queue.h"
 #include <ctype.h>
 #include <signal.h>
@@ -87,7 +89,8 @@ static void list_outputs(FmuModel *model) {
     size_t count = get_candidates(model, candidates, MAX_CANDIDATE_OUTPUTS);
     printf("\nNumeric FMU outputs (%zu):\n", count);
     for (size_t i = 0; i < count; ++i) {
-        printf("%4zu) %-12s VR=%-8u %s\n", i + 1, numeric_type_name(candidates[i].type), candidates[i].value_reference, candidates[i].name);
+        printf("%4zu) XML=%-6u %-12s VR=%-8u %s\n", i + 1, candidates[i].xml_index,
+               numeric_type_name(candidates[i].type), candidates[i].value_reference, candidates[i].name);
     }
     printf("\n");
 }
@@ -125,8 +128,7 @@ static void select_outputs(FmuModel *model, AppConfig *config) {
 
         bool duplicate = false;
         for (size_t i = 0; i < config->output_count; ++i) {
-            if (config->outputs[i].value_reference == candidates[index - 1].value_reference &&
-                config->outputs[i].type == candidates[index - 1].type) {
+            if (config->outputs[i].xml_index == candidates[index - 1].xml_index) {
                 duplicate = true;
                 break;
             }
@@ -168,12 +170,12 @@ static void configure_realtime(AppConfig *config) {
     config->strict_realtime = read_bool("Abort if SCHED_FIFO cannot be enabled? [y/n]: ", config->strict_realtime);
 }
 
-static void configure_csv(AppConfig *config) {
-    config->csv_enabled = read_bool("Enable CSV logging? [y/n]: ", config->csv_enabled);
-    if (config->csv_enabled) {
+static void ConfigureBinaryLogging(AppConfig *config) {
+    config->binary_log_enabled = read_bool("Enable binary logging? [y/n]: ", config->binary_log_enabled);
+    if (config->binary_log_enabled) {
         char path[PATH_LEN];
-        read_line("CSV output path [Enter keeps current]: ", path, sizeof(path));
-        if (path[0]) snprintf(config->csv_path, sizeof(config->csv_path), "%s", path);
+        read_line("Binary log path [Enter keeps current]: ", path, sizeof(path));
+        if (path[0]) snprintf(config->binary_log_path, sizeof(config->binary_log_path), "%s", path);
     }
 }
 
@@ -187,7 +189,33 @@ static void configure_plot(AppConfig *config) {
     }
 }
 
-static int run_simulation(FmuModel *model, AppConfig *config) {
+static void PrintLoggingResult(const run_logging_result_t *result) {
+    if (!result) return;
+    printf("\n=== Logging result ===\n");
+    printf("Enabled:                   %s\n", result->enabled ? "yes" : "no");
+    printf("Coordinator status:        %s\n", RunLoggingStatusString(result->status));
+    printf("Incomplete:                %s\n", result->logger.incomplete ? "yes" : "no");
+    printf("Accepted samples:          %llu\n", (unsigned long long)result->logger.accepted);
+    printf("Persisted samples:         %llu\n", (unsigned long long)result->logger.persisted);
+    printf("Discarded samples:         %llu\n", (unsigned long long)result->logger.discarded);
+    if (result->logger.has_last_persisted_sequence) printf("Last persisted sequence:   %llu\n", (unsigned long long)result->logger.last_persisted_sequence);
+    if (result->logger.first_error_stage != BINARY_LOGGER_STAGE_NONE) {
+        printf("First logging error:       %s / %s: %s\n", BinaryLoggerStageString(result->logger.first_error_stage),
+               BinaryLoggerStatusString(result->logger.first_error), result->logger.error_message);
+    }
+    printf("======================\n\n");
+}
+
+static const char *SimulationStateName(simulation_run_state_t state) {
+    switch (state) {
+        case SIMULATION_RUN_FINISHED: return "FINISHED";
+        case SIMULATION_RUN_STOPPED: return "STOPPED";
+        case SIMULATION_RUN_ERROR: return "ERROR";
+        default: return "UNKNOWN";
+    }
+}
+
+static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path[PATH_LEN], bool *last_log_closed) {
     if (!model->fmu) {
         printf("Load an FMU first.\n");
         return -1;
@@ -197,68 +225,115 @@ static int run_simulation(FmuModel *model, AppConfig *config) {
         return -1;
     }
 
-    SampleQueue log_queue, plot_queue;
-    sample_queue_init(&log_queue);
+    if (app_config_normalize_outputs(config) != 0) {
+        printf("Output selection has duplicate XML indices.\n");
+        return -1;
+    }
+    printf("Output selection uses ascending XML index order for FMU reads, log samples, and the descriptor.\n");
+
+    SampleQueue plot_queue;
     sample_queue_init(&plot_queue);
 
-    _Atomic bool producer_done = false;
+    _Atomic bool plot_producer_done = false;
     atomic_store_explicit(&g_stop_requested, false, memory_order_relaxed);
 
-    CsvLoggerContext csv_context;
     PlotterContext plot_context;
     RtSimulationContext sim_context;
-    bool csv_started = false;
+    run_logging_t logging;
+    run_result_t run_result;
+    log_descriptor_t descriptor;
+    run_logging_status_t descriptor_status;
     bool plot_started = false;
+    *last_log_closed = false;
+    RunLoggingInit(&logging, config->binary_log_enabled);
 
-    if (config->csv_enabled) {
-        if (csv_logger_start(&csv_context, &log_queue, config, &producer_done) == 0) csv_started = true;
-        else fprintf(stderr, "Could not start CSV logger thread.\n");
+    if (config->binary_log_enabled) {
+        descriptor_status = RunLoggingBuildDescriptor(config->fmu_path, config->outputs, config->output_count, config->step_size_s, &descriptor);
+        if (descriptor_status == RUN_LOGGING_STATUS_OK) {
+            if (RunLoggingStartFile(&logging, &descriptor, config->binary_log_path) == RUN_LOGGING_STATUS_OK) {
+                snprintf(last_log_path, PATH_LEN, "%s", config->binary_log_path);
+            }
+        } else {
+            (void)RunLoggingStart(&logging, NULL, NULL);
+            logging.result.status = descriptor_status;
+            snprintf(logging.result.logger.error_message, sizeof(logging.result.logger.error_message), "%s", RunLoggingStatusString(descriptor_status));
+        }
     }
     if (config->plot_enabled) {
-        if (plotter_start(&plot_context, &plot_queue, config, &producer_done) == 0) plot_started = true;
+        if (plotter_start(&plot_context, &plot_queue, config, &plot_producer_done) == 0) plot_started = true;
         else fprintf(stderr, "Could not start plotter thread.\n");
     }
 
     printf("\nStarting simulation. Press Ctrl+C to request a clean stop.\n");
-    int rc = rt_simulation_start(&sim_context, model, config,
-                                 csv_started ? &log_queue : NULL,
-                                 plot_started ? &plot_queue : NULL,
-                                 &g_stop_requested, &producer_done);
+    int rc = rt_simulation_start(&sim_context, model, config, logging.result.started ? &logging : NULL,
+                                 plot_started ? &plot_queue : NULL, &g_stop_requested, &plot_producer_done);
     if (rc != 0) {
         fprintf(stderr, "Could not create simulation thread.\n");
-        atomic_store_explicit(&producer_done, true, memory_order_release);
-        if (csv_started) csv_logger_join(&csv_context);
+        RunLoggingProducerDone(&logging);
+        RunLoggingFinish(&logging);
+        atomic_store_explicit(&plot_producer_done, true, memory_order_release);
         if (plot_started) plotter_join(&plot_context);
+        PrintLoggingResult(RunLoggingResult(&logging));
         return -1;
     }
 
     rc = rt_simulation_join(&sim_context);
-    if (csv_started) (void)csv_logger_join(&csv_context);
+    RunLoggingFinish(&logging);
     if (plot_started) (void)plotter_join(&plot_context);
+    RunResultAggregate(&run_result, &sim_context.run_result, RunLoggingResult(&logging));
+    *last_log_closed = config->binary_log_enabled && run_result.logging.status == RUN_LOGGING_STATUS_OK && !run_result.logging.logger.incomplete;
 
     printf("\n=== Simulation statistics ===\n");
-    printf("Result:                    %s\n", rc == 0 ? "OK" : "ERROR");
-    printf("SCHED_FIFO active:         %s\n", sim_context.stats.sched_fifo_active ? "yes" : "no");
-    printf("Completed steps:           %llu\n", (unsigned long long)sim_context.stats.completed_steps);
-    printf("Deadline misses:           %llu\n", (unsigned long long)sim_context.stats.deadline_misses);
-    printf("Max FMU computation time:  %.6f ms\n", sim_context.stats.max_computation_s * 1000.0);
-    printf("Max deadline lateness:     %.6f ms\n", sim_context.stats.max_lateness_s * 1000.0);
-    if (csv_started) printf("Dropped CSV samples:       %llu\n", (unsigned long long)sample_queue_dropped(&log_queue));
+    printf("State:                     %s\n", SimulationStateName(run_result.simulation.state));
+    printf("Code:                      %d\n", run_result.simulation.code);
+    printf("Stage:                     %s\n", run_result.simulation.stage);
+    printf("Message:                   %s\n", run_result.simulation.message);
+    printf("SCHED_FIFO active:         %s\n", run_result.simulation.stats.sched_fifo_active ? "yes" : "no");
+    printf("Completed steps:           %llu\n", (unsigned long long)run_result.simulation.stats.completed_steps);
+    printf("Deadline misses:           %llu\n", (unsigned long long)run_result.simulation.stats.deadline_misses);
+    printf("Max FMU computation time:  %.6f ms\n", run_result.simulation.stats.max_computation_s * 1000.0);
+    printf("Max deadline lateness:     %.6f ms\n", run_result.simulation.stats.max_lateness_s * 1000.0);
     if (plot_started) printf("Dropped plot samples:      %llu\n", (unsigned long long)sample_queue_dropped(&plot_queue));
     printf("=============================\n\n");
+    PrintLoggingResult(&run_result.logging);
     return rc;
+}
+
+static void ConvertClosedLog(AppConfig *config, const char *binary_path, bool log_closed) {
+    char csv_path[PATH_LEN];
+    log_descriptor_t descriptor;
+    log_converter_result_t result;
+
+    if (!log_closed || !binary_path || !binary_path[0]) {
+        printf("No closed binary log is available for conversion.\n");
+        return;
+    }
+    if (app_config_normalize_outputs(config) != 0 ||
+        RunLoggingBuildDescriptor(config->fmu_path, config->outputs, config->output_count, config->step_size_s, &descriptor) != RUN_LOGGING_STATUS_OK) {
+        printf("The selected FMU and outputs cannot provide a valid descriptor for conversion.\n");
+        return;
+    }
+    read_line("CSV destination path: ", csv_path, sizeof(csv_path));
+    if (!csv_path[0]) return;
+    if (LogConverterConvert(LOG_CONVERTER_EXECUTION_CLOSED, binary_path, csv_path, &descriptor, &result) == LOG_CONVERTER_STATUS_OK ||
+        result.status == LOG_CONVERTER_STATUS_PARTIAL) {
+        printf("CSV conversion: %s (%llu record(s)).\n", LogConverterStatusString(result.status), (unsigned long long)result.exported_records);
+    } else {
+        printf("CSV conversion failed: %s (%s).\n", LogConverterStatusString(result.status), result.message);
+    }
 }
 
 static void print_menu(void) {
     printf("1) Load/import FMU\n");
     printf("2) List numeric FMU outputs\n");
-    printf("3) Select outputs for CSV/plot\n");
+    printf("3) Select outputs for binary log/plot\n");
     printf("4) Configure simulation timing\n");
     printf("5) Configure real-time thread\n");
-    printf("6) Configure CSV logging\n");
+    printf("6) Configure binary logging\n");
     printf("7) Configure real-time plot\n");
     printf("8) Show current configuration\n");
     printf("9) Start simulation\n");
+    printf("10) Convert last closed binary log to CSV\n");
     printf("0) Exit\n");
 }
 
@@ -271,6 +346,8 @@ int main(void) {
     FmuModel model;
     app_config_set_defaults(&config);
     fmu_model_init(&model);
+    char last_log_path[PATH_LEN] = {0};
+    bool last_log_closed = false;
 
     printf("FMU 2.0 Co-Simulation Real-Time Runner\n");
     printf("Linux / POSIX threads / SCHED_FIFO / gnuplot\n\n");
@@ -284,10 +361,11 @@ int main(void) {
             case 3: if (model.fmu) select_outputs(&model, &config); else printf("Load an FMU first.\n"); break;
             case 4: configure_timing(&config); break;
             case 5: configure_realtime(&config); break;
-            case 6: configure_csv(&config); break;
+            case 6: ConfigureBinaryLogging(&config); break;
             case 7: configure_plot(&config); break;
             case 8: app_config_print(&config); break;
-            case 9: (void)run_simulation(&model, &config); break;
+            case 9: (void)run_simulation(&model, &config, last_log_path, &last_log_closed); break;
+            case 10: ConvertClosedLog(&config, last_log_path, last_log_closed); break;
             case 0: fmu_model_unload(&model); return 0;
             default: printf("Invalid option.\n"); break;
         }
