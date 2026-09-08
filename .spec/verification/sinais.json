@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "sinais": {
+    "ARQUIVO_INEXISTENTE::sdd-versioning::T-001": {
+      "codigo": "ARQUIVO_INEXISTENTE",
+      "feature": "sdd-versioning",
+      "ref": "T-001",
+      "ocorrencias": 2,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_TESTE::sdd-versioning::AC-001": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "sdd-versioning",
+      "ref": "AC-001",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_TESTE::sdd-versioning::AC-002": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "sdd-versioning",
+      "ref": "AC-002",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_TESTE::sdd-versioning::AC-003": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "sdd-versioning",
+      "ref": "AC-003",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_TESTE::sdd-versioning::AC-004": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "sdd-versioning",
+      "ref": "AC-004",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_TESTE::sdd-versioning::AC-005": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "sdd-versioning",
+      "ref": "AC-005",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_TESTE::sdd-versioning::AC-006": {
+      "codigo": "AC_SEM_TESTE",
+      "feature": "sdd-versioning",
+      "ref": "AC-006",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "PRINCIPIO_VIOLADO::—::P-002": {
+      "codigo": "PRINCIPIO_VIOLADO",
+      "feature": "—",
+      "ref": "P-002",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "PRINCIPIO_VIOLADO::—::P-003": {
+      "codigo": "PRINCIPIO_VIOLADO",
+      "feature": "—",
+      "ref": "P-003",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "PRINCIPIO_VIOLADO::—::P-004": {
+      "codigo": "PRINCIPIO_VIOLADO",
+      "feature": "—",
+      "ref": "P-004",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:51:32.704Z",
+      "ultimaVez": "2026-09-07T23:51:32.704Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_PROVA::sdd-versioning::AC-001": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "sdd-versioning",
+      "ref": "AC-001",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:57:37.770Z",
+      "ultimaVez": "2026-09-07T23:57:37.770Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_PROVA::sdd-versioning::AC-002": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "sdd-versioning",
+      "ref": "AC-002",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:57:37.770Z",
+      "ultimaVez": "2026-09-07T23:57:37.770Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_PROVA::sdd-versioning::AC-003": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "sdd-versioning",
+      "ref": "AC-003",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:57:37.770Z",
+      "ultimaVez": "2026-09-07T23:57:37.770Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_PROVA::sdd-versioning::AC-004": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "sdd-versioning",
+      "ref": "AC-004",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:57:37.770Z",
+      "ultimaVez": "2026-09-07T23:57:37.770Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_PROVA::sdd-versioning::AC-005": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "sdd-versioning",
+      "ref": "AC-005",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:57:37.770Z",
+      "ultimaVez": "2026-09-07T23:57:37.770Z",
+      "gitRev": "4020de9"
+    },
+    "AC_SEM_PROVA::sdd-versioning::AC-006": {
+      "codigo": "AC_SEM_PROVA",
+      "feature": "sdd-versioning",
+      "ref": "AC-006",
+      "ocorrencias": 1,
+      "primeiraVez": "2026-09-07T23:57:37.770Z",
+      "ultimaVez": "2026-09-07T23:57:37.770Z",
+      "gitRev": "4020de9"
+    }
+  }
+}

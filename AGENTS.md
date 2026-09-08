@@ -4,7 +4,7 @@ O projeto principal é este repositório. MICROHIL precede PIHIL. `MICROHIL-IO-D
 
 ## Ordem de leitura
 
-Leia [índice documental](docs/README.md), [constituição](docs/constitution.md), [contexto](docs/context.md), [alvo](docs/TARGET.md), os requisitos afetados em [spec.md](docs/spec.md), [arquitetura](docs/architecture.md), contratos relacionados e a tarefa em [plan.md](docs/plan.md). Consulte [decisões pendentes](docs/decisions.md) antes de implementar uma parte dependente de hardware ou transporte.
+Leia [índice documental](docs/README.md), [versão vigente do SDD](docs/sdd-versions.md), [constituição](docs/constitution.md), [contexto](docs/context.md), [alvo](docs/TARGET.md), os requisitos afetados em [spec.md](docs/spec.md), [arquitetura](docs/architecture.md), contratos relacionados e a tarefa em [plan.md](docs/plan.md). Consulte [decisões e parâmetros pendentes](docs/decisions.md) antes de implementar uma parte dependente de hardware ou transporte.
 
 ## Regras vigentes
 

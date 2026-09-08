@@ -1,0 +1,18 @@
+{
+  "testCommand": "node test/sdd-versioning.spec.test.js",
+  "reporter": "tap",
+  "testGlobs": [
+    "test/**",
+    "tests/**",
+    "src/**/*.test.*",
+    "src/**/*.spec.*",
+    "__tests__/**"
+  ],
+  "srcGlobs": [
+    "docs/sdd-versions.md",
+    "docs/README.md",
+    "docs/spec.md",
+    "docs/traceability.md",
+    "docs/quality-gates.md"
+  ]
+}

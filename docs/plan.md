@@ -4,7 +4,7 @@ Revisão 0.7. Decisões de produto e ICD foram consolidados; concluir a verifica
 
 ## TASK-000 — Preparar documentação
 
-Escopo documental: preservar fontes, revisar os 53 IDs de origem e seis derivados (59), incorporar respostas DEC-001…012 e Q-01…09, manter dúvidas Q explícitas e sincronizar requisitos, alvo, arquitetura, contratos, testes e rastreabilidade. Saída: documentos revisáveis no principal. Não declarar requisitos de produto aprovados nem refatoração concluída por esse resultado.
+Escopo documental: preservar fontes, revisar os 53 IDs de origem e seis derivados (59), incorporar respostas DEC-001…012 e Q-01…09, sincronizar requisitos, alvo, arquitetura, contratos, testes e rastreabilidade e manter a baseline em [sdd-versions.md](sdd-versions.md). Não declarar implementação ou validação do produto por resultado documental.
 
 ## Ordem e critérios
 

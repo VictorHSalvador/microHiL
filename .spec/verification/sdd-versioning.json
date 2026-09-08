@@ -1,0 +1,55 @@
+{
+  "feature": "sdd-versioning",
+  "timestamp": "2026-09-08T00:03:13.812Z",
+  "gitRev": "4020de9",
+  "command": "node test/sdd-versioning.spec.test.js",
+  "reporter": "tap",
+  "exitCode": 0,
+  "testsParsed": 9,
+  "results": {
+    "AC-001": {
+      "status": "pass",
+      "testName": "AC-001: A versão vigente é identificável @spec:AC-001",
+      "method": "tap"
+    },
+    "AC-002": {
+      "status": "pass",
+      "testName": "AC-002: O estado separa especificação, implementação e verificação @spec:AC-002",
+      "method": "tap"
+    },
+    "AC-003": {
+      "status": "pass",
+      "testName": "AC-003: Cada revisão possui metadados mínimos @spec:AC-003",
+      "method": "tap"
+    },
+    "AC-004": {
+      "status": "pass",
+      "testName": "AC-004: O procedimento de atualização é explícito @spec:AC-004",
+      "method": "tap"
+    },
+    "AC-005": {
+      "status": "pass",
+      "testName": "AC-005: Requisitos e matriz permanecem alinhados @spec:AC-005",
+      "method": "tap"
+    },
+    "AC-006": {
+      "status": "pass",
+      "testName": "AC-006: A camada mecânica não duplica requisitos do produto @spec:AC-006",
+      "method": "tap"
+    }
+  },
+  "principles": {
+    "P-002": {
+      "status": "pass",
+      "testName": "P-002: Existe uma única especificação normativa do produto @principle:P-002"
+    },
+    "P-003": {
+      "status": "pass",
+      "testName": "P-003: Estado documental não é estado de implementação @principle:P-003"
+    },
+    "P-004": {
+      "status": "pass",
+      "testName": "P-004: Toda revisão do SDD é rastreável @principle:P-004"
+    }
+  }
+}

@@ -6,6 +6,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 
 | Documento | Responsabilidade |
 |---|---|
+| [sdd-versions.md](sdd-versions.md) | Versão vigente, histórico e procedimento de atualização do conjunto SDD |
 | [constitution.md](constitution.md) | Regras permanentes, comentários e convenções de código |
 | [context.md](context.md) | Objetivo, fronteiras, fontes e situação do protótipo |
 | [TARGET.md](TARGET.md) | Hardware fornecido, reservas e lacunas do perfil físico |
@@ -32,6 +33,8 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) está preservada nesta pasta; o DOCX não está mais em docs/. Não manter DOCX e Markdown como duas especificações editáveis independentes. A evolução solicitada ocorre em `spec.md`; a cópia da referência A conserva a redação recebida.
 
 ## Atualização desta revisão
+
+Baseline vigente: **SDD-MICROHIL 0.7.1**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 

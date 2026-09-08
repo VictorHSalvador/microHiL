@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade
 
-Revisão 0.7. [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). Decisões confirmadas não alteram o estado de implementação: fontes continuam no estado auditado em `c788a4283cf81f17e9a2956ae258487c7931590a`.
+Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.1](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). Decisões confirmadas não alteram o estado de implementação: fontes continuam no estado auditado em `c788a4283cf81f17e9a2956ae258487c7931590a`.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Todos os V-* permanecem planejados. Evidências históricas não aprovam as exigências revisadas nem foram executadas novamente.
 

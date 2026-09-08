@@ -1,6 +1,6 @@
 # Especificação de trabalho do MICROHIL
 
-Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.7, 07.09.2026. **Estado: decisões de produto e ICD consolidados; implementação e validação pendentes.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
+Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.7, 07.09.2026; baseline conjunta [SDD-MICROHIL 0.7.1](sdd-versions.md). **Estado: decisões de produto e ICD consolidados; implementação e validação pendentes.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
 
 ## Origem e regra de leitura
 

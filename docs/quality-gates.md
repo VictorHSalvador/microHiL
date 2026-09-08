@@ -1,14 +1,14 @@
 # Gates de qualidade por incremento
 
-Status inicial: critérios definidos; liberação de produto não realizada. A verificação documental da sessão será registrada separadamente. Gates se aplicam ao escopo escolhido, não a todos os requisitos de todas as etapas simultaneamente.
+Status: G-CONSOLIDACAO aprovado em 07.09.2026; liberação de produto não realizada. Gates se aplicam ao escopo escolhido, não a todos os requisitos de todas as etapas simultaneamente.
 
 ## G-CONSOLIDACAO — Condição atual para iniciar código
 
-- [ ] Respostas Q incorporadas sem ambiguidades que afetem o desenvolvimento.
-- [ ] Requisitos/arquitetura/ICD/TARGET/verificação concordam com as decisões confirmadas.
-- [ ] Fase documental concluída; nenhuma proposta pendente foi tratada como resposta.
+- [x] Respostas Q incorporadas sem ambiguidades que afetem o desenvolvimento.
+- [x] Requisitos/arquitetura/ICD/TARGET/verificação concordam com as decisões confirmadas.
+- [x] Fase documental concluída; nenhuma proposta pendente foi tratada como resposta.
 
-Esse gate reflete a instrução específica do usuário de só começar desenvolvimento após sanear os Markdown. Independência técnica de um módulo HOST não revoga essa ordem.
+Esse gate reflete a instrução específica do usuário de só começar desenvolvimento após sanear os Markdown. A aprovação se apoia na [revisão da política de perda](evidence/realtime-loss-policy-review-2026-09-07.md) e na [prova mecânica do versionamento](../.spec/verification/sdd-versioning.json). Ela libera a implementação incremental prevista no plano, sem aprovar os gates HOST, ICD/TARGET ou TIMING/HIL. Parâmetros explicitamente atribuídos à implementação, seleção de versões ou medição continuam sob os gates correspondentes.
 
 ## G-DOC-HOST — Antes de implementação independente do hardware
 
