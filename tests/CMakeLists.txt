@@ -1,6 +1,12 @@
 add_executable(test_sample_queue test_sample_queue.c)
 target_link_libraries(test_sample_queue PRIVATE microhil_host_components)
 
+add_executable(test_log_format test_log_format.c)
+target_link_libraries(test_log_format PRIVATE microhil_host_components m)
+
 add_test(NAME sample_queue_spsc_order COMMAND test_sample_queue order)
 add_test(NAME sample_queue_spsc_wrap COMMAND test_sample_queue wrap)
 add_test(NAME sample_queue_spsc_saturation COMMAND test_sample_queue saturation)
+add_test(NAME log_format_header COMMAND test_log_format header)
+add_test(NAME log_format_records COMMAND test_log_format records)
+add_test(NAME log_format_rejection COMMAND test_log_format rejection)
