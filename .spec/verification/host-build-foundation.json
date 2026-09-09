@@ -1,11 +1,11 @@
 {
   "feature": "host-build-foundation",
-  "timestamp": "2026-09-08T00:56:30.324Z",
-  "gitRev": "fb04b98",
+  "timestamp": "2026-09-09T00:52:23.093Z",
+  "gitRev": "d6c220f",
   "command": "node test/run_spec_tests.js",
   "reporter": "tap",
   "exitCode": 0,
-  "testsParsed": 17,
+  "testsParsed": 29,
   "results": {
     "AC-007": {
       "status": "pass",

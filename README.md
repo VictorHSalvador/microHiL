@@ -1,12 +1,12 @@
 # MICROHIL
 
-O projeto está sendo retomado por desenvolvimento orientado à especificação, preservando o executor de FMU existente. A baseline vigente é a SDD-MICROHIL 0.7.2: a fundação de build HOST da TASK-001 foi implementada, evidenciada e auditada. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
+O projeto está sendo retomado por desenvolvimento orientado à especificação, preservando o executor de FMU existente. A baseline vigente é a SDD-MICROHIL 0.7.3: a fundação de build HOST da TASK-001 e o logging HOST da TASK-002 foram implementados, evidenciados e auditados. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
 
-O código atual implementa um protótipo HOST com terminal, CSV e gnuplot. GUI Qt, DAQC, ROS 2/micro-ROS e comunicação física ainda não estão implementados. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra falhas de logging e limitações temporais; a [evidência](docs/evidence/audit-2026-09-06/README.md) não constitui validação HIL. Não reutilize o diretório `build/` preexistente: os comandos abaixo usam diretórios limpos e os resultados executados estão na [evidência da fundação HOST](docs/evidence/host-build-foundation-2026-09-07.md).
+O código atual implementa um protótipo HOST com terminal de debug, logging binário e gnuplot. GUI Qt, DAQC, ROS 2/micro-ROS e comunicação física ainda não estão implementados. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra limitações históricas; a [evidência da TASK-002](docs/evidence/host-run-logging-2026-09-08.md) delimita o que foi testado no HOST. Não reutilize o diretório `build/` preexistente: os comandos abaixo usam diretórios limpos.
 
-## Existing FMU runner
+## Runner HOST atual
 
-Modular C application for Linux that executes an **FMI 2.0 Co-Simulation FMU synchronized to wall-clock time**, with a dedicated POSIX real-time simulation thread, asynchronous CSV logging, and asynchronous live plotting through gnuplot.
+Aplicação C modular para Linux destinada a executar FMU FMI 2.0 Co-Simulation, com thread de simulação, logging binário assíncrono e plotagem separada por gnuplot. A compilação do runner não foi acompanhada de execução de FMU nesta baseline; o agendamento atual também não comprova a política final de grade fixa nem desempenho em tempo real.
 
 ## Architecture
 
@@ -23,13 +23,13 @@ Modular C application for Linux that executes an **FMI 2.0 Co-Simulation FMU syn
 |                                                                  |
 |  input hook (future DAQ/ROS) -> fmi2DoStep() -> read outputs     |
 |                                |                                 |
-|                                +----> SPSC queue ----> CSV thread|
+|                                +----> SPSC queue ----> logger binário|
 |                                |                                 |
 |                                +----> SPSC queue ----> plot thread
 +------------------------------------------------------------------+
 ```
 
-CSV writing and gnuplot interaction run in separate consumer threads. Error paths in the FMU wrapper still write to stderr, and FMU callbacks/internal operations have not been audited for bounded execution. The current separation is useful but does not establish complete isolation from blocking I/O.
+O logger binário é o consumidor proprietário do arquivo; a fila SPSC tem capacidade fixa de 128 posições, parâmetro que ainda precisa de medição. O CSV só é produzido por ação explícita depois do encerramento. Plotagem continua em consumidor separado. Ainda há `printf`/`fprintf` legados no terminal, na thread de simulação e no wrapper FMI; isso não atende a ausência final de I/O textual no caminho crítico.
 
 ## Real-time behavior
 
@@ -39,7 +39,7 @@ For each communication step `h`:
 2. Selected FMU outputs are read.
 3. The step must complete before the absolute wall-clock deadline `t + h`.
 4. `clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, ...)` synchronizes the result with wall time and avoids cumulative drift.
-5. The sample is copied to independent SPSC queues for CSV and plotting.
+5. A amostra final é copiada para filas SPSC independentes de logging binário e plotagem.
 6. The current counter reports steps already late before the sleep, and maximum computation time covers the FMU step and output reads. Wakeup lateness and the complete cycle require additional instrumentation before these values can establish timing compliance.
 
 A simulation cannot be considered hard real-time merely because `SCHED_FIFO` is used. The FMU itself must have a bounded execution time smaller than the configured communication step, and the Linux kernel/platform must provide the required scheduling latency.
@@ -63,6 +63,17 @@ cmake -S . -B /tmp/microhil-host-independent \
 cmake --build /tmp/microhil-host-independent
 ctest --test-dir /tmp/microhil-host-independent -N
 ctest --test-dir /tmp/microhil-host-independent --output-on-failure
+```
+
+Para exercitar também os sanitizers de endereço e comportamento indefinido no HOST, o LeakSanitizer é desabilitado neste ambiente porque ele é incompatível com `ptrace`; essa opção não é evidência de ausência de vazamentos:
+
+```bash
+cmake -S . -B /tmp/microhil-host-asan \
+  -DMICROHIL_BUILD_RUNNER=OFF -DBUILD_TESTING=ON \
+  -DCMAKE_C_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \
+  -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined'
+cmake --build /tmp/microhil-host-asan
+ASAN_OPTIONS=detect_leaks=0 ctest --test-dir /tmp/microhil-host-asan --output-on-failure
 ```
 
 Para o runner completo, a obtenção oficial é opt-in e fixa a FMILibrary 3.0.4 na revisão `4a4b21ec10a632b2768a604c2330c54204919644`:
@@ -118,15 +129,11 @@ For an FMU exported from OpenModelica:
 
 The terminal menu will import the FMU, inspect `modelDescription.xml` through FMI Library, list numeric output variables, and allow selection by index.
 
-## CSV format
+## Fluxo de registro e conversão
 
-```csv
-sequence,simulation_time_s,wall_time_s,"output1","output2"
-0,0.020000000,0.020061231,1.23,4.56
-1,0.040000000,0.040057812,1.25,4.60
-```
+Durante uma execução com logging habilitado, o runner grava `MHILLOG1` little-endian, com SHA-256 dos bytes da FMU e descritor canônico das saídas. O índice XML é one-based, isto é, a posição da `ScalarVariable` na lista do XML. O formato preserva Real, Integer, Enumeration e Boolean, bitmap de qualidade e valores finais por passo; não inclui métricas temporais por registro.
 
-`simulation_time_s` is the FMU time. `wall_time_s` is elapsed `CLOCK_MONOTONIC` time since the start of the run and can be used to measure real-time synchronization.
+Após o encerramento, o menu de debug pode converter o último log fechado para CSV. O conversor reconstrói o descritor da FMU carregada e exige igualdade de hash, índice XML, nome, tipo, valueReference e ordem. `t_start` e `h` ficam registrados no arquivo, mas não integram essa identidade. As colunas são `sequence`, `simulation_time_s` e, para cada saída, `<nome>_value`, `<nome>_valid`. Real inválido vira `NaN`; discreto inválido, zero com qualidade `0`. Log marcado incompleto não é disponibilizado como log íntegro para conversão.
 
 ## Current scope
 

@@ -18,10 +18,12 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [adrs/ADR-002-product-decisions.md](adrs/ADR-002-product-decisions.md) | Decisões de produto confirmadas pelas respostas DEC |
 | [plan.md](plan.md) | Backlog ordenado, dependências, tarefas e critérios de conclusão |
 | [tasks/TASK-001.md](tasks/TASK-001.md) | Fundação de build HOST implementada, evidenciada e auditada |
+| [tasks/TASK-002.md](tasks/TASK-002.md) | Logging binário e conversão posterior HOST implementados, evidenciados e auditados mecanicamente, sem validação de produto |
 | [traceability.md](traceability.md) | Requisito → design → tarefa → teste → evidência |
 | [verification/verification-plan.md](verification/verification-plan.md) | Ambientes, procedimentos e limites dos testes |
 | [quality-gates.md](quality-gates.md) | Gates por escopo, com o resultado demonstrado da fundação HOST |
 | [evidence/host-build-foundation-2026-09-07.md](evidence/host-build-foundation-2026-09-07.md) | Ambiente, comandos, resultados e limites executados da TASK-001 |
+| [evidence/host-run-logging-2026-09-08.md](evidence/host-run-logging-2026-09-08.md) | Ambiente, comandos, resultados e limites executados da TASK-002 |
 
 ## Fontes e precedência
 
@@ -35,7 +37,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.7.2**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.7.3**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -57,4 +59,6 @@ Revisão 0.6: leitor USB em thread independente; consumir última atualização 
 
 Revisão 0.7: DATA real-time sem CRC, retransmissão ou sessão no fio; gaps detectáveis são contados e o pacote novo segue. READ_ACK MID 03 confirma consumo sem solicitar replay; XRCE MID 04 integra micro-ROS sob o mesmo dono do enlace. A [evidência de consolidação 0.7](evidence/realtime-loss-policy-review-2026-09-07.md) registra a verificação documental, sem alegar teste do produto.
 
-Patch 0.7.2: a [TASK-001](tasks/TASK-001.md) registrou build limpo independente, CTest, diagnóstico da dependência e builds do runner com a revisão oficial e com instalação externa. A [evidência correspondente](evidence/host-build-foundation-2026-09-07.md) delimita que nenhuma FMU, Raspberry Pi, DAQC, USB, ROS, GUI, concorrência real SPSC ou deadline foi validado; o verify comprovou 8/8 critérios da feature e a auditoria final ficou limpa.
+Patch 0.7.2: a [TASK-001](tasks/TASK-001.md) registrou build limpo independente, CTest, diagnóstico da dependência e builds do runner com a revisão oficial e com instalação externa. A [evidência correspondente](evidence/host-build-foundation-2026-09-07.md) delimita que nenhuma FMU, Raspberry Pi, DAQC, USB, ROS, GUI, concorrência real SPSC ou deadline foi validado.
+
+Patch 0.7.3: a [TASK-002](tasks/TASK-002.md) sincroniza o IF-LOG implementado no HOST: codec `MHILLOG1`, fila SPSC limitada, falhas estruturadas, SHA-256 local e conversão CSV posterior. A [evidência correspondente](evidence/host-run-logging-2026-09-08.md) registra CTest normal e com ASan+UBSan, harness de especificação, compilação externa do runner e os limites: sem execução de FMU, sem qualificação de instalação externa, GUI, Raspberry Pi, USB, ROS, firmware, bancada, HIL ou timing real.

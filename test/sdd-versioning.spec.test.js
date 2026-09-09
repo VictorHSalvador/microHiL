@@ -70,7 +70,7 @@ RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
   const version_files = fs.readdirSync(path.join(ROOT, 'docs')).filter((name) => /^sdd-versions\.md$/.test(name));
   assert.deepEqual(version_files, ['sdd-versions.md']);
   assert.match(index, /\[sdd-versions\.md\]\(sdd-versions\.md\)/);
-  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.7\.2\*\*, de 07\.09\.2026/);
+  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.7\.3\*\*, de 09\.09\.2026/);
   assert.match(versioning, /Status da versão:/);
 });
 
@@ -79,17 +79,17 @@ RegisterTest('AC-002: O estado separa especificação, implementação e verific
   assert.match(versioning, /\| Especificação \|/);
   assert.match(versioning, /\| Implementação \|/);
   assert.match(versioning, /\| Verificação \|/);
-  assert.match(versioning, /não executa FMU, ROS, USB, firmware, GUI, bancada ou HIL/i);
+  assert.match(versioning, /não executa FMU, ROS, USB, firmware, GUI, Raspberry Pi, bancada, HIL ou timing real/i);
 });
 
 RegisterTest('AC-003: Cada revisão possui metadados mínimos @spec:AC-003', () => {
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
-  assert.equal(rows.length, 9);
+  assert.equal(rows.length, 10);
   for (const row of rows) {
     assert.equal(row.length, 7);
     assert.ok(row.every((cell) => cell.length > 0));
   }
-  assert.deepEqual(rows.map((row) => row[0]), ['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0', '0.6.0', '0.7.0', '0.7.1', '0.7.2']);
+  assert.deepEqual(rows.map((row) => row[0]), ['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0', '0.6.0', '0.7.0', '0.7.1', '0.7.2', '0.7.3']);
 });
 
 RegisterTest('AC-004: O procedimento de atualização é explícito @spec:AC-004', () => {
@@ -131,7 +131,7 @@ RegisterTest('P-002: Existe uma única especificação normativa do produto @pri
 
 RegisterTest('P-003: Estado documental não é estado de implementação @principle:P-003', () => {
   const versioning = Read('docs/sdd-versions.md');
-  assert.match(versioning, /fundação HOST da TASK-001 implementada, evidenciada e auditada; validação do produto pendente/);
+  assert.match(versioning, /TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente/);
   assert.match(versioning, /Aprovação documental não significa implementação/);
 });
 
@@ -247,15 +247,26 @@ RegisterTest('AC-014: O SDD reflete o estado observado @spec:AC-014', () => {
   const traceability = Read('docs/traceability.md');
   const gates = Read('docs/quality-gates.md');
   const versioning = Read('docs/sdd-versions.md');
-  assert.match(plan, /Baseline 0\.7\.2/);
+  const task_two = Read('docs/tasks/TASK-002.md');
+  const logging_feature = Read('.spec/features/host-run-logging/spec.md');
+  const logging_tasks = Read('.spec/features/host-run-logging/tasks.md');
+  assert.match(plan, /TASK-002[\s\S]*Concluída, evidenciada e auditada/);
+  assert.match(task_two, /Status: concluída, evidenciada e auditada mecanicamente/);
+  assert.match(task_two, /Nenhuma FMU foi executada/);
+  assert.match(logging_feature, /> status: pronta/);
+  for (const task_id of ['T-005', 'T-006', 'T-007', 'T-008', 'T-009']) assert.match(logging_tasks, new RegExp(task_id + '[\\s\\S]*\\[concluida\\]'));
   assert.match(task, /Status: concluída, evidenciada e auditada/);
   assert.match(task, /Executar uma FMU/);
   for (const requirement_id of ['REQ-NF-01', 'REQ-NF-11', 'REQ-NF-13', 'REQ-NF-18']) {
     const row = traceability.split(/\r?\n/).find((line) => line.startsWith('| ' + requirement_id + ' |'));
     assert.ok(row && row.includes('host-build-foundation-2026-09-07.md'));
   }
-  assert.match(gates, /- \[ \] Resultado agregado e integridade de dados coerentes/);
-  assert.match(versioning, /\| 0\.7\.2 \| 07\.09\.2026 \| PATCH \|/);
+  assert.match(gates, /- \[x\] Resultado agregado e integridade de dados coerentes/);
+  assert.match(versioning, /\| 0\.7\.3 \| 09\.09\.2026 \| PATCH \|/);
+  for (const requirement_id of ['REQ-F-07', 'REQ-F-09', 'REQ-F-11', 'REQ-F-12', 'REQ-F-22', 'REQ-F-25', 'REQ-F-26', 'REQ-NF-30']) {
+    const row = traceability.split(/\r?\n/).find((line) => line.startsWith('| ' + requirement_id + ' |'));
+    assert.ok(row && row.includes('host-run-logging-2026-09-08.md'));
+  }
 });
 
 console.log('TAP version 13');

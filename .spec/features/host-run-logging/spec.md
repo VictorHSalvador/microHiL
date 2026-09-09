@@ -97,6 +97,10 @@ Como operador, quero receber o resultado agregado do logger ao fim da execução
 - **Quando** o consumidor registra o diagnóstico
 - **Então** a causa fica disponível por código, etapa e mensagem limitada para GUI/terminal debug, sem `printf`, `fprintf` ou `perror` no novo módulo de logging
 
+## Estado da evidência
+
+Os 12 critérios AC-015…AC-026 foram cobertos por testes C anotados e exercitados no HOST. Isto prova o comportamento controlado do codec, logger, conversor e agregação, não uma execução de FMU ou validação de produto. A fila de capacidade 128, o caminho de terminal com I/O textual legado e o agendamento atual permanecem limitações explicitamente registradas na TASK-002 e na evidência.
+
 ## Fora de escopo
 
 - Implementar GUI Qt, seleção visual, atuação DAQC, USB, ROS 2/micro-ROS ou firmware.

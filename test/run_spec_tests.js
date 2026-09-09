@@ -18,6 +18,10 @@ function CommandOutput(result) {
   return (result.stdout || '') + (result.stderr || '');
 }
 
+function Read(relative_path) {
+  return fs.readFileSync(path.join(ROOT, relative_path), 'utf8');
+}
+
 function ReadTapResults(output) {
   const results = [];
   for (const line of output.split(/\r?\n/)) {
@@ -52,6 +56,27 @@ function WithTemporaryBuild(body) {
   } finally {
     fs.rmSync(build_directory, { recursive: true, force: true });
   }
+}
+
+let host_run_logging_ctest;
+
+function RunHostRunLoggingCtest() {
+  if (host_run_logging_ctest) return host_run_logging_ctest;
+  WithTemporaryBuild((build_directory) => {
+    const configure = RunCommand('cmake', [
+      '-S', ROOT,
+      '-B', build_directory,
+      '-DMICROHIL_BUILD_RUNNER=OFF',
+      '-DBUILD_TESTING=ON',
+    ]);
+    assert.equal(configure.status, 0, CommandOutput(configure));
+    const build = RunCommand('cmake', ['--build', build_directory]);
+    assert.equal(build.status, 0, CommandOutput(build));
+    host_run_logging_ctest = RunCommand('ctest', ['--test-dir', build_directory, '--output-on-failure']);
+  });
+  assert.equal(host_run_logging_ctest.status, 0, CommandOutput(host_run_logging_ctest));
+  assert.match(CommandOutput(host_run_logging_ctest), /100% tests passed, 0 tests failed out of 23/);
+  return host_run_logging_ctest;
 }
 
 const existing_output = CaptureExistingRunner();
@@ -97,6 +122,28 @@ RegisterTest('AC-009: Os testes HOST são descobertos e executados @spec:AC-009'
     assert.match(CommandOutput(execution), /100% tests passed, 0 tests failed out of [1-9][0-9]*/);
   });
 });
+
+const HOST_RUN_LOGGING_CRITERIA = [
+  ['AC-015', 'tests/test_log_format.c'],
+  ['AC-016', 'tests/test_log_format.c'],
+  ['AC-017', 'tests/test_log_format.c'],
+  ['AC-018', 'tests/test_binary_logger.c'],
+  ['AC-019', 'tests/test_binary_logger.c'],
+  ['AC-020', 'tests/test_binary_logger.c'],
+  ['AC-021', 'tests/test_binary_logger.c'],
+  ['AC-022', 'tests/test_log_converter.c'],
+  ['AC-023', 'tests/test_log_converter.c'],
+  ['AC-024', 'tests/test_log_converter.c'],
+  ['AC-025', 'tests/test_run_logging.c'],
+  ['AC-026', 'tests/test_binary_logger.c'],
+];
+
+for (const [criterion, source] of HOST_RUN_LOGGING_CRITERIA) {
+  RegisterTest(criterion + ': O teste C anotado é executado no CTest HOST @spec:' + criterion, () => {
+    assert.match(Read(source), new RegExp('@spec:' + criterion));
+    RunHostRunLoggingCtest();
+  });
+}
 
 console.log('TAP version 13');
 let failures = 0;

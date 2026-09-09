@@ -19,15 +19,15 @@ Esse gate reflete a instrução específica do usuário de só começar desenvol
 
 Ausência de pinagem não reprova uma correção isolada de logger. Campo de formato ou política em aberto pode bloquear sua integração operacional, sem impedir testar propagação de erro.
 
-## G-HOST — TASK-001 no host
+## G-HOST — TASK-001 e TASK-002 no host
 
 - [x] Build limpo dos alvos declarados, com versões e warnings revisados.
 - [x] Testes de comportamento e falha executados; nenhum “zero testes” apresentado como suíte aprovada.
-- [ ] Resultado agregado e integridade de dados coerentes, incluindo falhas.
-- [ ] Comentários/nomenclatura do escopo atendem ADR-001; APIs externas preservadas.
+- [x] Resultado agregado e integridade de dados coerentes, incluindo falhas, para logger/codec/conversor em testes HOST controlados.
+- [x] Comentários/nomenclatura dos módulos novos de logging atendem ADR-001; APIs externas foram preservadas no escopo.
 - [x] Evidência e matriz atualizadas, sem apresentar teste parcial como produto validado.
 
-Os itens marcados foram demonstrados pela [evidência da TASK-001](evidence/host-build-foundation-2026-09-07.md): build independente, três testes CTest, diagnóstico da dependência e compilação do runner pelas duas rotas. Os dois itens restantes não foram demonstrados neste escopo; em especial, não houve execução de FMU, validação de integridade de dados em execução, revisão global de estilo nem teste de hardware/tempo real.
+Os itens marcados foram demonstrados pelas evidências da [TASK-001](evidence/host-build-foundation-2026-09-07.md) e da [TASK-002](evidence/host-run-logging-2026-09-08.md): build independente, CTest, diagnóstico de dependência, compilação do runner, codec, falhas, concorrência SPSC controlada, conversão e resultado agregado. Isso não valida integridade de dados em execução de FMU, revisão global de estilo, GUI, hardware ou tempo real. A capacidade 128 e a política temporal continuam abertas para medição.
 
 ## G-ICD-TARGET — Antes de driver definitivo e atuação
 

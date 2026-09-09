@@ -1,8 +1,8 @@
 # Matriz de rastreabilidade
 
-Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.2](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A TASK-001 avançou somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, concorrência real ou deadlines.
+Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.3](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). TASK-001 e TASK-002 avançaram somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, bancada, HIL ou deadlines.
 
-I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; a evidência da TASK-001 demonstra apenas build e testes HOST delimitados.
+I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 
 | Requisito | Design/contrato | Tarefa | Código observado | Estado | Teste planejado / ambiente | Evidência disponível |
 |---|---|---|---|---|---|---|
@@ -12,12 +12,12 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | Não implementado | A | V-F-04 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-05 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-06 | ARCH-STATE / IF-CORE | TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-06 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-07 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-07 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-F-07 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c; src/run_logging.c | P | V-F-07 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): fechamento/drenagem HOST; sem Stop/FMU/zero físico/HIL |
 | REQ-F-08 | ARCH-STATE | TASK-003, TASK-009 | Não implementado | A | V-F-08 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-09 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-09 / HOST + HIL | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
+| REQ-F-09 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/run_logging.c; src/binary_logger.c | P | V-F-09 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): erro de log estruturado; GUI, falha FMI/link e prints legados pendentes |
 | REQ-F-10 | ARCH-GUI / IF-LOG | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-F-10 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-11 | ARCH-LOG / IF-LOG | TASK-002 | src/csv_logger.c; src/sample_queue.c | P | V-F-11 / HOST + HIL | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
-| REQ-F-12 | ARCH-TIME / IF-LOG | TASK-002, TASK-004 | src/rt_simulation.c; agregados incompletos | P | V-F-12 / HOST + alvo | Inspeção apenas; sem caso de aceitação executado |
+| REQ-F-11 | ARCH-LOG / IF-LOG | TASK-002 | src/log_format.c; src/binary_logger.c; src/run_logging.c | P | V-F-11 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): codec, qualidade, perdas e falhas HOST; sem FMU/HIL |
+| REQ-F-12 | ARCH-TIME / IF-LOG | TASK-002, TASK-004 | src/run_result.c; src/rt_simulation.c | P | V-F-12 / HOST + alvo | [TASK-002](evidence/host-run-logging-2026-09-08.md): resultado de logging separado; métricas completas/timing são TASK-004 |
 | REQ-F-13 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-F-13 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-F-14 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-F-14 / GUI | Sem execução do caso de aceitação |
 | REQ-F-15 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-F-15 / GUI | Sem execução do caso de aceitação |
@@ -27,11 +27,11 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-19 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-F-19 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-F-20 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-F-20 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-F-21 | ARCH-CORE / IF-CORE | TASK-003, TASK-006 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-21 / HOST | Sem execução do caso de aceitação |
-| REQ-F-22 | ARCH-LOG / IF-LOG | TASK-002 | src/csv_logger.c; src/sample_queue.c | P | V-F-22 / HOST | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
+| REQ-F-22 | ARCH-LOG / IF-LOG | TASK-002 | src/binary_logger.c; src/run_logging.c | P | V-F-22 / HOST | [TASK-002](evidence/host-run-logging-2026-09-08.md): drenagem/interleaving e flush/close HOST; sem lifecycle FMI |
 | REQ-F-23 | ARCH-CORE / ARCH-IO / IF-SAMPLE | TASK-003, TASK-006, TASK-007 | Não implementado para inputs DAQC | A | V-F-23 / HOST + integração | Sem execução da revisão 0.4 |
 | REQ-F-24 | ARCH-CORE / ARCH-STATE / IF-SAMPLE | TASK-003, TASK-006, TASK-007, TASK-009 | Não implementado para inputs DAQC | A | V-F-24 / HOST + integração | Sem execução da revisão 0.4 |
-| REQ-F-25 | ARCH-STATE / ARCH-LOG | TASK-002, TASK-003, TASK-009 | src/main.c e wrapper: terminal sem gate debug | P | V-F-25 / HOST + GUI | Sem execução |
-| REQ-F-26 | ARCH-LOG / IF-LOG | TASK-002, TASK-009 | Não implementado | A | V-F-26 / HOST + GUI | Sem execução |
+| REQ-F-25 | ARCH-STATE / ARCH-LOG | TASK-002, TASK-003, TASK-009 | src/binary_logger.c; src/run_logging.c; src/main.c; src/fmu_model.c | P | V-F-25 / HOST + GUI | [TASK-002](evidence/host-run-logging-2026-09-08.md): novo logger sem I/O textual e diagnóstico estruturado; prints legados no caminho crítico pendentes |
+| REQ-F-26 | ARCH-LOG / IF-LOG | TASK-002, TASK-009 | src/log_converter.c; src/main.c | P | V-F-26 / HOST + GUI | [TASK-002](evidence/host-run-logging-2026-09-08.md): CSV posterior, identidade e parcialidade HOST; GUI/FMU real pendentes |
 | REQ-F-27 | ARCH-FW / IF-READ-PROGRESS | TASK-006, TASK-007, TASK-008, TASK-010 | Não implementado | A | V-F-27 / HOST + bancada/HIL | Sem execução; READ_ACK definido, cadência/tolerância dependem de medição |
 | REQ-NF-01 | ARCH-CORE | TASK-001 | Build HOST independente e runner compilados em Ubuntu 22.04 | P | V-NF-01 / HOST + alvo | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): host demonstrado; Raspberry Pi não validado |
 | REQ-NF-02 | ARCH-IO | TASK-007 | Não implementado | A | V-NF-02 / HOST + HIL | Sem execução do caso de aceitação |
@@ -58,10 +58,10 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-NF-23 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-23 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-24 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-NF-24 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-25 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-25 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-26 | ADR-001 / constitution | TASK-005 | src/ e include/ ainda não migrados | D | V-NF-26 / Revisão + HOST | Sem execução do caso de aceitação |
+| REQ-NF-26 | ADR-001 / constitution | TASK-005 | módulos novos do logging em src/ e include/; base legada não migrada | P | V-NF-26 / Revisão + HOST | [TASK-002](evidence/host-run-logging-2026-09-08.md): build/testes dos módulos novos; revisão global permanece TASK-005 |
 | REQ-NF-27 | ADR-001 / constitution | TASK-005 | Sem Python de produto | NA | V-NF-27 / Revisão + HOST | Sem execução do caso de aceitação |
 | REQ-NF-28 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-28 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-29 | ARCH-IO / IF-DAQ | TASK-004, TASK-007 | Não implementado | A | V-NF-29 / HOST + HIL | Sem execução do caso de aceitação |
-| REQ-NF-30 | ARCH-LOG / ARCH-GUI | TASK-002, TASK-004, TASK-009 | src/csv_logger.c; src/sample_queue.c | P | V-NF-30 / HOST + alvo | Sem execução do caso de aceitação |
+| REQ-NF-30 | ARCH-LOG / ARCH-GUI | TASK-002, TASK-004, TASK-009 | src/binary_logger.c; src/run_logging.c; src/plotter.c | P | V-NF-30 / HOST + alvo | [TASK-002](evidence/host-run-logging-2026-09-08.md): sink fora do produtor e plot separado; sem medição de cadência/GUI/alvo |
 | REQ-NF-31 | ARCH-TIME / IF-SAMPLE | TASK-004, TASK-006, TASK-007 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-31 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-32 | ARCH-TIME | TASK-004, TASK-010 | Não implementado | A | V-NF-32 / HOST + HIL | Sem execução |

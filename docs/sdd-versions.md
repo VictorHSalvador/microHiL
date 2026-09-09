@@ -1,18 +1,18 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.7.2**, de 07.09.2026.
+Versão vigente: **SDD-MICROHIL 0.7.3**, de 09.09.2026.
 
-Status da versão: **baseline documental consolidada; fundação HOST da TASK-001 implementada, evidenciada e auditada; validação do produto pendente**.
+Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.7.2 | Evidência/limite |
+| Eixo | Estado em 0.7.3 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
-| Implementação | Fundação de build HOST da TASK-001 concluída; demais requisitos de produto seguem pendentes | Build independente e runner compilados; não inferir execução de FMU ou conformidade integral |
-| Verificação | Agregador 17/17, verify 8/8 para a fundação HOST e auditoria final limpa | Não executa FMU, ROS, USB, firmware, GUI, bancada ou HIL |
+| Implementação | TASK-001 e TASK-002 HOST concluídas; codec/logging/conversão implementados, requisitos de produto seguem parciais ou pendentes | Build independente e runner compilados; não inferir execução de FMU ou conformidade integral |
+| Verificação | CTest 23/23 normal e 23/23 ASan+UBSan; harness e critérios da feature executados | Não executa FMU, ROS, USB, firmware, GUI, Raspberry Pi, bancada, HIL ou timing real |
 
 ## Esquema de versão
 
@@ -39,6 +39,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.7.0 | 07.09.2026 | MINOR | DATA sem CRC/retransmissão/sessão no fio; READ_ACK MID 03; XRCE MID 04; perda segue para o próximo pacote | ADR-003, spec, contracts, architecture, plan, verification | realtime-loss-policy-review-2026-09-07 | 4020de9 |
 | 0.7.1 | 07.09.2026 | PATCH | Registro único de versões e auditoria mecânica da governança documental | sdd-versions, README, .spec, teste documental e quality-gates | onp-spec verify/audit desta feature | 61feaa9 |
 | 0.7.2 | 07.09.2026 | PATCH | Fundação de build HOST, testes, rastreabilidade e evidência da TASK-001 sem alterar comportamento aprovado do produto | README, TARGET, plano, tarefa, matriz, gates, evidence, .spec e teste documental | host-build-foundation-2026-09-07; verify 8/8; audit limpo | fb04b98 |
+| 0.7.3 | 09.09.2026 | PATCH | Sincronização do IF-LOG já aprovado com a implementação/evidência HOST da TASK-002, sem alterar comportamento normativo de produto | README, docs, TASK-002, matriz, gates, evidence, .spec, config e teste documental | host-run-logging-2026-09-08; CTest 23/23 normal/ASan+UBSan; verify 12/12 e audit --ci limpo | a7af739, 742febe, 1e87ac7, d6c220f; documentação nesta baseline |
 
 ## Procedimento de atualização
 

@@ -1,6 +1,6 @@
 # Especificação de trabalho do MICROHIL
 
-Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.7, 07.09.2026; baseline conjunta [SDD-MICROHIL 0.7.1](sdd-versions.md). **Estado: decisões de produto e ICD consolidados; implementação e validação pendentes.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
+Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.7, baseline conjunta [SDD-MICROHIL 0.7.3](sdd-versions.md), 08.09.2026. **Estado: decisões de produto e ICD consolidados; TASK-001 e TASK-002 verificadas no HOST, validação de produto pendente.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
 
 ## Origem e regra de leitura
 
@@ -129,7 +129,7 @@ Com logging habilitado, registrar o valor final de cada saída selecionada corre
 
 **Critério de aceitação proposto (V-F-11; HOST + HIL):** Confrontar passos concluídos e registros finais por saída; detectar perda e amostra final ausente. Testar outputs registrados sem substituição por inputs retidos e falha de sink sem parar a simulação; Q-07 fecha representação tipada e metadados.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** vetores tipados e teste de falha do sink.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** integração com FMU real, GUI e confirmação do ciclo/atuação de produto; vetores HOST tipados e falhas de sink foram executados em 08.09.2026.
 
 ### REQ-F-12 — Coleta de métricas para apresentação final
 
@@ -233,7 +233,7 @@ Ao finalizar uma simulação por término normal, Stop ou erro recuperável, a p
 
 **Critério de aceitação proposto (V-F-22; HOST):** Em fim/Stop/erro recuperável, preservar até última amostra concluída quando sink disponível; testar interleaving final e erros de flush/close; impossibilidade de gravação deve ser erro explícito, sem alegar preservação impossível.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** implementação e testes de falha/encerramento.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** encerramento integrado com lifecycle FMU e atuação física; drenagem e falhas de flush/close foram exercitadas no HOST em 08.09.2026.
 
 
 ### REQ-F-23 — Retenção no host das entradas provenientes da DAQC
@@ -274,7 +274,7 @@ A plataforma deve disponibilizar conversão do binário de saídas para CSV some
 
 **Critério de aceitação proposto (V-F-26; HOST + GUI):** Converter depois de Finished/Stopped conforme contrato, bloquear conversão durante Running e rejeitar FMU incompatível. Comparar valores tipados do binário/CSV usando a ordem explicitamente registrada e conferida contra os metadados XML.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** vetores de round-trip e incompatibilidade.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** ação e apresentação GUI; round-trip, incompatibilidade e cauda truncada foram exercitados no HOST em 08.09.2026.
 
 ### REQ-F-27 — DISABLE após 60 segundos de streaming sem leitura pelo host
 
