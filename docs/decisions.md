@@ -11,13 +11,21 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 | DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM configurável | Caracterização elétrica continua requisito de bancada |
 | DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; grade fixa, sem compensação; USB ≤5 ms por transferência | Medir orçamento fim a fim por modelo/perfil |
 | DEC-005 | Aquisição inválida retida no host, inicial válido do input se necessário; checkbox/100 passos. Encerramento zera saídas físicas e cessa DATA; restart reinicializa FMU | Verificar ordem e confirmação em HIL |
-| DEC-006 | Primeiro Linux Ubuntu 22.04/ROS 2 Humble; futuro Raspberry Pi 4/2 GB | Versões reproduzíveis, kernel/arquitetura do Pi e firmware a detalhar no TARGET |
+| DEC-006 | Primeiro Linux Ubuntu 22.04.5/ROS 2 Humble; futuro Raspberry Pi 4/2 GB; firmware usa ESP-IDF v4.4.8 e ramos Humble de micro-ROS | Fixar commits/revisões reproduzíveis do micro-ROS e verificar build integrado; kernel/arquitetura do Pi seguem pendentes |
 | DEC-007 | Continuar após overrun; último dado válido pode ser reutilizado até fim; saída constante não é defeito; SCHED_FIFO deve ser verificado | Falha de configuração impede Play HiL e gera diagnóstico |
 | DEC-008 | Saída da FMU por passo no binário; Real inválido usa NaN, discreto inválido usa zero com bit de qualidade; falha de gravação gera aviso e não interrompe | Formato IF-LOG deve ser testado antes de estabilizar versão 1 |
 | DEC-009 | Sem pausa; gráfico até 10 Hz, ticks Y configuráveis, janela temporal comum deslizante; fechar destrói histórico, reabrir começa dali; configuração e abertura separadas, abertura antes de Play permitida | Sem conflito pendente com proteção: ela termina em Error |
 | DEC-010 | Preservar APIs Qt; convenção própria C++ e estilo definidos na constituição | Nenhuma decisão de toolkit reaberta |
 | DEC-011 | Importação de FMU separada da configuração binária; diagnosticar incompatibilidades específicas com FMU/DAQ/mapa | Pode identificar e informar capacidades não suportadas no incremento inicial (Q-08 resolvida) |
 | DEC-012 | SYNC 0x7259; MID CONFIG=01, DATA=02, READ_ACK=03, XRCE=04; COMMAND 01/02/03; payload DATA até 256; STATUS só no CONFIG ESP32→host; sem CRC/retransmissão | Cadência do ACK, MTU XRCE e prazo agregado CONFIG serão medidos |
+
+## Decisões de toolchain e UART — 0.7.4
+
+O host auditado executa Ubuntu 22.04.5 com `ROS_DISTRO=humble`. Por decisão do usuário, a baseline do firmware é ESP-IDF v4.4.8, com `micro_ros_setup`, componente ESP-IDF e agente micro-ROS nos ramos Humble. A compatibilidade de integração ainda precisa de build reproduzível e de commits fixos; esta decisão não a declara executada.
+
+A UART da ponte CH340 é configurável de 9.600 a 115.200 bit/s, com 8N1 e RTS/CTS desabilitado. A escolha de taxa é uma propriedade do perfil/enlace e deve ser aplicada nos dois extremos antes de STREAMING. O limite superior não garante a meta de 100 Hz: um DATA de 261 bytes em 115.200 bit/s ocupa aproximadamente 22,66 ms no fio. A validação pré-Play e os ensaios devem rejeitar uma configuração cujo orçamento observado não caiba no passo, sem mudar `h` ou recuperar etapas.
+
+RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos de controle de fluxo e não comprovam consumo pelo host; READ_ACK continua sendo a confirmação cumulativa requerida por F-27.
 
 ## Respostas Q incorporadas
 

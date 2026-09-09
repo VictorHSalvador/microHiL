@@ -10,14 +10,14 @@ Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponi
 | Identificador provisório | DAQC-PROT-ESP32-DEVKIT-30P-USB-C | Identifica protótipo, não perfil aprovado de produto |
 | MCU | ESP32-D0WDQ5, revisão 3, informado por esptool | Preservar saída bruta antes de consolidar nomenclatura comercial/ECO |
 | CPU/cristal | Dual-core, capacidade até 240 MHz; cristal informado 40 MHz | Clock configurado de firmware ainda não definido |
-| USB–UART | CH340/CH341, VID:PID 1a86:7523 | Confirmar variante, driver, baud rate, reset e exclusividade do dispositivo |
+| USB–UART | CH340/CH341, VID:PID 1a86:7523; UART 8N1 configurável de 9.600 a 115.200 bit/s; RTS/CTS desabilitado | Confirmar variante, driver, reset e exclusividade do dispositivo; medir capacidade por perfil/passo |
 | Porta | /dev/ttyUSB0 na identificação fornecida | Não é identificador persistente nem prova de presença atual |
 | Flash | 4 MB informados | Partições, modo e frequência pendentes |
 | ADC | Referência VRef em eFuse informada | Não comprova calibração de sistema ou exatidão da DAQC |
 | Módulo | Blindagem/antena PCB no relato | Modelo comercial e conexões adicionais pendentes |
 | Host produto | Raspberry Pi 4 com 2 GB, confirmado pelo usuário | Arquitetura do SO, kernel e recursos reservados pendentes; etapa inicial em máquina Linux Ubuntu 22.04/ROS 2 Humble |
 | Host auditado | Ubuntu 22.04.5, x86-64, kernel 6.8.0-138-generic | Não representa o alvo Raspberry Pi |
-| Software alvo | ROS 2 Humble, FMILibrary, Qt 6 conforme requisitos | Fixar versões/revisões, toolchain, ESP-IDF, micro-ROS e RTOS efetivos |
+| Software alvo | ROS 2 Humble, FMILibrary, Qt 6; ESP-IDF v4.4.8 e ramos Humble de micro-ROS | Fixar commits/revisões do micro-ROS, toolchain e RTOS efetivos; build integrado pendente |
 
 ## Evidência do host de build
 
@@ -48,7 +48,7 @@ Sinais externos de processo, precisão ADC, tensão útil DAC e estado das saíd
 
 Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. Bulk/libusb e micro-ROS estão mantidos por DEC-001. O coordenador único do host possui o enlace e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. O uso de Python fora do núcleo continua possibilidade, sem substituir a camada C/libusb exigida.
 
-A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial, o que demonstra uma alternativa a avaliar, sem fixar versões ou compatibilidade desta placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/establish-serial-connection.html), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble). Consultadas em 06.09.2026; a página ESP-IDF stable então indicava v6.1, não escolhida como SDK do produto.
+A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial. A baseline escolhida é ESP-IDF v4.4.8 com os componentes micro-ROS no ramo Humble; falta fixar commits e executar build integrado, portanto não há alegação de compatibilidade já validada na placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/establish-serial-connection.html), [micro_ros_setup Humble](https://github.com/micro-ROS/micro_ros_setup/tree/humble), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble).
 
 ## Dados necessários para liberar o perfil
 
@@ -79,7 +79,13 @@ O mapa analógico usa volts; DAC converte para código de 8 bits e nunca confund
 
 Uso dos dois núcleos confirmado. Proposta: reservar afinidade da aquisição/atuação em um núcleo e comunicação/supervisão no outro; definir números de CPU e prioridades após inspecionar tarefas/IRQs do SDK escolhido. Memória e periféricos compartilhados ainda podem produzir interferência. Ensaiar carga máxima de comunicação e supervisão concorrentes com o caminho periódico.
 
-A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. READ_ACK MID 03 confirma cumulativamente o último SEQ DAQC→host consumido pela aplicação. Não confundir esvaziamento de FIFO UART com leitura pela aplicação. RTS/CTS/conexões não foram confirmados e não substituem essa confirmação. A cadência do ACK e a tolerância de supervisão serão dimensionadas e medidas; não há CRC ou retransmissão de DATA.
+A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. READ_ACK MID 03 confirma cumulativamente o último SEQ DAQC→host consumido pela aplicação. Não confundir esvaziamento de FIFO UART com leitura pela aplicação. RTS/CTS fica desabilitado e não substitui essa confirmação. A cadência do ACK e a tolerância de supervisão serão dimensionadas e medidas; não há CRC ou retransmissão de DATA.
+
+## Baseline de firmware e UART
+
+O firmware usará ESP-IDF v4.4.8. O host ROS é Humble, e `micro_ros_setup`, o componente ESP-IDF e o agente serão obtidos nos ramos Humble, com commits registrados na tarefa de firmware após o primeiro build limpo. Não trocar silenciosamente para um ramo rolling nem para ESP-IDF 5/6.
+
+A configuração do enlace é UART 8N1, sem RTS/CTS, com baud rate escolhido pelo usuário entre 9.600 e 115.200 bit/s e aplicado simetricamente à ponte e ao ESP32. Essa faixa é um limite de configuração, não uma garantia de throughput: antes de habilitar STREAMING, validar o orçamento do frame e do passo. Para o quadro DATA máximo de 261 bytes, 115.200 bit/s representa aproximadamente 22,66 ms de transmissão serial 8N1; logo, uma execução de 100 Hz só é possível com payloads suficientemente menores e com orçamento completo medido.
 
 ## Opções configuráveis do perfil ESP32
 

@@ -62,7 +62,7 @@ Confirmado: grade fixa de liberações no relógio real; preservar h e a sequên
 | Idade de entrada/cadência de aquisição | Último dado válido reutilizável até fim; valor constante é válido. Cadência de aquisição ainda a dimensionar; 60 s sem leitura host seguem F-27 |
 | Jitter aceitável/duração/carga de ensaio | Detalhar na verificação; limites não vieram do Demo |
 
-Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. Para serial 8N1, se selecionada, 261 bytes em 115200 baud exigem aproximadamente 22,66 ms apenas no fio. É exemplo aritmético, não baud rate adotado ou medição. Maximizar taxa significa medir o maior ajuste estável do caminho completo, não usar taxa nominal USB como prova.
+Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. O enlace serial é UART 8N1 configurável de 9.600 a 115.200 bit/s, com RTS/CTS desabilitado. Em 115.200 bit/s, 261 bytes exigem aproximadamente 22,66 ms apenas no fio. Isso impede usar o DATA máximo em 100 Hz e é um limite aritmético, não medição; o perfil deve validar tamanho de payload e orçamento completo antes de STREAMING. Não aumentar baud rate além da faixa aprovada, alterar `h` ou compensar etapas para ocultar essa limitação.
 
 Coletar médias/máximos de ciclo, FMU e leitura/escrita, contagem de timeouts e pior atraso para apresentação final. Esses agregados ficam separados do stream binário de saídas. Escopo exato de persistência de metadados está em IF-LOG. Não fazer I/O textual/disco/GUI/ROS síncrono no ciclo, nem alocar snapshots Python na thread crítica C por analogia com RaspDAQ.
 

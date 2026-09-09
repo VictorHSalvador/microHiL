@@ -1,6 +1,6 @@
 # Plano e backlog de retomada
 
-Baseline 0.7.2. Decisões de produto e ICD foram consolidados; a TASK-001 concluiu a fundação de build HOST com evidência limitada ao host. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
+Baseline 0.7.4. Decisões de produto e ICD foram consolidados; a TASK-001 concluiu a fundação de build HOST com evidência limitada ao host. ESP-IDF v4.4.8 e micro-ROS Humble são a baseline do firmware, ainda sem build integrado; UART 8N1 é configurável de 9.600 a 115.200 bit/s, sem RTS/CTS. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
 
 ## TASK-000 — Preparar documentação
 
@@ -21,7 +21,7 @@ Escopo documental: preservar fontes, revisar os 53 IDs de origem e seis derivado
 | TASK-009 | GUI Qt e persistência; F-04/05/06/07/08/09/10/14/15/16/17/24/25/26, NF-09/10/12/15 | TASK-003/006; Qt/estilo/CSV posterior confirmados; Q-07 para layout do registro | Play/Stop/entradas ao vivo, gráficos individuais até 10 Hz, ticks Y e destruição/reabertura, leitura/escrita/corrupção de perfil/log, falha gráfica isolada | Planejada; detalhes pendentes |
 | TASK-010 | Integração HIL e qualificação; conjunto aplicável | TASK-004/007/008 e alvo instrumentado | Malha física e falhas sob carga, limites aprovados, evidências por requisito, nenhum resultado fictício promovido | Não iniciada |
 
-TASK-002 fechou as partes HOST independentes de FMILibrary/hardware. A capacidade 128 da fila de logging continua pendente de medição. Tarefas do transporte seguem o contrato 0.7; valores de baud, MTU, filas e cadência são escolhidos por medição dentro das tarefas, sem inventar resultados.
+TASK-002 fechou as partes HOST independentes de FMILibrary/hardware. A capacidade 128 da fila de logging continua pendente de medição. Tarefas do transporte seguem o contrato 0.7; baud é configurável somente entre 9.600 e 115.200 bit/s, enquanto MTU, filas e cadência são escolhidos por medição dentro das tarefas, sem inventar resultados.
 
 ## Estratégia de reaproveitamento
 

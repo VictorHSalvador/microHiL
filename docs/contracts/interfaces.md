@@ -39,7 +39,7 @@ Outputs da FMU seguem o caminho de atuação. DATA é aplicado/transmitido somen
 
 **U:** placa informada usa CH340/CH341, VID:PID 1a86:7523, conectando USB do host à UART do ESP32. Os VID/PID 1d6b:0104 e caminhos ep0/ep1/ep2 do RaspDAQ pertencem ao gadget Linux, não à placa atual. Descobrir endpoints Bulk nos descritores; não copiar endereços fixos. Exclusividade: não abrir TTY e libusb para consumir os mesmos bytes. Acesso direto via libusb deve configurar a ponte, verificar retorno das requisições, serial/framing e preservar a política de reset; detach/reattach do driver precisa ser controlado fora de STREAMING.
 
-RaspDAQ não fornece inicialização CH340. A referência técnica complementar é o [driver CH341 Linux v6.8](https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/usb/serial/ch341.c), sem copiar código licenciado por inferência de compatibilidade. Baud rate e combinação de placa/clock/firmware serão medidas; 200 Hz no RaspDAQ não prova essa cadência no ESP32. Toda transferência MICROHIL permanece com timeout ≤5 ms; os 200/1000 ms do CLI de referência não são adotados.
+RaspDAQ não fornece inicialização CH340. A referência técnica complementar é o [driver CH341 Linux v6.8](https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/usb/serial/ch341.c), sem copiar código licenciado por inferência de compatibilidade. UART usa 8N1, RTS/CTS desabilitado e baud rate configurável de 9.600 a 115.200 bit/s, aplicado antes de STREAMING nos dois extremos. Medir a combinação de payload, placa, clock e firmware; 200 Hz no RaspDAQ não prova essa cadência no ESP32. Toda transferência MICROHIL permanece com timeout ≤5 ms; os 200/1000 ms do CLI de referência não são adotados.
 
 ## IF-WIRE-BASE — Formato derivado de RaspDAQ
 
