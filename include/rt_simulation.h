@@ -18,6 +18,8 @@ typedef struct {
     _Atomic bool *stop_requested;
     _Atomic bool *plot_producer_done;
     run_logging_t *logging;
+    input_state_t input_state;
+    bool input_state_ready;
     simulation_stats_t stats;
     simulation_run_result_t run_result;
     int result;

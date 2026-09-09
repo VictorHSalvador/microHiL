@@ -17,6 +17,7 @@ typedef enum {
 typedef struct {
     uint64_t completed_steps;
     uint64_t deadline_misses;
+    uint64_t unused_releases;
     double max_computation_s;
     double max_lateness_s;
     bool sched_fifo_active;

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "common.h"
+#include "input_state.h"
 
 typedef struct {
     char fmu_path[PATH_LEN];
@@ -19,10 +20,14 @@ typedef struct {
     double plot_refresh_s;
     OutputVariable outputs[MAX_OUTPUTS];
     size_t output_count;
+    input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
+    size_t input_count;
+    bool stop_on_invalid_input_limit;
 } AppConfig;
 
 void app_config_set_defaults(AppConfig *config);
 void app_config_print(const AppConfig *config);
 int app_config_normalize_outputs(AppConfig *config);
+bool app_config_timing_is_valid(const AppConfig *config);
 
 #endif

@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #define MAX_CANDIDATE_OUTPUTS 512
+#define MAX_CANDIDATE_INPUTS 512
 
 static _Atomic bool g_stop_requested = false;
 
@@ -95,6 +96,18 @@ static void list_outputs(FmuModel *model) {
     printf("\n");
 }
 
+static void list_inputs(FmuModel *model) {
+    input_channel_descriptor_t candidates[MAX_CANDIDATE_INPUTS];
+    size_t count = fmu_model_list_numeric_inputs(model, candidates, MAX_CANDIDATE_INPUTS);
+    if (count > MAX_CANDIDATE_INPUTS) count = MAX_CANDIDATE_INPUTS;
+    printf("\nNumeric FMU inputs (%zu):\n", count);
+    for (size_t index = 0U; index < count; ++index) {
+        printf("%4zu) %-12s VR=%-8u %s%s\n", index + 1U, candidates[index].input_name, candidates[index].value_reference,
+               numeric_type_name(candidates[index].type), candidates[index].initial_value_valid ? " (initial value available)" : "");
+    }
+    printf("\n");
+}
+
 static void select_outputs(FmuModel *model, AppConfig *config) {
     OutputVariable candidates[MAX_CANDIDATE_OUTPUTS];
     size_t count = get_candidates(model, candidates, MAX_CANDIDATE_OUTPUTS);
@@ -150,16 +163,28 @@ static int load_fmu_menu(FmuModel *model, AppConfig *config) {
     if (fmu_model_load(model, path) != 0) return -1;
     snprintf(config->fmu_path, sizeof(config->fmu_path), "%s", path);
     config->output_count = 0;
+    config->input_count = fmu_model_list_numeric_inputs(model, config->inputs, INPUT_STATE_MAX_CHANNELS);
+    if (config->input_count > INPUT_STATE_MAX_CHANNELS) {
+        fprintf(stderr, "FMU has too many numeric inputs for the current HOST limit.\n");
+        config->input_count = 0U;
+        return -1;
+    }
     printf("Loaded FMI 2.0 Co-Simulation model: %s\n", fmu_model_name(model));
     list_outputs(model);
+    list_inputs(model);
     return 0;
 }
 
 static void configure_timing(AppConfig *config) {
-    config->step_size_s = read_double("Step size in seconds [Enter keeps current]: ", config->step_size_s);
-    config->stop_time_s = read_double("Simulation duration in seconds [Enter keeps current]: ", config->stop_time_s);
-    if (config->step_size_s <= 0.0) config->step_size_s = 0.02;
-    if (config->stop_time_s <= 0.0) config->stop_time_s = 60.0;
+    const double step_size_s = read_double("Step size in seconds [Enter keeps current]: ", config->step_size_s);
+    const double stop_time_s = read_double("Simulation duration in seconds [Enter keeps current]: ", config->stop_time_s);
+    const AppConfig candidate = {.step_size_s = step_size_s, .stop_time_s = stop_time_s};
+    if (!app_config_timing_is_valid(&candidate)) {
+        printf("Step size and duration must be finite positive values. Configuration unchanged.\n");
+        return;
+    }
+    config->step_size_s = step_size_s;
+    config->stop_time_s = stop_time_s;
 }
 
 static void configure_realtime(AppConfig *config) {
@@ -218,6 +243,10 @@ static const char *SimulationStateName(simulation_run_state_t state) {
 static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path[PATH_LEN], bool *last_log_closed) {
     if (!model->fmu) {
         printf("Load an FMU first.\n");
+        return -1;
+    }
+    if (!app_config_timing_is_valid(config)) {
+        printf("Simulation timing must contain finite positive step and duration values.\n");
         return -1;
     }
     if (config->output_count == 0) {
@@ -291,6 +320,7 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
     printf("SCHED_FIFO active:         %s\n", run_result.simulation.stats.sched_fifo_active ? "yes" : "no");
     printf("Completed steps:           %llu\n", (unsigned long long)run_result.simulation.stats.completed_steps);
     printf("Deadline misses:           %llu\n", (unsigned long long)run_result.simulation.stats.deadline_misses);
+    printf("Unused releases:           %llu\n", (unsigned long long)run_result.simulation.stats.unused_releases);
     printf("Max FMU computation time:  %.6f ms\n", run_result.simulation.stats.max_computation_s * 1000.0);
     printf("Max deadline lateness:     %.6f ms\n", run_result.simulation.stats.max_lateness_s * 1000.0);
     if (plot_started) printf("Dropped plot samples:      %llu\n", (unsigned long long)sample_queue_dropped(&plot_queue));
@@ -326,6 +356,7 @@ static void ConvertClosedLog(AppConfig *config, const char *binary_path, bool lo
 static void print_menu(void) {
     printf("1) Load/import FMU\n");
     printf("2) List numeric FMU outputs\n");
+    printf("11) List numeric FMU inputs\n");
     printf("3) Select outputs for binary log/plot\n");
     printf("4) Configure simulation timing\n");
     printf("5) Configure real-time thread\n");
@@ -366,6 +397,7 @@ int main(void) {
             case 8: app_config_print(&config); break;
             case 9: (void)run_simulation(&model, &config, last_log_path, &last_log_closed); break;
             case 10: ConvertClosedLog(&config, last_log_path, last_log_closed); break;
+            case 11: if (model.fmu) list_inputs(&model); else printf("Load an FMU first.\n"); break;
             case 0: fmu_model_unload(&model); return 0;
             default: printf("Invalid option.\n"); break;
         }

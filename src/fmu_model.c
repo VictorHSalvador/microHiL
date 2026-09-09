@@ -147,6 +147,52 @@ size_t fmu_model_list_numeric_outputs(FmuModel *model, OutputVariable *outputs, 
     return count;
 }
 
+size_t fmu_model_list_numeric_inputs(FmuModel *model, input_channel_descriptor_t *inputs, size_t capacity) {
+    if (!model || !model->fmu) return 0U;
+
+    fmi2_import_variable_list_t *list = fmi2_import_get_variable_list(model->fmu, 0);
+    if (!list) return 0U;
+
+    size_t count = 0U;
+    const size_t total = fmi2_import_get_variable_list_size(list);
+    for (size_t index = 0U; index < total; ++index) {
+        fmi2_import_variable_t *variable = fmi2_import_get_variable(list, index);
+        const fmi2_base_type_enu_t type = fmi2_import_get_variable_base_type(variable);
+        if (fmi2_import_get_causality(variable) != fmi2_causality_enu_input || type == fmi2_base_type_str) continue;
+
+        if (inputs && count < capacity) {
+            input_channel_descriptor_t *input = &inputs[count];
+            *input = (input_channel_descriptor_t){0};
+            snprintf(input->input_name, sizeof(input->input_name), "%s", fmi2_import_get_variable_name(variable));
+            input->value_reference = (uint32_t)fmi2_import_get_variable_vr(variable);
+            input->type = map_numeric_type(type);
+            if (fmi2_import_get_variable_has_start(variable)) {
+                switch (input->type) {
+                    case NUMERIC_REAL:
+                        input->initial_value.real_value = (double)fmi2_import_get_real_variable_start(fmi2_import_get_variable_as_real(variable));
+                        break;
+                    case NUMERIC_INTEGER:
+                        input->initial_value.discrete_value = fmi2_import_get_integer_variable_start(fmi2_import_get_variable_as_integer(variable));
+                        break;
+                    case NUMERIC_ENUMERATION:
+                        input->initial_value.discrete_value = fmi2_import_get_enum_variable_start(fmi2_import_get_variable_as_enum(variable));
+                        break;
+                    case NUMERIC_BOOLEAN:
+                        input->initial_value.boolean_value = fmi2_import_get_boolean_variable_start(fmi2_import_get_variable_as_boolean(variable)) == fmi2_true ? 1U : 0U;
+                        break;
+                    default:
+                        break;
+                }
+                input->initial_value_valid = true;
+            }
+        }
+        ++count;
+    }
+
+    fmi2_import_free_variable_list(list);
+    return count;
+}
+
 int fmu_model_initialize_cosimulation(FmuModel *model, double start_time_s, double stop_time_s) {
     if (!model || !model->fmu || !model->dll_created) return -1;
 
@@ -179,6 +225,72 @@ int fmu_model_initialize_cosimulation(FmuModel *model, double start_time_s, doub
     }
 
     model->initialized = true;
+    return 0;
+}
+
+int fmu_model_resolve_input_initial_values(FmuModel *model, input_channel_descriptor_t *inputs, size_t count) {
+    if (!model || !model->fmu || !model->initialized || (count > 0U && !inputs)) return -1;
+
+    for (size_t index = 0U; index < count; ++index) {
+        const fmi2_value_reference_t value_reference = (fmi2_value_reference_t)inputs[index].value_reference;
+        fmi2_status_t status;
+        switch (inputs[index].type) {
+            case NUMERIC_REAL: {
+                fmi2_real_t value = 0.0;
+                status = fmi2_import_get_real(model->fmu, &value_reference, 1U, &value);
+                inputs[index].initial_value.real_value = (double)value;
+                break;
+            }
+            case NUMERIC_INTEGER:
+            case NUMERIC_ENUMERATION: {
+                fmi2_integer_t value = 0;
+                status = fmi2_import_get_integer(model->fmu, &value_reference, 1U, &value);
+                inputs[index].initial_value.discrete_value = (int64_t)value;
+                break;
+            }
+            case NUMERIC_BOOLEAN: {
+                fmi2_boolean_t value = fmi2_false;
+                status = fmi2_import_get_boolean(model->fmu, &value_reference, 1U, &value);
+                inputs[index].initial_value.boolean_value = value == fmi2_true ? 1U : value == fmi2_false ? 0U : 2U;
+                break;
+            }
+            default:
+                return -1;
+        }
+        if (!status_is_ok(status)) return -1;
+        inputs[index].initial_value_valid = true;
+    }
+    return 0;
+}
+
+int fmu_model_set_inputs(FmuModel *model, const input_channel_descriptor_t *inputs, const input_value_t *values, size_t count) {
+    if (!model || !model->fmu || !model->initialized || (count > 0U && (!inputs || !values))) return -1;
+
+    for (size_t index = 0U; index < count; ++index) {
+        const fmi2_value_reference_t value_reference = (fmi2_value_reference_t)inputs[index].value_reference;
+        fmi2_status_t status;
+        switch (inputs[index].type) {
+            case NUMERIC_REAL: {
+                const fmi2_real_t value = (fmi2_real_t)values[index].real_value;
+                status = fmi2_import_set_real(model->fmu, &value_reference, 1U, &value);
+                break;
+            }
+            case NUMERIC_INTEGER:
+            case NUMERIC_ENUMERATION: {
+                const fmi2_integer_t value = (fmi2_integer_t)values[index].discrete_value;
+                status = fmi2_import_set_integer(model->fmu, &value_reference, 1U, &value);
+                break;
+            }
+            case NUMERIC_BOOLEAN: {
+                const fmi2_boolean_t value = values[index].boolean_value == 0U ? fmi2_false : fmi2_true;
+                status = fmi2_import_set_boolean(model->fmu, &value_reference, 1U, &value);
+                break;
+            }
+            default:
+                return -1;
+        }
+        if (!status_is_ok(status)) return -1;
+    }
     return 0;
 }
 

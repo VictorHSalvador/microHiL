@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #include "rt_simulation.h"
+#include "release_schedule.h"
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
@@ -13,19 +14,30 @@ static double timespec_to_seconds(const struct timespec *ts) {
     return (double)ts->tv_sec + (double)ts->tv_nsec / 1e9;
 }
 
-static struct timespec seconds_to_timespec(double seconds) {
-    struct timespec ts;
-    ts.tv_sec = (time_t)floor(seconds);
-    ts.tv_nsec = (long)((seconds - (double)ts.tv_sec) * 1e9);
-    if (ts.tv_nsec >= 1000000000L) {
-        ++ts.tv_sec;
-        ts.tv_nsec -= 1000000000L;
-    }
-    return ts;
-}
-
 static double elapsed_seconds(const struct timespec *start, const struct timespec *end) {
     return timespec_to_seconds(end) - timespec_to_seconds(start);
+}
+
+static uint64_t elapsed_nanoseconds(const struct timespec *start, const struct timespec *end) {
+    time_t seconds = end->tv_sec - start->tv_sec;
+    long nanoseconds = end->tv_nsec - start->tv_nsec;
+    if (nanoseconds < 0L) {
+        --seconds;
+        nanoseconds += 1000000000L;
+    }
+    if (seconds < 0) return 0U;
+    return (uint64_t)seconds * UINT64_C(1000000000) + (uint64_t)nanoseconds;
+}
+
+static struct timespec add_nanoseconds(const struct timespec *origin, uint64_t nanoseconds) {
+    struct timespec result = *origin;
+    result.tv_sec += (time_t)(nanoseconds / UINT64_C(1000000000));
+    result.tv_nsec += (long)(nanoseconds % UINT64_C(1000000000));
+    if (result.tv_nsec >= 1000000000L) {
+        ++result.tv_sec;
+        result.tv_nsec -= 1000000000L;
+    }
+    return result;
 }
 
 static int configure_realtime_thread(RtSimulationContext *context) {
@@ -107,6 +119,15 @@ static void SetRunFailure(RtSimulationContext *context, const char *stage, const
     snprintf(context->run_result.message, sizeof(context->run_result.message), "%s", message);
 }
 
+static void SetInputProtectionFailure(RtSimulationContext *context, const input_step_t *step) {
+    const size_t channel_index = step->invalid_limit_channels[0];
+    const input_channel_state_t *channel = &context->input_state.channels[channel_index];
+    context->run_result.state = SIMULATION_RUN_ERROR;
+    context->run_result.code = -1;
+    snprintf(context->run_result.stage, sizeof(context->run_result.stage), "%s", "input-protection");
+    snprintf(context->run_result.message, sizeof(context->run_result.message), "invalid input limit: %.70s", channel->descriptor.input_name);
+}
+
 static void *simulation_thread(void *arg) {
     RtSimulationContext *context = arg;
     memset(&context->stats, 0, sizeof(context->stats));
@@ -123,19 +144,68 @@ static void *simulation_thread(void *arg) {
         goto finish;
     }
 
+    input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
+    if (context->config->input_count > INPUT_STATE_MAX_CHANNELS) {
+        SetRunFailure(context, "inputs", "configured input count exceeds the supported limit");
+        goto finish;
+    }
+    memcpy(inputs, context->config->inputs, context->config->input_count * sizeof(inputs[0]));
+    if (fmu_model_resolve_input_initial_values(context->model, inputs, context->config->input_count) != 0 ||
+        InputStateInit(&context->input_state, inputs, context->config->input_count, context->config->stop_on_invalid_input_limit) != INPUT_STATE_STATUS_OK) {
+        SetRunFailure(context, "inputs", "could not establish valid FMU input references");
+        goto finish;
+    }
+    context->input_state_ready = true;
+
     struct timespec wall_start;
     clock_gettime(CLOCK_MONOTONIC, &wall_start);
-    double wall_start_s = timespec_to_seconds(&wall_start);
     double sim_time = 0.0;
     uint64_t sequence = 0;
+    release_schedule_t release_schedule;
+    if (!ReleaseScheduleInit(&release_schedule, context->config->step_size_s)) {
+        SetRunFailure(context, "schedule", "could not initialize the fixed release schedule");
+        goto finish;
+    }
+    bool first_step = true;
 
     while (sim_time + 1e-12 < context->config->stop_time_s &&
            !atomic_load_explicit(context->stop_requested, memory_order_relaxed)) {
+        if (!first_step) {
+            struct timespec now;
+            clock_gettime(CLOCK_MONOTONIC, &now);
+            if (!ReleaseScheduleAdvanceToEarliestRelease(&release_schedule, elapsed_nanoseconds(&wall_start, &now))) {
+                SetRunFailure(context, "schedule", "could not advance the fixed release schedule");
+                goto finish;
+            }
+            const struct timespec release_time = add_nanoseconds(&wall_start, ReleaseScheduleReleaseNs(&release_schedule));
+            int sleep_rc;
+            do {
+                sleep_rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &release_time, NULL);
+            } while (sleep_rc == EINTR && !atomic_load_explicit(context->stop_requested, memory_order_relaxed));
+            if (sleep_rc != 0 && sleep_rc != EINTR) {
+                SetRunFailure(context, "schedule", "could not wait for the fixed release schedule");
+                goto finish;
+            }
+            if (atomic_load_explicit(context->stop_requested, memory_order_relaxed)) break;
+        }
+        first_step = false;
         double h = context->config->step_size_s;
         if (sim_time + h > context->config->stop_time_s) h = context->config->stop_time_s - sim_time;
 
-        struct timespec compute_start, compute_end, release_time;
+        struct timespec compute_start, compute_end;
         clock_gettime(CLOCK_MONOTONIC, &compute_start);
+
+        input_step_t input_step;
+        const input_state_status_t input_status = InputStatePrepareStep(&context->input_state, &input_step);
+        if (input_status == INPUT_STATE_STATUS_PROTECTION_TRIPPED) {
+            SetInputProtectionFailure(context, &input_step);
+            goto finish;
+        }
+        if (input_status != INPUT_STATE_STATUS_OK ||
+            fmu_model_set_inputs(context->model, inputs, input_step.values, input_step.value_count) != 0) {
+            SetRunFailure(context, "inputs", "could not apply FMU inputs");
+            goto finish;
+        }
 
         if (fmu_model_do_step(context->model, sim_time, h) != 0) {
             SetRunFailure(context, "step", "FMU step failed");
@@ -155,23 +225,15 @@ static void *simulation_thread(void *arg) {
         double computation_s = elapsed_seconds(&compute_start, &compute_end);
         if (computation_s > context->stats.max_computation_s) context->stats.max_computation_s = computation_s;
 
-        double deadline_s = wall_start_s + log_sample.sim_time_s;
-        release_time = seconds_to_timespec(deadline_s);
+        if (!ReleaseScheduleCompleteStep(&release_schedule, elapsed_nanoseconds(&wall_start, &compute_end))) {
+            SetRunFailure(context, "schedule", "could not complete the fixed release schedule");
+            goto finish;
+        }
+        context->stats.deadline_misses = release_schedule.late_steps;
+        context->stats.unused_releases = release_schedule.unused_releases;
+        context->stats.max_lateness_s = (double)release_schedule.max_completion_lateness_ns / 1e9;
 
         struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        double now_s = timespec_to_seconds(&now);
-        if (now_s < deadline_s) {
-            int sleep_rc;
-            do {
-                sleep_rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &release_time, NULL);
-            } while (sleep_rc == EINTR && !atomic_load_explicit(context->stop_requested, memory_order_relaxed));
-        } else {
-            double lateness = now_s - deadline_s;
-            ++context->stats.deadline_misses;
-            if (lateness > context->stats.max_lateness_s) context->stats.max_lateness_s = lateness;
-        }
-
         clock_gettime(CLOCK_MONOTONIC, &now);
         plot_sample.wall_time_s = elapsed_seconds(&wall_start, &now);
 
@@ -191,6 +253,10 @@ static void *simulation_thread(void *arg) {
     snprintf(context->run_result.message, sizeof(context->run_result.message), "%s", stopped ? "simulation stopped by request" : "simulation completed");
 
 finish:
+    if (context->input_state_ready) {
+        InputStateDestroy(&context->input_state);
+        context->input_state_ready = false;
+    }
     fmu_model_terminate(context->model);
     context->run_result.stats = context->stats;
     if (context->logging) RunLoggingProducerDone(context->logging);

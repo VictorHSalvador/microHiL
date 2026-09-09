@@ -1,4 +1,5 @@
 #include "app_config.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,6 +15,7 @@ void app_config_set_defaults(AppConfig *config) {
     config->plot_enabled = true;
     config->plot_window_s = 10.0;
     config->plot_refresh_s = 0.10;
+    config->stop_on_invalid_input_limit = true;
 }
 
 void app_config_print(const AppConfig *config) {
@@ -34,6 +36,11 @@ void app_config_print(const AppConfig *config) {
     printf("\n");
     printf("Selected outputs:    %zu\n", config->output_count);
     for (size_t i = 0; i < config->output_count; ++i) printf("  [XML %u] %s\n", config->outputs[i].xml_index, config->outputs[i].name);
+    printf("FMU inputs:          %zu\n", config->input_count);
+    printf("Invalid input stop:  %s\n", config->stop_on_invalid_input_limit ? "enabled at 100 steps" : "disabled");
+    for (size_t i = 0; i < config->input_count; ++i) {
+        printf("  [VR %u] %s\n", config->inputs[i].value_reference, config->inputs[i].input_name);
+    }
     printf("=============================\n\n");
 }
 
@@ -54,4 +61,8 @@ int app_config_normalize_outputs(AppConfig *config) {
         if (config->outputs[index - 1U].xml_index == config->outputs[index].xml_index) return -1;
     }
     return 0;
+}
+
+bool app_config_timing_is_valid(const AppConfig *config) {
+    return config && isfinite(config->step_size_s) && isfinite(config->stop_time_s) && config->step_size_s > 0.0 && config->stop_time_s > 0.0;
 }
