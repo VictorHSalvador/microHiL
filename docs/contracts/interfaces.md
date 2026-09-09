@@ -35,9 +35,9 @@ Outputs da FMU seguem o caminho de atuação. DATA é aplicado/transmitido somen
 
 ## IF-DAQ — Dono do enlace e adaptação do transporte
 
-**R/D:** um serviço coordenador cria o estado compartilhado uma vez; leitura USB, escrita USB e ROS consomem/publicam snapshots. Só o coordenador gerencia dispositivo, workers e encerramento. Manter a camada C/libusb exigida no MICROHIL; Python é referência de design, não substituição obrigatória. O núcleo C não chama ROS nem aloca dataclasses em cada passo.
+**R/D:** um serviço coordenador C cria o estado compartilhado uma vez; leitura, escrita e ROS consomem/publicam snapshots. Só o coordenador gerencia `/dev/ttyUSB*`, workers e encerramento. O núcleo C não chama ROS nem aloca dataclasses em cada passo.
 
-**U:** placa informada usa CH340/CH341, VID:PID 1a86:7523, conectando USB do host à UART do ESP32. Os VID/PID 1d6b:0104 e caminhos ep0/ep1/ep2 do RaspDAQ pertencem ao gadget Linux, não à placa atual. Descobrir endpoints Bulk nos descritores; não copiar endereços fixos. Exclusividade: não abrir TTY e libusb para consumir os mesmos bytes. Acesso direto via libusb deve configurar a ponte, verificar retorno das requisições, serial/framing e preservar a política de reset; detach/reattach do driver precisa ser controlado fora de STREAMING.
+**U:** placa informada usa CH340/CH341, VID:PID 1a86:7523, conectando USB do host à UART do ESP32. Os VID/PID 1d6b:0104 e caminhos ep0/ep1/ep2 do RaspDAQ pertencem ao gadget Linux, não à placa atual. O coordenador abre um único `/dev/ttyUSB*`, configura 8N1/baud aprovado e preserva a política de reset fora de STREAMING. Não abrir um segundo processo, agente serial ou cliente libusb para consumir os mesmos bytes.
 
 RaspDAQ não fornece inicialização CH340. A referência técnica complementar é o [driver CH341 Linux v6.8](https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/usb/serial/ch341.c), sem copiar código licenciado por inferência de compatibilidade. UART usa 8N1, RTS/CTS desabilitado e baud rate configurável de 9.600 a 115.200 bit/s, aplicado antes de STREAMING nos dois extremos. Medir a combinação de payload, placa, clock e firmware; 200 Hz no RaspDAQ não prova essa cadência no ESP32. Toda transferência MICROHIL permanece com timeout ≤5 ms; os 200/1000 ms do CLI de referência não são adotados.
 
@@ -131,7 +131,7 @@ DATA usa mailbox de capacidade um: produtor substitui valor ainda não consumido
 | Adaptação | Contrato vigente | Limite a validar |
 |---|---|---|
 | READ_ACK, MID 03 | Host confirma cumulativamente o último SEQ DAQC→host efetivamente lido; quadro de 5 bytes, sem CRC, sem retransmissão e coalescível | Cadência deve impedir falso DISABLE sem gerar carga relevante; medir wrap e saturação |
-| XRCE, MID 04 | Um único dono libusb/UART demultiplexa XRCE de CONFIG/DATA; LENGTH uint16 delimita a mensagem; caminho periódico best effort | Fixar MTU, fragmentação, executor e QoS na versão micro-ROS escolhida |
+| XRCE, MID 04 | Um único dono TTY/UART demultiplexa XRCE de CONFIG/DATA e entrega payload a transporte customizado do Agent; LENGTH uint16 delimita a mensagem; caminho periódico best effort | Fixar MTU, fragmentação, executor e QoS na versão micro-ROS escolhida |
 | Limpeza de execução | Transição para STREAMING limpa fragmentos/mailboxes e reinicia SEQ/ACK; DATA fora de STREAMING é descartado | Ensaiar CONFIG repetido, reconexão e bytes tardios |
 
 Não existe identificador de sessão nem extensão de integridade no contrato vigente. O SEQ uint16 é usado somente no fluxo corrente e comparado dentro da meia faixa. O watchdog de 60 s mede tempo monotônico sem avanço de READ_ACK; não converte 60 s de pacotes em distância modular e não armazena histórico para recuperar perdas.

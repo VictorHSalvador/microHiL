@@ -1,6 +1,6 @@
 # Especificação de trabalho do MICROHIL
 
-Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.7, baseline conjunta [SDD-MICROHIL 0.7.4](sdd-versions.md), 09.09.2026. **Estado: decisões de produto e ICD consolidados; TASK-001 e TASK-002 verificadas no HOST, validação de produto pendente.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
+Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.8, baseline conjunta [SDD-MICROHIL 0.8.0](sdd-versions.md), 09.09.2026. **Estado: decisões de produto e ICD consolidados; TASK-001 e TASK-002 verificadas no HOST, validação de produto pendente.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
 
 ## Origem e regra de leitura
 
@@ -8,7 +8,7 @@ Os 53 IDs de origem foram preservados. Respostas DEC-001…012 atualizam os text
 
 **Texto vigente:** exigência recebida ou alteração confirmada; detalhes físicos desconhecidos não foram inventados. **Critério de aceitação proposto:** refinamento para teste, não evidência executada. **Pendência:** parâmetro de implementação, medição ou dependência externa; não reabre decisões confirmadas. A implementação começa somente após a verificação cruzada final dos Markdown.
 
-Confirmados: Qt 6 desacoplado/terminal debug, Bulk/libusb + micro-ROS sob dono único, perfil ESP32/ADC-DAC/PWM, Pi 4/2 GB após Linux inicial, logging binário de saídas/CSV posterior, retenção de último válido, meta 100 Hz/timeout USB até 5 ms, continuar após overrun, gráficos até 10 Hz e DATA sem CRC/retransmissão. [decisions.md](decisions.md) separa decisões dos parâmetros a medir.
+Confirmados: Qt Quick/QML desacoplado/terminal debug, micro-ROS sob coordenador C único em `/dev/ttyUSB*`, perfil ESP32/ADC-DAC/PWM, Pi 4/2 GB após Linux inicial, logging binário de saídas/CSV posterior, retenção de último válido, meta 100 Hz/timeout USB até 5 ms, continuar após overrun, gráficos até 10 Hz e DATA sem CRC/retransmissão. [decisions.md](decisions.md) separa decisões dos parâmetros a medir.
 
 Comentários de todo código próprio devem estar em inglês, ser breves e úteis, conforme [constituição](constitution.md). Não quebrar parâmetros por estética; quebrar apenas linhas extremamente longas. Essas regras são instruções confirmadas do usuário, aplicáveis a todos os incrementos, sem criar funcionalidades ou mecanismos de hardware adicionais.
 
@@ -324,21 +324,21 @@ A leitura USB deve ser executada em thread dedicada de alta prioridade, para dad
 
 ### REQ-NF-05 — Transferência USB
 
-A comunicação USB 2.0 entre a main board e a DAQC deve utilizar transferências do tipo Bulk.
+A comunicação USB entre a main board e a DAQC deve usar a ponte CH340 pelo driver serial Linux, sob propriedade exclusiva do coordenador C.
 
-**Critério de aceitação proposto (V-NF-05; Bancada):** Captura/descritores e caminho efetivo demonstram Bulk se mantido; conector USB e porta TTY isolados não provam conformidade da implementação.
+**Critério de aceitação proposto (V-NF-05; HOST + bancada):** O coordenador abre exclusivamente o dispositivo CH340 identificado, configura o enlace e transmite/recebe os quadros ICD; dispositivo TTY isolado não prova interoperabilidade.
 
 **Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** descritores/endpoints reais e ensaio da ponte.
 
 ### REQ-NF-06 — Biblioteca USB
 
-A comunicação USB da main board deve utilizar libusb, mantendo a exigência atual de implementação da camada em C. Leitura/orquestração em Python foi levantada como possibilidade; seu papel e eventual revisão desta exigência dependem de Q-01.
+A comunicação host–CH340 deve usar a API serial POSIX em C, através de `/dev/ttyUSB*`, mantendo um único coordenador proprietário do enlace. O Agent micro-ROS recebe XRCE somente pelo transporte customizado conectado ao MID 04.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-NF-06; HOST + bancada):** Identificar código/caminho libusb e dono do dispositivo. Se Python for adotado, registrar como interage com camada C e snapshots; não marcar um leitor serial comum como conformidade de libusb.
+**Critério de aceitação proposto (V-NF-06; HOST + bancada):** Identificar o coordenador C, o dispositivo aberto, os parâmetros seriais e a exclusividade; demonstrar que não há segundo leitor TTY ou Agent serial concorrente.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** configuração CH340 via libusb e teste de exclusividade.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** configuração CH340 via termios e teste de exclusividade.
 
 ### REQ-NF-07 — Escrita USB no Ciclo de Simulação
 
@@ -384,7 +384,7 @@ As funções responsáveis pelo núcleo de simulação, gerenciamento da FMU e e
 
 ### REQ-NF-12 — Interface Gráfica
 
-GUI deve utilizar Qt 6/C++, desacoplada do núcleo C, que pode operar pelo terminal em modo debug. A aparência deve lembrar Linux Mint; APIs Qt são preservadas e estilo próprio segue constituição.
+GUI deve utilizar Qt Quick/QML em Qt 6/C++, desacoplada do núcleo C, que pode operar pelo terminal em modo debug. A aparência deve lembrar Linux Mint; APIs Qt são preservadas e estilo próprio segue constituição.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 

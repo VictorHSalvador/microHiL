@@ -37,7 +37,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.7.4**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.8.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -64,3 +64,5 @@ Patch 0.7.2: a [TASK-001](tasks/TASK-001.md) registrou build limpo independente,
 Patch 0.7.3: a [TASK-002](tasks/TASK-002.md) sincroniza o IF-LOG implementado no HOST: codec `MHILLOG1`, fila SPSC limitada, falhas estruturadas, SHA-256 local e conversão CSV posterior. A [evidência correspondente](evidence/host-run-logging-2026-09-08.md) registra CTest normal e com ASan+UBSan, harness de especificação, compilação externa do runner e os limites: sem execução de FMU, sem qualificação de instalação externa, GUI, Raspberry Pi, USB, ROS, firmware, bancada, HIL ou timing real.
 
 Patch 0.7.4: ESP-IDF v4.4.8 e os ramos Humble de micro-ROS passam a ser a baseline de firmware. A UART CH340–ESP32 é 8N1 configurável entre 9.600 e 115.200 bit/s, com RTS/CTS desabilitado. A decisão documenta uma configuração aprovada; o build integrado e a capacidade de tempo real continuam pendentes de evidência.
+
+Revisão 0.8: o coordenador C passa a possuir exclusivamente a CH340 pela API serial POSIX em `/dev/ttyUSB*`. Ele entrega XRCE do MID 04 a um transporte customizado do Micro-ROS Agent; o Agent serial padrão não abre a porta. A GUI do produto será Qt Quick/QML. Esta revisão muda o contrato de transporte e não constitui execução em placa.

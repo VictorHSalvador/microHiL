@@ -68,11 +68,11 @@ Coletar médias/máximos de ciclo, FMU e leitura/escrita, contagem de timeouts e
 
 ## ARCH-IO — Comunicação e perfis
 
-Bulk/libusb e micro-ROS no ESP32 permanecem confirmados. A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. Libusb pode ser parte de acesso direto à ponte, mas precisa de controle/configuração do dispositivo, exclusividade frente ao driver e integração XRCE explicitamente desenhada. Nenhuma dessas partes está implementada.
+A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. O coordenador C usa exclusivamente `/dev/ttyUSB*`, configurado pelo driver CH341 Linux, e integra XRCE por transporte customizado do Agent. Nenhuma dessas partes está implementada.
 
 RaspDAQ foi localizado em Projects/OT1-HiLInfrastructure e inspecionado: raspdaq_main cria uma única SharedDaqState, passada ao runtime FunctionFS e ao nó rclpy. Snapshots imutáveis são substituídos sob RLock; o objeto compartilhado/nó permanece. Reaproveitar ownership, troca de snapshots e coordenação de encerramento, sem copiar endpoints Linux FunctionFS para ESP32. A camada micro-ROS/XRCE continua necessária. [Inspeção estática](evidence/q-review-2026-09-06.md).
 
-ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A transação micro-ROS de perfil ocorre fora de STREAMING, é idempotente e precisa confirmar o hash antes de atuar. Não deixar libusb e agente TTY lerem concorrentemente a mesma porta. NF-06 continua C/libusb; um wrapper Python não revoga a camada C por inferência.
+ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A transação micro-ROS de perfil ocorre fora de STREAMING, é idempotente e precisa confirmar o hash antes de atuar. Não deixar o coordenador e um agente serial padrão lerem concorrentemente a mesma porta; o Agent recebe XRCE pelo transporte customizado. Qt Quick/QML chama somente interfaces de controle e nunca a FMU.
 
 Design vigente: dono único do enlace, demultiplexação CONFIG/DATA/READ_ACK/XRCE no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. DATA usa mailbox de última atualização, sem fila crescente nem retransmissão. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço.
 

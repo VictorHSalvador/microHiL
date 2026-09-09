@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade
 
-Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.4](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). TASK-001 e TASK-002 avançaram somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, bancada, HIL ou deadlines.
+Revisão 0.8, baseline conjunta [SDD-MICROHIL 0.8.0](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). TASK-001 e TASK-002 avançaram somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, bancada, HIL ou deadlines.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 
