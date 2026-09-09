@@ -19,6 +19,9 @@ target_link_libraries(test_input_state PRIVATE microhil_host_components m)
 add_executable(test_daq_protocol test_daq_protocol.c)
 target_link_libraries(test_daq_protocol PRIVATE microhil_host_components m)
 
+add_executable(test_daq_tty test_daq_tty.c)
+target_link_libraries(test_daq_tty PRIVATE microhil_host_components m)
+
 add_executable(test_app_config test_app_config.c)
 target_link_libraries(test_app_config PRIVATE microhil_host_components m)
 
@@ -59,6 +62,7 @@ add_test(NAME input_state_protection COMMAND test_input_state protection)
 add_test(NAME daq_protocol_frames COMMAND test_daq_protocol frames)
 add_test(NAME daq_protocol_fragmentation COMMAND test_daq_protocol fragmentation)
 add_test(NAME daq_protocol_sequence COMMAND test_daq_protocol sequence)
+add_test(NAME daq_tty_validation COMMAND test_daq_tty)
 add_test(NAME app_config_timing COMMAND test_app_config)
 add_test(NAME release_schedule_overrun COMMAND test_release_schedule overrun)
 add_test(NAME release_schedule_boundary COMMAND test_release_schedule boundary)
