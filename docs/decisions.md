@@ -115,6 +115,10 @@ Em 10.09.2026, o usuário confirmou o formato persistido da configuração ADC/P
 
 Em 10.09.2026, o usuário aprovou substituir a premissa de transporte customizado dentro do Agent Humble por uma ponte UDP local. A inspeção da fonte oficial `micro-ROS-Agent` Humble no commit `c93ee764e0d2ef4907aeb29233c68cb5f4b56976` mostrou suporte direto apenas a SerialPort e UDP. O modo serial não pode ser usado, pois abriria a CH340 em concorrência com o coordenador C. O coordenador continua sendo o único leitor/escritor da UART e converte somente frames MID 04 em datagramas UDP para um Agent em loopback; o fluxo de retorno UDP é reenquadrado como MID 04 pelo mesmo coordenador. CONFIG, DATA e READ_ACK não passam pelo UDP, continuam com prioridade própria e não são visíveis ao Agent. A porta UDP local é configurável pelo integrador; `8888` é apenas o valor inicial do serviço, sem significado no enlace físico.
 
+## Nó ROS 2 no runner — 0.22.0
+
+O usuário confirmou que o próprio `fmu_rt_runner` será um nó ROS 2 em C, usando `rcl`. O componente ROS executa em thread de controle separada: publica `DaqcSetup`, recebe `DaqcState` e `DaqcErrors`, armazena confirmações e acorda somente o controlador de Play/Stop. Ele não chama FMI, não acessa a TTY/CH340 e não espera dentro da thread de simulação. O controlador prepara a FMU, solicita ENABLE por CONFIG, publica o setup correspondente e aguarda `profile_applied` e `configuration_applied`; só então solicita STREAMING e cria a thread de simulação. A prioridade, latência e comportamento sob carga exigem medição HOST/HIL.
+
 ## Perfil compilado e XRCE HOST — 0.14.0
 
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.

@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.21.3**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.22.0**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -70,6 +70,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.21.1 | 10.09.2026 | PATCH | Evidência do build e início local do Agent Humble em UDP, incluindo dependência micro_ros_msgs | plano, rastreabilidade, evidence e sdd-versions | Agent UDP iniciado no host temporário; sem sessão XRCE, CH340, ESP32 ou HIL | a58017a |
 | 0.21.2 | 10.09.2026 | PATCH | Preparação da FMU e dos inputs ocorre antes da thread de simulação, sem executar passo; correção de referências documentais antigas de configuração binária para YAML | runner HOST, teste FMU, arquitetura, requisitos, decisões, plano, rastreabilidade, evidência e sdd-versions | CTest 46/46 com fixture FMU; sem DAQC, ROS, CH340, ESP32, bancada ou HIL | 88ce359 |
 | 0.21.3 | 10.09.2026 | PATCH | Correção do ICD: `DaqcSetup` já transporta somente a configuração ADC/PWM aprovada; mapa e descritores continuam compilados | ICD, README, teste documental e sdd-versions | Correção de consistência documental; não há nova execução | c8ffce2 |
+| 0.22.0 | 10.09.2026 | MINOR | O runner C torna-se nó ROS 2 por `rcl`; controle ROS ocorre em thread própria e Play somente prossegue depois da confirmação DAQC | decisões, arquitetura, ICD, plano, rastreabilidade e sdd-versions | Decisão explícita do usuário; implementação e ensaio pendentes | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

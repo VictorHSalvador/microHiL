@@ -107,6 +107,7 @@ Log binário de saídas finais por passo; conversão CSV após encerramento, uti
 |---|---|---|
 | Configuração validada e mapa | Controlador da execução | Imutável durante run; cópia/configuração versionada |
 | Instância e tempo FMU | Controlador prepara; thread de simulação executa | Inicialização e referências de input são resolvidas antes do STREAMING; `doStep` e leituras/escritas FMI do ciclo pertencem exclusivamente à thread |
+| Controle ROS 2 | Thread `rcl` do runner | Publica setup e recebe estado/erros; não chama FMI, não possui TTY e não bloqueia a thread de simulação |
 | Input snapshot | Adaptador USB host | Candidato bruto, qualidade e último válido por canal, geração/seq coerentes; simulação consome sem esperar I/O |
 | Contadores de aquisição inválida | Thread de simulação no host | Atualiza uma vez por passo por canal; publica erro para consumidor GUI |
 | Progresso de leitura | Thread de comunicação host envia READ_ACK; firmware supervisiona | Último SEQ lido no STREAMING atual, independente de valor numérico/constância |
@@ -123,6 +124,8 @@ No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O
 ## ARCH-FW — Firmware proposto
 
 O firmware possui uma base compilada para ADC/DAC internos, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. CONFIG é a única autoridade de transição. `/daqc_setup` só confirma o estado já efetivo e configura perfil/ADC/PWM fora de STREAMING; divergência de `command` é diagnosticada por `/daqc_errors`. A aplicação micro-ROS de `/daqc_setup`, `/daqc_state` e `/daqc_errors` usa MID 04 e permanece fora do caminho de aquisição/atuação.
+
+No host, o runner hospeda um nó `rcl` em thread própria para esse mesmo conjunto de tópicos. A thread recebe e guarda o último estado/erro com sincronização limitada; a thread de simulação não participa de ROS. O controlador de ciclo pode aguardar confirmação fora do caminho crítico antes de STREAMING, mas não aguarda publicação ROS durante `doStep` nem para encerrar uma simulação já em curso.
 
 Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
 

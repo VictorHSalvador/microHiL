@@ -142,6 +142,8 @@ Não copiar o quarto comando STOP_STREAM de RaspDAQ: três COMMANDs MICROHIL já
 
 CONFIG é idempotente e confirmado pelo estado efetivo. Antes de mudar para STREAMING, o dono do enlace descarta fragmentos e DATA pendentes e redefine as sequências; DATA fora de STREAMING é rejeitado. O prazo agregado de confirmação é configurável e inicia em 10 ms. O host tenta CONFIG no início e pode repetir após 5 ms, sem retransmitir DATA; se não houver confirmação até o prazo, Play não cria a thread de simulação e Stop/Error informa a falta de confirmação. O prazo agregado é distinto do timeout de no máximo 5 ms por transferência. Nenhum worker mantém bloqueio ilimitado esperando confirmação.
 
+Antes do CONFIG ENABLE→STREAMING, o controlador HOST publica `DaqcSetup` com `command=ENABLE`, `profile_id`, `apply_configuration=1` e a configuração ADC/PWM validada. Ele aguarda `DaqcState` com ENABLE efetivo, `profile_applied=1` e `configuration_applied=1`. A recepção ocorre em thread ROS própria; essa espera antecede a thread de simulação e não altera o relógio FMI. O setup de estado STREAMING pode ser publicado para observação depois da confirmação CONFIG, mas não participa da autorização de atuação.
+
 ## IF-QUEUES — Filas, ownership e prioridades
 
 **R:** um SharedDaqState permanece vivo, snapshots substituídos sob lock e caches de última revisão. **D:** o host usa um worker serial único como dono da TTY, separado da thread de simulação; ele alterna RX e TX limitados, preservando a prioridade emitida pelo coordenador. Simulação é único escritor do contador por passo. USB/ROS não chamam FMI nem compartilham ponteiros mutáveis com widgets.
