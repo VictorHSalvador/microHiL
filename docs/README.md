@@ -72,7 +72,7 @@ Patch 0.8.1: o setup, as mensagens e o Agent micro-ROS dos ramos Humble tiveram 
 
 Revisão 0.9: o usuário substituiu ESP-IDF 4.4.8 por **ESP-IDF v5.2.6**, a tag oficial da menor série declarada como testada pelo componente micro-ROS Humble atual. A verificação local do SDK lista o alvo `esp32`, compatível com o ESP32-D0WDQ5 clássico. O build integrado e a validação na placa continuam necessários.
 
-Revisão 0.10: tópicos e mensagens micro-ROS foram definidos: setup, state, errors e data por perfil. A enumeração física do perfil ESP32 permanece pendente e não foi convertida em código.
+Revisão 0.10: tópicos e mensagens micro-ROS foram definidos para setup, state e errors.
 
 Revisão 0.11: UART 152.000 bit/s e MTU XRCE de 128 bytes foram selecionados como baseline. A ponte CH340–ESP32 precisa de ensaio; XRCE continua best effort e não comprova deadline.
 
@@ -80,6 +80,4 @@ Patch 0.11.1: a TTY HOST passou a configurar 152.000 bit/s via `termios2`/`BOTHE
 
 Patch 0.11.2: o pacote `microhil_interfaces` gerou e inspecionou em ROS 2 Humble as mensagens de setup, state e errors. A [evidência](evidence/host-ros-interfaces-2026-09-09.md) não declara firmware, Agent ou tópicos em execução.
 
-Revisão 0.12: `Esp32Data` usa identificadores físicos genéricos por GPIO, sem impor nomes de sensores ou atuadores. A mensagem completa poderá fragmentar pelo MTU XRCE de 128 bytes; o mapa de funções por GPIO continua sendo validado antes de STREAMING.
-
-Patch 0.12.1: a [evidência HOST](evidence/host-esp32-data-interface-2026-09-09.md) registra a geração e inspeção da interface genérica, sem firmware ou configuração física.
+Revisão 0.13: a interface ROS fica limitada a setup, state e errors; aquisição e atuação seguem exclusivamente pelo DATA do ICD.

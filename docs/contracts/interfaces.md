@@ -148,7 +148,7 @@ Em STREAMING, 60 s sem avanço de READ_ACK dispara DISABLE local. A thread de co
 
 Progresso via confirmação pode deixar de chegar porque o caminho de retorno falhou; é detecção conservadora de consumo comprovado, não acesso ao buffer interno CH340. Não suspender watchdog esperando TX bloqueado nem acumular backlog durante 60 s. READ_ACK não solicita reenvio e não foi encontrado na referência.
 
-## IF-ROS — Tópicos micro-ROS e mensagens por perfil
+## IF-ROS — Tópicos micro-ROS de controle e diagnóstico
 
 O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent integrado ao coordenador host. Ele não substitui DATA MID 02 para aquisição e atuação real-time. Os tópicos abaixo são a interface ROS 2/micro-ROS; sua publicação, serialização e tratamento ocorrem fora do caminho crítico da FMU.
 
@@ -157,7 +157,6 @@ O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent
 | `/daqc_setup` | Host → DAQC | `microhil_interfaces/DaqcSetup` | Solicita DISABLE, ENABLE ou STREAMING e seleciona perfil compilado na DAQC |
 | `/daqc_state` | DAQC → Host | `microhil_interfaces/DaqcState` | Confirma estado efetivo e perfil aplicado |
 | `/daqc_errors` | Host e DAQC → consumidores | `microhil_interfaces/DaqcErrors` | Publica flags de falha; `source_is_daqc` identifica a origem |
-| `/daqc_data` | DAQC → Host | Mensagem específica do perfil, como `microhil_interfaces/Esp32Data` | Telemetria não crítica do snapshot completo de I/O do perfil |
 
 `DaqcSetup.msg` contém exatamente `uint8 command` e `uint32 profile_id`. `command` usa DISABLE=1, ENABLE=2 e STREAMING=3, coerente com CONFIG do ICD. `profile_id` identifica um perfil compilado, com schema congelado e nomes de I/O definidos antes de STREAMING; não transporta um mapa de pinos ou descritores variáveis no ciclo.
 
@@ -165,7 +164,6 @@ O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent
 
 As interfaces de controle estão materializadas no pacote `ros2/microhil_interfaces` e tiveram build HOST no Humble; a [evidência](../evidence/host-ros-interfaces-2026-09-09.md) delimita esse resultado. `DaqcErrors.msg` contém somente flags `uint8`: `source_is_daqc`, `ros_error`, `communication_error`, `fmu_error`, `profile_error`, `timeout_error` e `invalid_data_error`. Cada flag vale 0 ou 1. A DAQC publica `fmu_error=0`, pois não executa FMI; o host pode publicar essa flag quando a execução da FMU falhar. A GUI associa a origem e as flags ao diagnóstico estruturado local, sem depender de texto ou prints no firmware.
 
-Cada perfil possui uma mensagem de telemetria própria, não uma lista dinâmica. Ela contém todos os I/O habilitados do perfil, usando nomes de I/O como campos; digitais usam `uint8` limitado a 0/1 e analógicos usam `float32`. Por decisão do usuário, `Esp32Data.msg` usa nomes físicos genéricos, sem semântica de sensor/atuador: `gpioNN_adc_v`, `gpioNN_dac_v`, `gpioNN_di`, `gpioNN_do` e `gpioNN_pwm_duty`. UART0 (GPIO1/3) fica reservada ao enlace e não entra na mensagem. ADC e DAC transportam volts; PWM transporta duty normalizado 0…1. Uma função não habilitada no mapa do perfil não possui valor semântico no snapshot; o consumidor usa o mapa compatível carregado, sem inferir zero como medição. A telemetria completa contém 186 bytes de campos antes da serialização XRCE e pode fragmentar acima do MTU de 128 bytes. O [build e a inspeção HOST](../evidence/host-esp32-data-interface-2026-09-09.md) confirmam a geração da interface, sem configurar GPIOs. A telemetria é best effort e não carrega a decisão de atuação nem altera a cadência de DATA.
 
 O MTU XRCE selecionado é 128 bytes. Cliente, transporte customizado no Agent, buffers e testes devem usar o mesmo valor. A fragmentação XRCE é permitida acima desse limite, mas não cria prioridade sobre CONFIG, READ_ACK ou DATA. Um frame XRCE iniciado não é intercalado; por isso, em 152.000 bit/s, o pior quadro de 133 bytes ocupa cerca de 8,75 ms no fio e sua emissão permanece best effort, sujeita ao orçamento medido do STREAMING.
 

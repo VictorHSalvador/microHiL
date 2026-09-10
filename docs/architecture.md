@@ -109,7 +109,7 @@ Log binário de saídas finais por passo; conversão CSV após encerramento, uti
 | Contadores de aquisição inválida | Thread de simulação no host | Atualiza uma vez por passo por canal; publica erro para consumidor GUI |
 | Progresso de leitura | Thread de comunicação host envia READ_ACK; firmware supervisiona | Último SEQ lido no STREAMING atual, independente de valor numérico/constância |
 | Comandos virtuais | Controlador aceita; simulação aplica | Publicação limitada e confirmação de aplicação na fronteira de ciclo |
-| Output snapshot | Simulação | Cópias para adaptador de saída/telemetria; sem ponteiros mutáveis para widgets |
+| Output snapshot | Simulação | Cópias para adaptador de saída; sem ponteiros mutáveis para widgets |
 | Filas log/plot | Simulação produz, um consumidor por fila | SPSC enquanto topologia for exatamente essa; não adicionar consumidor à mesma fila sem revisão |
 | Estado público | Controlador da execução | Eventos ordenados e snapshots; erro dos workers propagado |
 | Atuação física AO/DO/PWM | Tarefa DAQC com escritor final único | Dados somente STREAMING; encerramento aplica zero e cessa DATA; novo run aplica outputs iniciais da FMU |
@@ -120,11 +120,11 @@ No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O
 
 ## ARCH-FW — Firmware proposto
 
-Firmware ainda ausente. ADC/DAC internos confirmados, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. O firmware micro-ROS usa `/daqc_setup`, `/daqc_state`, `/daqc_errors` e telemetria por perfil conforme IF-ROS.
+Firmware ainda ausente. ADC/DAC internos confirmados, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. O firmware micro-ROS usa `/daqc_setup`, `/daqc_state` e `/daqc_errors` conforme IF-ROS.
 
 Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
 
-UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE periódico não podem bloquear o caminho de CONFIG.
+UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE não podem bloquear o caminho de CONFIG.
 
 
 ### Supervisão de leitura e concorrência no firmware

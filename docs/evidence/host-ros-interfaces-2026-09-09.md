@@ -16,4 +16,4 @@ O pacote compilou sem erro. As três interfaces geradas contêm os campos, os c�
 
 ## Limites
 
-Não há firmware, cliente micro-ROS, Agent integrado, tópico em execução, CH340, ESP32 ou comunicação ROS 2 medida nesta evidência. `Esp32Data` não foi criado: sua estrutura depende dos I/Os simultâneos e nomes concretos do perfil ESP32, ainda não definidos.
+Não há firmware, cliente micro-ROS, Agent integrado, tópico em execução, CH340, ESP32 ou comunicação ROS 2 medida nesta evidência.

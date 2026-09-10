@@ -6,7 +6,7 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 
 | ID | Confirmado | Detalhamento restante |
 |---|---|---|
-| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data` | MTU XRCE 128 bytes selecionado; implementar transporte integrado e medir custo |
+| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state` e `/daqc_errors` | MTU XRCE 128 bytes selecionado; implementar transporte integrado e medir custo |
 | DEC-002 | Qt 6/C++ com Qt Quick/QML desacoplado, terminal debug, prioridade GUI inferior ao núcleo, aparência Mint; log binário tipado e CSV posterior | Validar UX e formatos por fixtures |
 | DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM configurável | Caracterização elétrica continua requisito de bancada |
 | DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; grade fixa, sem compensação; USB ≤5 ms por transferência | Medir orçamento fim a fim por modelo/perfil |
@@ -93,8 +93,8 @@ Em 09.09.2026 foi feito clone limpo dos ramos `humble` e build HOST de `micro_ro
 
 O README desse commit do componente declara testes para ESP-IDF 5.2, 5.3, 5.4, 5.5 e 6.0; não declara ESP-IDF 4.4.8. Em 09.09.2026, o usuário escolheu ESP-IDF v5.2.6, a menor série declarada, após confirmação de que o alvo `esp32` clássico é suportado. A evidência limitada está em [micro-ros-host-baseline-2026-09-09.md](evidence/micro-ros-host-baseline-2026-09-09.md); o build integrado do firmware e o ensaio na placa ainda estão pendentes.
 
-## Interface ROS confirmada — 0.10.0
+## Interface ROS confirmada — 0.13.0
 
-O usuário definiu os tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data`. A interface detalhada está no [IF-ROS](contracts/interfaces.md#if-ros--tópicos-micro-ros-e-mensagens-por-perfil). Setup e state usam comando/estado `uint8` e identificador de perfil `uint32`; errors usa flags binárias. `/daqc_data` é telemetria não crítica por perfil e não substitui DATA MID 02.
+O usuário definiu somente os tópicos `/daqc_setup`, `/daqc_state` e `/daqc_errors`. A interface detalhada está no [IF-ROS](contracts/interfaces.md#if-ros--tópicos-micro-ros-de-controle-e-diagnóstico). Setup e state usam comando/estado `uint8` e identificador de perfil `uint32`; errors usa flags binárias. O MID 04 permanece reservado a XRCE e não substitui DATA MID 02.
 
-Foi definida a mensagem `DaqcErrors` com flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. A telemetria ESP32 usa agora nomes físicos genéricos, sem nomes de sensor ou atuador: `gpioNN_adc_v`, `gpioNN_dac_v`, `gpioNN_di`, `gpioNN_do` e `gpioNN_pwm_duty`. UART0 fica reservada. O mapa de funções continua a validar exclusões por GPIO antes de STREAMING; os campos de função não habilitada não têm valor semântico. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, Agent customizado e buffers devem usar o mesmo valor; a mensagem completa exige fragmentação.
+A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, Agent customizado e buffers devem usar o mesmo valor.

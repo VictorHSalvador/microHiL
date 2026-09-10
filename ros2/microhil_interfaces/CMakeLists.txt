@@ -5,7 +5,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-    "msg/Esp32Data.msg"
     "msg/DaqcErrors.msg"
     "msg/DaqcSetup.msg"
     "msg/DaqcState.msg"
