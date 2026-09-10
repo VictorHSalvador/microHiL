@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.11.2**, de 09.09.2026.
+Versão vigente: **SDD-MICROHIL 0.12.1**, de 09.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -48,6 +48,8 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.11.0 | 09.09.2026 | MINOR | Seleção de UART 152.000 bit/s e MTU XRCE de 128 bytes; orçamento explícito do frame e adaptação TTY pendente | TARGET, ICD, architecture, decisions, plan, README e sdd-versions | Decisão do usuário; sem ensaio CH340–ESP32, sem build integrado ou validação temporal | alterações locais; registrar commit quando criado |
 | 0.11.1 | 09.09.2026 | PATCH | Implementação HOST de UART 152.000 bit/s com `termios2`/`BOTHER` e limite XRCE de 128 bytes | Código TTY/protocolo, testes, TARGET, decisions, plan, README, evidence e sdd-versions | Build HOST e 39 testes em pseudo-terminal; sem CH340, ESP32, Agent ou teste temporal | alterações locais; registrar commit quando criado |
 | 0.11.2 | 09.09.2026 | PATCH | Materialização e build HOST das interfaces ROS 2 de setup, state e errors | pacote microhil_interfaces, ICD, plano, README, evidence e sdd-versions | Build e inspeção de interfaces no Humble; sem firmware, Agent, tópicos ou CH340 | alterações locais; registrar commit quando criado |
+| 0.12.0 | 09.09.2026 | MINOR | Definição de `Esp32Data` por identificadores GPIO genéricos, sem semântica de sensor/atuador | pacote microhil_interfaces, ICD, decisions, plano, README e sdd-versions | Build HOST pendente desta revisão; sem firmware, mapa físico aplicado ou enlace | alterações locais; registrar commit quando criado |
+| 0.12.1 | 09.09.2026 | PATCH | Build e inspeção HOST de `Esp32Data` | pacote microhil_interfaces, ICD, README, evidence e sdd-versions | Build Humble concluído; sem GPIO configurado, fragmentação, firmware ou enlace | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

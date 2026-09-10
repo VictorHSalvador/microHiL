@@ -79,3 +79,7 @@ Revisão 0.11: UART 152.000 bit/s e MTU XRCE de 128 bytes foram selecionados com
 Patch 0.11.1: a TTY HOST passou a configurar 152.000 bit/s via `termios2`/`BOTHER` e o codec limita XRCE a 128 bytes. A [evidência HOST](evidence/host-uart-152000-2026-09-09.md) registra 39 testes em pseudo-terminal; não é ensaio da CH340 ou do ESP32.
 
 Patch 0.11.2: o pacote `microhil_interfaces` gerou e inspecionou em ROS 2 Humble as mensagens de setup, state e errors. A [evidência](evidence/host-ros-interfaces-2026-09-09.md) não declara firmware, Agent ou tópicos em execução.
+
+Revisão 0.12: `Esp32Data` usa identificadores físicos genéricos por GPIO, sem impor nomes de sensores ou atuadores. A mensagem completa poderá fragmentar pelo MTU XRCE de 128 bytes; o mapa de funções por GPIO continua sendo validado antes de STREAMING.
+
+Patch 0.12.1: a [evidência HOST](evidence/host-esp32-data-interface-2026-09-09.md) registra a geração e inspeção da interface genérica, sem firmware ou configuração física.
