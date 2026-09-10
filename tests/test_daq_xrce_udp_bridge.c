@@ -9,6 +9,8 @@
 
 #include "daq_xrce_udp_bridge.h"
 
+#define TEST_SKIP 77
+
 static void Require(bool condition, const char *message) {
     if (!condition) {
         fprintf(stderr, "%s\n", message);
@@ -18,12 +20,18 @@ static void Require(bool condition, const char *message) {
 
 static int BindAgentSocket(uint16_t *port) {
     const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    Require(socket_fd >= 0, "could not create the fake Agent socket");
+    if (socket_fd < 0) return -1;
     const struct sockaddr_in address = {.sin_family = AF_INET, .sin_addr.s_addr = htonl(INADDR_LOOPBACK), .sin_port = 0U};
-    Require(bind(socket_fd, (const struct sockaddr *)&address, sizeof(address)) == 0, "could not bind the fake Agent socket");
+    if (bind(socket_fd, (const struct sockaddr *)&address, sizeof(address)) != 0) {
+        (void)close(socket_fd);
+        return -1;
+    }
     struct sockaddr_in bound_address = {0};
     socklen_t length = sizeof(bound_address);
-    Require(getsockname(socket_fd, (struct sockaddr *)&bound_address, &length) == 0, "could not discover the fake Agent port");
+    if (getsockname(socket_fd, (struct sockaddr *)&bound_address, &length) != 0) {
+        (void)close(socket_fd);
+        return -1;
+    }
     *port = ntohs(bound_address.sin_port);
     return socket_fd;
 }
@@ -50,6 +58,7 @@ int main(void) {
 
     uint16_t agent_port = 0U;
     const int agent_socket = BindAgentSocket(&agent_port);
+    if (agent_socket < 0) return TEST_SKIP;
     daq_xrce_udp_bridge_t bridge;
     const daq_xrce_udp_bridge_config_t bridge_config = {.coordinator = &coordinator, .agent_port = agent_port};
     Require(DaqXrceUdpBridgeStart(&bridge, &bridge_config) == DAQ_XRCE_UDP_BRIDGE_OK, "could not start UDP bridge");
