@@ -23,7 +23,7 @@ typedef enum {
 } daq_actuation_status_t;
 
 daq_actuation_status_t DaqActuationInit(daq_actuation_t *actuation, const daq_schema_t *schema);
-daq_actuation_status_t DaqActuationPack(daq_actuation_t *actuation, const log_value_t *values, size_t value_count,
+daq_actuation_status_t DaqActuationPack(daq_actuation_t *actuation, const OutputVariable *outputs, const log_value_t *values, size_t value_count,
                                         uint8_t *payload, size_t payload_capacity);
 void DaqActuationZero(const daq_actuation_t *actuation, uint8_t *payload, size_t payload_capacity);
 const char *DaqActuationStatusString(daq_actuation_status_t status);

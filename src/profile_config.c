@@ -92,6 +92,7 @@ static bool BuildAcquisitionField(const profile_mapping_t *mapping, daq_field_t 
             .width = channels[index].width,
             .scale = mapping->scale,
             .offset_value = mapping->offset,
+            .value_reference = mapping->value_reference,
             .fmu_index = mapping->fmu_index
         };
         return true;
@@ -119,6 +120,7 @@ static bool BuildActuationField(const profile_mapping_t *mapping, daq_field_t *f
             .width = channels[index].width,
             .scale = mapping->scale,
             .offset_value = mapping->offset,
+            .value_reference = mapping->value_reference,
             .fmu_index = mapping->fmu_index
         };
         return true;

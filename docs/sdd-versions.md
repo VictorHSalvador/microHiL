@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.17.4**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.17.5**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -60,6 +60,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.17.2 | 10.09.2026 | PATCH | Carregamento YAML resolve cada nome/tipo para o valueReference atual da FMU e valida sua direção | código HOST, fixture, testes, plano e sdd-versions | Build HOST com FMILibrary e 42 testes; schemas e integração DAQC pendentes | alterações locais; registrar commit quando criado |
 | 0.17.3 | 10.09.2026 | PATCH | Mapa YAML já resolvido constrói o schema de aquisição ESP32 de payload fixo 28 bytes, preservando offsets físicos e aceitando seleção parcial ordenada pelo próprio host | código HOST, teste FMU, plano, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e 42 testes; schema de atuação, integração DAQC e ensaio físico pendentes | alterações locais; registrar commit quando criado |
 | 0.17.4 | 10.09.2026 | PATCH | Mapa YAML resolvido também constrói o schema de atuação ESP32 de 21 bytes; o codificador HOST preserva último output válido e produz payload de zero para o encerramento coordenado | código HOST, fixture, testes, plano, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e 43 testes; envio ao enlace, lifecycle integrado e ensaio físico pendentes | alterações locais; registrar commit quando criado |
+| 0.17.5 | 10.09.2026 | PATCH | Bridge HOST codifica outputs identificados pela FMU e publica DATA de atuação no mailbox do coordenador somente após STREAMING, incluindo payload zero | código HOST, testes, contratos, plano, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e 44 testes; ligação ao runner, serviço TTY e ensaio físico pendentes | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

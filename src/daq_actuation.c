@@ -31,6 +31,14 @@ static daq_actuation_status_t EncodeField(const daq_field_t *field, const log_va
     return DAQ_ACTUATION_OK;
 }
 
+static const log_value_t *FindOutputValue(const daq_field_t *field, const OutputVariable *outputs, const log_value_t *values, size_t value_count) {
+    for (size_t index = 0U; index < value_count; ++index) {
+        if (outputs[index].fmu_index == field->fmu_index && outputs[index].value_reference == field->value_reference &&
+            outputs[index].type == field->fmu_type) return &values[index];
+    }
+    return NULL;
+}
+
 daq_actuation_status_t DaqActuationInit(daq_actuation_t *actuation, const daq_schema_t *schema) {
     if (!actuation || !schema || schema->payload_size > DAQ_PROTOCOL_MAX_DATA_PAYLOAD) return DAQ_ACTUATION_INVALID_ARGUMENT;
     for (size_t index = 0U; index < schema->field_count; ++index) {
@@ -40,9 +48,9 @@ daq_actuation_status_t DaqActuationInit(daq_actuation_t *actuation, const daq_sc
     return DAQ_ACTUATION_OK;
 }
 
-daq_actuation_status_t DaqActuationPack(daq_actuation_t *actuation, const log_value_t *values, size_t value_count,
+daq_actuation_status_t DaqActuationPack(daq_actuation_t *actuation, const OutputVariable *outputs, const log_value_t *values, size_t value_count,
                                         uint8_t *payload, size_t payload_capacity) {
-    if (!actuation || !actuation->initialized || !values || !payload || payload_capacity < actuation->schema->payload_size) {
+    if (!actuation || !actuation->initialized || !outputs || !values || !payload || payload_capacity < actuation->schema->payload_size) {
         return DAQ_ACTUATION_INVALID_ARGUMENT;
     }
     uint8_t next_payload[DAQ_PROTOCOL_MAX_DATA_PAYLOAD];
@@ -51,8 +59,9 @@ daq_actuation_status_t DaqActuationPack(daq_actuation_t *actuation, const log_va
     memcpy(next_has_last_value, actuation->field_has_last_value, sizeof(next_has_last_value));
     for (size_t index = 0U; index < actuation->schema->field_count; ++index) {
         const daq_field_t *field = &actuation->schema->fields[index];
-        if (field->fmu_index >= value_count) return DAQ_ACTUATION_INVALID_ARGUMENT;
-        const daq_actuation_status_t status = EncodeField(field, &values[field->fmu_index], next_payload);
+        const log_value_t *value = FindOutputValue(field, outputs, values, value_count);
+        if (!value) return DAQ_ACTUATION_INVALID_ARGUMENT;
+        const daq_actuation_status_t status = EncodeField(field, value, next_payload);
         if (status == DAQ_ACTUATION_OK) {
             next_has_last_value[index] = true;
         } else if (!next_has_last_value[index]) {

@@ -32,6 +32,7 @@ typedef struct {
     uint16_t width;
     double scale;
     double offset_value;
+    uint32_t value_reference;
     uint16_t fmu_index;
 } daq_field_t;
 

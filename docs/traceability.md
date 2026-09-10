@@ -24,7 +24,7 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-16 | ARCH-GUI | TASK-009 | Não implementado | A | V-F-16 / GUI + alvo | Sem execução do caso de aceitação |
 | REQ-F-17 | ARCH-CORE / IF-CORE | TASK-006, TASK-009 | Não implementado | A | V-F-17 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-18 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-F-18 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-F-19 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-F-19 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-F-19 | ARCH-IO / IF-DAQ | TASK-007 | src/daq_output_bridge.c; src/daq_coordinator.c | P | V-F-19 / HOST + HIL | [host-output-bridge-2026-09-10](evidence/host-output-bridge-2026-09-10.md): mailbox DATA HOST; sem TTY, DAQC ou HIL |
 | REQ-F-20 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-F-20 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-F-21 | ARCH-CORE / IF-CORE | TASK-003, TASK-006 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-21 / HOST | Sem execução do caso de aceitação |
 | REQ-F-22 | ARCH-LOG / IF-LOG | TASK-002 | src/binary_logger.c; src/run_logging.c | P | V-F-22 / HOST | [TASK-002](evidence/host-run-logging-2026-09-08.md): drenagem/interleaving e flush/close HOST; sem lifecycle FMI |
@@ -39,7 +39,7 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-NF-04 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-04 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-05 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-05 / Bancada | Sem execução do caso de aceitação |
 | REQ-NF-06 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-06 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-07 | ARCH-TIME / IF-DAQ | TASK-004, TASK-007 | Não implementado | A | V-NF-07 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-NF-07 | ARCH-TIME / IF-DAQ | TASK-004, TASK-007 | src/daq_output_bridge.c; src/daq_coordinator.c | P | V-NF-07 / HOST + HIL | [host-output-bridge-2026-09-10](evidence/host-output-bridge-2026-09-10.md): ordem mailbox após STREAMING em HOST; runner e HIL pendentes |
 | REQ-NF-08 | ARCH-IO / IF-SAMPLE | TASK-004, TASK-007 | Não implementado | A | V-NF-08 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-09 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-NF-09 / GUI + alvo | Sem execução do caso de aceitação |
 | REQ-NF-10 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-NF-10 / HOST + alvo | Sem execução do caso de aceitação |

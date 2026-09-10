@@ -138,6 +138,7 @@ size_t fmu_model_list_numeric_outputs(FmuModel *model, OutputVariable *outputs, 
             snprintf(outputs[count].name, sizeof(outputs[count].name), "%s", fmi2_import_get_variable_name(var));
             outputs[count].xml_index = (uint32_t)(i + 1U);
             outputs[count].value_reference = (uint32_t)fmi2_import_get_variable_vr(var);
+            outputs[count].fmu_index = (uint16_t)count;
             outputs[count].type = map_numeric_type(type);
         }
         ++count;
