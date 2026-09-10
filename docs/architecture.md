@@ -68,7 +68,7 @@ Coletar médias/máximos de ciclo, FMU e leitura/escrita, contagem de timeouts e
 
 ## ARCH-IO — Comunicação e perfis
 
-A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. O coordenador C usa exclusivamente `/dev/ttyUSB*`, configurado pelo driver CH341 Linux. O worker `daq_serial_service` implementa RX/TX limitado em thread própria no HOST; a [evidência](evidence/host-serial-service-2026-09-10.md) cobre pseudo-terminal. A integração do transporte customizado do Agent permanece pendente.
+A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. O coordenador C usa exclusivamente `/dev/ttyUSB*`, configurado pelo driver CH341 Linux. O worker `daq_serial_service` implementa RX/TX limitado em thread própria no HOST; a [evidência](evidence/host-serial-service-2026-09-10.md) cobre pseudo-terminal. O coordenador já demultiplexa XRCE recebido e mantém um mailbox XRCE de saída limitado a 128 bytes, mas a integração do transporte customizado do Agent permanece pendente.
 
 RaspDAQ foi localizado em Projects/OT1-HiLInfrastructure e inspecionado: raspdaq_main cria uma única SharedDaqState, passada ao runtime FunctionFS e ao nó rclpy. Snapshots imutáveis são substituídos sob RLock; o objeto compartilhado/nó permanece. Reaproveitar ownership, troca de snapshots e coordenação de encerramento, sem copiar endpoints Linux FunctionFS para ESP32. A camada micro-ROS/XRCE continua necessária. [Inspeção estática](evidence/q-review-2026-09-06.md).
 

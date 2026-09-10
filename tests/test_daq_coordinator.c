@@ -34,6 +34,7 @@ int main(void) {
     };
     const uint8_t acquisition_payload[] = {0U, 0U, 0x20U, 0x40U};
     const uint8_t xrce_payload[] = {0xa5U, 0x11U};
+    const uint8_t outbound_xrce_payload[] = {0x42U, 0x24U};
     const uint8_t output_payload[] = {7U, 8U};
     uint8_t incoming[64];
     uint8_t outgoing[DAQ_PROTOCOL_DATA_PREFIX_SIZE + DAQ_PROTOCOL_MAX_DATA_PAYLOAD];
@@ -76,6 +77,8 @@ int main(void) {
     Require(InputStatePrepareStep(&input_state, &step) == INPUT_STATE_STATUS_OK && fabs(step.values[0].real_value - 2.5) < 1e-12,
             "inbound DATA did not reach the FMU input snapshot");
     Require(capture.count == 1U && capture.first_byte == 0xa5U, "XRCE payload was not demultiplexed");
+    Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_payload, sizeof(outbound_xrce_payload)) == DAQ_COORDINATOR_OK,
+            "could not queue outbound XRCE");
     Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
             frame.kind == DAQ_TRANSMIT_READ_ACK && frame.size == 5U && outgoing[2] == DAQ_PROTOCOL_MID_READ_ACK && outgoing[3] == 9U,
             "READ_ACK was not prioritized after a consumed DATA frame");
@@ -86,10 +89,18 @@ int main(void) {
     Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
             frame.kind == DAQ_TRANSMIT_CONFIG && outgoing[3] == DAQ_PROTOCOL_COMMAND_DISABLE,
             "CONFIG did not take priority over pending DATA");
+    Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
+            frame.kind == DAQ_TRANSMIT_DATA && outgoing[2] == DAQ_PROTOCOL_MID_DATA,
+            "DATA did not take priority over pending XRCE");
+    Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
+            frame.kind == DAQ_TRANSMIT_XRCE && frame.size == 7U && outgoing[2] == DAQ_PROTOCOL_MID_XRCE && outgoing[5] == 0x42U,
+            "outbound XRCE was not transmitted after critical traffic");
+    Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_payload, sizeof(outbound_xrce_payload)) == DAQ_COORDINATOR_OK,
+            "could not queue XRCE before a state change");
     Require(DaqProtocolEncodeConfig(incoming, sizeof(incoming), DAQ_PROTOCOL_COMMAND_DISABLE, true, DAQ_PROTOCOL_COMMAND_DISABLE) == 5U &&
             DaqCoordinatorReceive(&coordinator, incoming, 5U) == DAQ_COORDINATOR_OK, "DISABLE confirmation was rejected");
     Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
-            frame.kind == DAQ_TRANSMIT_NONE, "DISABLE confirmation did not discard pending DATA");
+            frame.kind == DAQ_TRANSMIT_NONE, "DISABLE confirmation did not discard pending DATA and XRCE");
     DaqCoordinatorDestroy(&coordinator);
     InputStateDestroy(&input_state);
     return EXIT_SUCCESS;

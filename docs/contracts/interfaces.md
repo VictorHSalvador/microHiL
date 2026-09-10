@@ -85,7 +85,7 @@ READ_ACK para SEQ 7: 59 72 03 07 00.
 
 Congelar schema antes de STREAMING. Payload recebido tem exatamente N bytes da direção; N=0 permite desativar a direção sem enviar DATA vazio periódico. Mudança de perfil exige parar e validar novamente. Não transportar nomes em cada amostra; nome, índice, tipo e valueReference ficam associados na configuração. Host e firmware devem possuir a mesma versão de perfil/schema antes de habilitar STREAMING.
 
-CONFIG 01/02/03 altera somente o estado da DAQC. A configuração do perfil usa uma transação micro-ROS pelo MID 04 em DISABLE ou ENABLE, nunca dentro do ciclo. O pedido contém revisão do protocolo/perfil, SHA-256 do descritor canônico, tamanhos N de aquisição e atuação, quantidade de canais e descritores ordenados. Cada descritor informa função, GPIO, tipo no fio, offset, largura, escala, limites e parâmetros ADC/PWM aplicáveis. O firmware valida integralmente, copia para armazenamento prealocado e responde com estado aceito/rejeitado, índice/código do primeiro erro e hash aplicado. A transação é idempotente e pode ser repetida sob prazo limitado; STREAMING só é aceito quando o hash esperado coincide. O RaspDAQ usa schemas compilados e não fornece essa negociação.
+CONFIG 01/02/03 altera somente o estado da DAQC. A seleção do perfil usa `DaqcSetup.profile_id` pelo MID 04 em DISABLE ou ENABLE, nunca dentro do ciclo. O identificador seleciona um perfil compilado no firmware; `DaqcState.profile_id` e `profile_applied` confirmam sua aplicação. O arquivo de configuração HOST contém o mapeamento entre FMU e o perfil selecionado e deve ser validado integralmente antes do Play. Esta revisão não transporta descritores, mapa de GPIOs ou parâmetros ADC/PWM variáveis para a DAQC pelo enlace. STREAMING só é aceito quando o perfil selecionado e o schema do host são compatíveis. O RaspDAQ usa schemas compilados e não fornece essa seleção micro-ROS.
 
 ## IF-PARSER — Frames, sequência e invalidade
 
@@ -131,7 +131,7 @@ DATA usa mailbox de capacidade um: produtor substitui valor ainda não consumido
 | Adaptação | Contrato vigente | Limite a validar |
 |---|---|---|
 | READ_ACK, MID 03 | Host confirma cumulativamente o último SEQ DAQC→host efetivamente lido; quadro de 5 bytes, sem CRC, sem retransmissão e coalescível | Cadência deve impedir falso DISABLE sem gerar carga relevante; medir wrap e saturação |
-| XRCE, MID 04 | Um único dono TTY/UART demultiplexa XRCE de CONFIG/DATA e entrega payload a transporte customizado do Agent; LENGTH uint16 delimita a mensagem; caminho periódico best effort | Fixar MTU, fragmentação, executor e QoS na versão micro-ROS escolhida |
+| XRCE, MID 04 | Um único dono TTY/UART demultiplexa XRCE de CONFIG/DATA e entrega ou recebe payload pelo transporte customizado do Agent; LENGTH uint16 delimita a mensagem; mailbox HOST de 128 bytes coalesce mensagens pendentes; caminho best effort | Fixar fragmentação, executor e QoS na versão micro-ROS escolhida |
 | Limpeza de execução | Transição para STREAMING limpa fragmentos/mailboxes e reinicia SEQ/ACK; DATA fora de STREAMING é descartado | Ensaiar CONFIG repetido, reconexão e bytes tardios |
 
 Não existe identificador de sessão nem extensão de integridade no contrato vigente. O SEQ uint16 é usado somente no fluxo corrente e comparado dentro da meia faixa. O watchdog de 60 s mede tempo monotônico sem avanço de READ_ACK; não converte 60 s de pacotes em distância modular e não armazena histórico para recuperar perdas.

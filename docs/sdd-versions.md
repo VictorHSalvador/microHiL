@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.13.1**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.14.0**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -50,6 +50,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.11.2 | 09.09.2026 | PATCH | Materialização e build HOST das interfaces ROS 2 de setup, state e errors | pacote microhil_interfaces, ICD, plano, README, evidence e sdd-versions | Build e inspeção de interfaces no Humble; sem firmware, Agent, tópicos ou CH340 | alterações locais; registrar commit quando criado |
 | 0.13.0 | 09.09.2026 | MINOR | Interface ROS limitada a setup, state e errors; aquisição e atuação mantidas no DATA do ICD | pacote microhil_interfaces, ICD, architecture, decisions, plano, README e sdd-versions | Build Humble e testes HOST pendentes desta revisão; sem firmware ou enlace | alterações locais; registrar commit quando criado |
 | 0.13.1 | 10.09.2026 | PATCH | Worker serial HOST único para a TTY, com RX/TX limitado e encerramento coordenado | componentes HOST, testes, ICD, arquitetura, plano, README, evidence e sdd-versions | Build HOST e CTest 40/40 em pseudo-terminal; sem CH340, ESP32, Agent ou timing físico | alterações locais; registrar commit quando criado |
+| 0.14.0 | 10.09.2026 | MINOR | Perfil selecionado por identificador compilado na DAQC, sem transação de mapa variável; mailbox XRCE HOST de saída limitado a 128 bytes | ICD, arquitetura, plano, README, componentes HOST, testes, evidence e sdd-versions | Build HOST e CTest 40/40; sem Agent, firmware, CH340, ESP32 ou timing físico | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

@@ -22,7 +22,8 @@ typedef enum {
     DAQ_TRANSMIT_NONE = 0,
     DAQ_TRANSMIT_CONFIG,
     DAQ_TRANSMIT_READ_ACK,
-    DAQ_TRANSMIT_DATA
+    DAQ_TRANSMIT_DATA,
+    DAQ_TRANSMIT_XRCE
 } daq_transmit_kind_t;
 
 typedef struct {
@@ -41,6 +42,10 @@ typedef struct {
     pthread_mutex_t transmit_mutex;
     daq_protocol_command_t pending_command;
     bool command_pending;
+    uint8_t xrce_mailbox[DAQ_PROTOCOL_XRCE_MTU];
+    size_t xrce_mailbox_size;
+    bool xrce_pending;
+    uint64_t xrce_coalesced;
     uint64_t rejected_frames;
     uint64_t xrce_frames;
     bool initialized;
@@ -61,6 +66,7 @@ void DaqCoordinatorDestroy(daq_coordinator_t *coordinator);
 daq_coordinator_status_t DaqCoordinatorReceive(daq_coordinator_t *coordinator, const uint8_t *bytes, size_t byte_count);
 daq_coordinator_status_t DaqCoordinatorQueueCommand(daq_coordinator_t *coordinator, daq_protocol_command_t command);
 daq_coordinator_status_t DaqCoordinatorPublishOutput(daq_coordinator_t *coordinator, uint16_t sequence, const uint8_t *payload, size_t payload_size);
+daq_coordinator_status_t DaqCoordinatorQueueXrce(daq_coordinator_t *coordinator, const uint8_t *payload, size_t payload_size);
 daq_coordinator_status_t DaqCoordinatorTakeTransmit(daq_coordinator_t *coordinator, uint8_t *destination, size_t capacity,
                                                      daq_transmit_frame_t *frame);
 const char *DaqCoordinatorStatusString(daq_coordinator_status_t status);

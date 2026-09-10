@@ -98,3 +98,9 @@ O README desse commit do componente declara testes para ESP-IDF 5.2, 5.3, 5.4, 5
 O usuário definiu somente os tópicos `/daqc_setup`, `/daqc_state` e `/daqc_errors`. A interface detalhada está no [IF-ROS](contracts/interfaces.md#if-ros--tópicos-micro-ros-de-controle-e-diagnóstico). Setup e state usam comando/estado `uint8` e identificador de perfil `uint32`; errors usa flags binárias. O MID 04 permanece reservado a XRCE e não substitui DATA MID 02.
 
 A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, Agent customizado e buffers devem usar o mesmo valor.
+
+## Perfil compilado e XRCE HOST — 0.14.0
+
+`DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado, valida a compatibilidade antes do Play e não transfere mapa de GPIOs, descritores ou parâmetros ADC/PWM variáveis pelo MID 04. `DaqcState` confirma o identificador e a aplicação do perfil.
+
+O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. A mensagem mais nova substitui a anterior e é enviada somente depois de CONFIG, READ_ACK e DATA pendentes. Confirmações CONFIG limpam esse mailbox, impedindo transportar controle XRCE de uma transição anterior. Isso implementa o multiplexador local; o transporte customizado do Agent e o cliente micro-ROS continuam pendentes.
