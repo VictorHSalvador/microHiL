@@ -21,15 +21,34 @@ bool DaqcTransportInit(void) {
     return g_tx_mutex && g_xrce_stream;
 }
 
-bool DaqcTransportSend(uint8_t mid, const uint8_t *payload, size_t payload_size) {
-    uint8_t frame[DAQC_FRAME_MAX];
-    size_t frame_size = 0U;
-    if (mid == DAQC_MID_XRCE) frame_size = DaqcEncodeXrce(frame, sizeof(frame), payload, payload_size);
-    else if (mid == DAQC_MID_DATA) frame_size = DaqcEncodeData(frame, sizeof(frame), 0U, payload, payload_size);
+int DaqcTransportReadRaw(uint8_t *buffer, size_t capacity, uint32_t timeout_ms) {
+    if (!buffer || capacity == 0U) return -1;
+    return uart_read_bytes(DAQC_UART, buffer, capacity, pdMS_TO_TICKS(timeout_ms));
+}
+
+static bool SendFrame(const uint8_t *frame, size_t frame_size) {
     if (!frame_size || !g_tx_mutex || xSemaphoreTake(g_tx_mutex, pdMS_TO_TICKS(5)) != pdTRUE) return false;
     const int written = uart_write_bytes(DAQC_UART, (const char *)frame, frame_size);
     (void)xSemaphoreGive(g_tx_mutex);
     return written == (int)frame_size;
+}
+
+bool DaqcTransportSendConfig(uint8_t command, uint8_t status) {
+    uint8_t frame[5];
+    const size_t frame_size = DaqcEncodeConfig(frame, sizeof(frame), command, true, status);
+    return SendFrame(frame, frame_size);
+}
+
+bool DaqcTransportSendAcquisition(uint16_t sequence, const uint8_t payload[DAQC_ACQUISITION_SIZE]) {
+    uint8_t frame[5U + DAQC_ACQUISITION_SIZE];
+    const size_t frame_size = DaqcEncodeData(frame, sizeof(frame), sequence, payload, DAQC_ACQUISITION_SIZE);
+    return SendFrame(frame, frame_size);
+}
+
+static bool DaqcTransportSendXrce(const uint8_t *payload, size_t payload_size) {
+    uint8_t frame[5U + DAQC_XRCE_MTU];
+    const size_t frame_size = DaqcEncodeXrce(frame, sizeof(frame), payload, payload_size);
+    return SendFrame(frame, frame_size);
 }
 
 bool DaqcTransportAcceptXrce(const uint8_t *payload, size_t payload_size) {
@@ -41,7 +60,7 @@ bool DaqcTransportClose(struct uxrCustomTransport *transport) { return transport
 size_t DaqcTransportWrite(struct uxrCustomTransport *transport, const uint8_t *buffer, size_t length, uint8_t *error_code) {
     (void)transport;
     if (error_code) *error_code = 0U;
-    return DaqcTransportSend(DAQC_MID_XRCE, buffer, length) ? length : 0U;
+    return DaqcTransportSendXrce(buffer, length) ? length : 0U;
 }
 size_t DaqcTransportRead(struct uxrCustomTransport *transport, uint8_t *buffer, size_t length, int timeout_ms, uint8_t *error_code) {
     (void)transport;

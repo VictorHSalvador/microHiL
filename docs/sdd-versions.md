@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.17.6**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.17.7**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -62,6 +62,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.17.4 | 10.09.2026 | PATCH | Mapa YAML resolvido também constrói o schema de atuação ESP32 de 21 bytes; o codificador HOST preserva último output válido e produz payload de zero para o encerramento coordenado | código HOST, fixture, testes, plano, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e 43 testes; envio ao enlace, lifecycle integrado e ensaio físico pendentes | alterações locais; registrar commit quando criado |
 | 0.17.5 | 10.09.2026 | PATCH | Bridge HOST codifica outputs identificados pela FMU e publica DATA de atuação no mailbox do coordenador somente após STREAMING, incluindo payload zero | código HOST, testes, contratos, plano, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e 44 testes; ligação ao runner, serviço TTY e ensaio físico pendentes | alterações locais; registrar commit quando criado |
 | 0.17.6 | 10.09.2026 | PATCH | Modo terminal carrega YAML após a FMU, valida/resolve os mapas, constrói schemas, aplica timing do arquivo e exige seleção das saídas mapeadas antes de Play | código HOST, plano, contratos, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e execução manual controlada do menu; DAQC não é iniciada pelo runner e HIL permanece pendente | alterações locais; registrar commit quando criado |
+| 0.17.7 | 10.09.2026 | PATCH | Transporte do firmware passa a ser o único proprietário de TX UART; watchdog STREAMING só renova com avanço modular do READ_ACK | firmware, plano, rastreabilidade, evidência e sdd-versions | Build cruzado ESP-IDF v5.2.6; sem placa, CH340, medição de 60 s, Agent ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

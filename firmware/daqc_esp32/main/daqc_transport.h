@@ -10,8 +10,12 @@
 #include "freertos/stream_buffer.h"
 #include "uxr/client/transport.h"
 
+#include "daqc_protocol.h"
+
 bool DaqcTransportInit(void);
-bool DaqcTransportSend(uint8_t mid, const uint8_t *payload, size_t payload_size);
+int DaqcTransportReadRaw(uint8_t *buffer, size_t capacity, uint32_t timeout_ms);
+bool DaqcTransportSendConfig(uint8_t command, uint8_t status);
+bool DaqcTransportSendAcquisition(uint16_t sequence, const uint8_t payload[DAQC_ACQUISITION_SIZE]);
 bool DaqcTransportAcceptXrce(const uint8_t *payload, size_t payload_size);
 bool DaqcTransportOpen(struct uxrCustomTransport *transport);
 bool DaqcTransportClose(struct uxrCustomTransport *transport);
