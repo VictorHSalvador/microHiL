@@ -65,7 +65,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.17.7 | 10.09.2026 | PATCH | Transporte do firmware passa a ser o único proprietário de TX UART; watchdog STREAMING só renova com avanço modular do READ_ACK | firmware, plano, rastreabilidade, evidência e sdd-versions | Build cruzado ESP-IDF v5.2.6; sem placa, CH340, medição de 60 s, Agent ou HIL | fe8f076 |
 | 0.18.0 | 10.09.2026 | MINOR | CONFIG passa a ser a única autoridade de estado; cliente micro-ROS usa XRCE customizado para setup/state/errors fora de STREAMING | firmware, decisões, arquitetura, ICD, plano, rastreabilidade, evidência e sdd-versions | Build cruzado ESP-IDF v5.2.6; sem placa, Agent, tópico ROS, CH340 ou HIL | f552169 |
 | 0.19.0 | 10.09.2026 | MINOR | Play exige ENABLE→STREAMING e Stop usa STREAMING→DISABLE; confirmação CONFIG tem prazo configurável de 10 ms inicial | SDD, controlador HOST, testes e evidência | Build HOST e 45 CTests; sem TTY físico, ESP32, Agent ou HIL | 6d47781 |
-| 0.20.0 | 10.09.2026 | MINOR | Formato YAML obrigatório para ADC/PWM completo do perfil ESP32, confirmado pelo usuário | ICD, TARGET, decisões, plano, código HOST, fixtures, testes, evidência e sdd-versions | Build HOST e 45 CTests; sem GUI, Agent, CH340, ESP32 ou aplicação física | alterações locais; registrar commit quando criado |
+| 0.20.0 | 10.09.2026 | MINOR | Formato YAML obrigatório para ADC/PWM completo do perfil ESP32, confirmado pelo usuário | ICD, TARGET, decisões, plano, código HOST, fixtures, testes, evidência e sdd-versions | Build HOST e 45 CTests; sem GUI, Agent, CH340, ESP32 ou aplicação física | 7b24226 |
 
 ## Procedimento de atualização
 
