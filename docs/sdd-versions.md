@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.16.0**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.16.1**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -54,6 +54,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.15.0 | 10.09.2026 | MINOR | Mapa simultâneo do perfil ESP32 e layouts DATA de 28 bytes de aquisição e 21 bytes de atuação | TARGET, ICD, spec, arquitetura, decisões, plano, README e sdd-versions | Decisão do usuário; sem firmware, CH340, ESP32 ou ensaio físico | alterações locais; registrar commit quando criado |
 | 0.15.1 | 10.09.2026 | PATCH | Identificador numérico do perfil ESP32 definido como 1 | TARGET, ICD, spec, decisões, plano, README e sdd-versions | Decisão do usuário; sem firmware, CH340, ESP32 ou ensaio físico | alterações locais; registrar commit quando criado |
 | 0.16.0 | 10.09.2026 | MINOR | Configuração limitada de ADC/PWM em `DaqcSetup`, confirmação no estado e flags específicas de erro | interfaces ROS, ICD, TARGET, arquitetura, decisões, plano, README, evidence e sdd-versions | host-ros-setup-config-2026-09-10; firmware, CH340 e ESP32 pendentes | alterações locais; registrar commit quando criado |
+| 0.16.1 | 10.09.2026 | PATCH | Build cruzado ESP-IDF/micro-ROS do firmware e materialização inicial do perfil físico ADC, DAC, GPIO e PWM | firmware, plano, arquitetura, evidence e sdd-versions | esp32-firmware-build-2026-09-10; sem placa, CH340, Agent, tópicos ou ensaio temporal | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
