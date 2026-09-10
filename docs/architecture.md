@@ -76,7 +76,7 @@ ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MI
 
 Design vigente: dono único do enlace, demultiplexação CONFIG/DATA/READ_ACK/XRCE no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. DATA usa mailbox de última atualização, sem fila crescente nem retransmissão. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço.
 
-Perfil ESP32 tem mapa funcional confirmado: AI em GPIO32/33/34/35/36/39, DI em GPIO4/13/14/27, AO em GPIO25/26, DO em GPIO16/17/21/22/23 e PWM em GPIO18/19. UART0 (GPIO1/3) e pinos de boot (GPIO2/5/12/15) ficam fora do perfil. DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO/PWM. O mapa analógico usa volts; DAC converte explicitamente para 0…255. PWM usa duty normalizado e frequência/resolução configuradas. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
+Perfil ESP32 tem mapa funcional confirmado: AI em GPIO32/33/34/35/36/39, DI em GPIO4/13/14/27, AO em GPIO25/26, DO em GPIO16/17/21/22/23 e PWM em GPIO18/19. UART0 (GPIO1/3) e pinos de boot (GPIO2/5/12/15) ficam fora do perfil. DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO/PWM. O mapa analógico usa volts; DAC converte explicitamente para 0…255. PWM usa duty normalizado no DATA e frequência/resolução validadas por `DaqcSetup` fora de STREAMING. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
 
 ## ARCH-GUI — Interface e persistência
 

@@ -101,10 +101,14 @@ A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, pe
 
 ## Perfil compilado e XRCE HOST — 0.14.0
 
-`DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado, valida a compatibilidade antes do Play e não transfere mapa de GPIOs, descritores ou parâmetros ADC/PWM variáveis pelo MID 04. `DaqcState` confirma o identificador e a aplicação do perfil.
+`DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.
 
 O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. A mensagem mais nova substitui a anterior e é enviada somente depois de CONFIG, READ_ACK e DATA pendentes. Confirmações CONFIG limpam esse mailbox, impedindo transportar controle XRCE de uma transição anterior. Isso implementa o multiplexador local; o transporte customizado do Agent e o cliente micro-ROS continuam pendentes.
 
 ## Mapa funcional ESP32 — 0.15.0
 
 O usuário confirmou o perfil simultâneo ESP32: AI GPIO36/39/34/35/32/33; AO GPIO25/26; DI GPIO27/14/13/4; DO GPIO16/17/21/22/23; PWM GPIO18/19. GPIO1/3 são reservados à UART0 e GPIO2/5/12/15 ao boot. O mapa usa `float32` para AI/AO/PWM e campos binários para DI/DO, resultando em DATA DAQC→host de 28 bytes e host→DAQC de 21 bytes. A ordem canônica e offsets estão no IF-MAP. O valor confirmado de `uint32 profile_id` é 1.
+
+## Configuração ADC/PWM pelo setup — 0.16.0
+
+O usuário aprovou ampliar `DaqcSetup` sem criar tópicos adicionais. A mensagem transporta resolução ADC comum, atenuação por AI, frequência e resolução por PWM, além de `apply_configuration`. A DAQC aplica esses parâmetros somente em DISABLE ou ENABLE e confirma pelo novo campo binário `DaqcState.configuration_applied`. `DaqcErrors` passa a indicar separadamente erro de configuração ADC e PWM por flags binárias. Duty PWM continua no DATA crítico; não há telemetria ROS adicional.
