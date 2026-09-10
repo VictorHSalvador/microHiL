@@ -6,7 +6,7 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 
 | ID | Confirmado | Detalhamento restante |
 |---|---|---|
-| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state` e `/daqc_errors` | MTU XRCE 128 bytes selecionado; implementar transporte integrado e medir custo |
+| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e ponte UDP local do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state` e `/daqc_errors` | MTU XRCE 128 bytes selecionado; integrar Agent e medir custo |
 | DEC-002 | Qt 6/C++ com Qt Quick/QML desacoplado, terminal debug, prioridade GUI inferior ao núcleo, aparência Mint; log binário tipado e CSV posterior | Validar UX e formatos por fixtures |
 | DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM configurável | Caracterização elétrica continua requisito de bancada |
 | DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; grade fixa, sem compensação; USB ≤5 ms por transferência | Medir orçamento fim a fim por modelo/perfil |
@@ -97,7 +97,7 @@ O README desse commit do componente declara testes para ESP-IDF 5.2, 5.3, 5.4, 5
 
 O usuário definiu somente os tópicos `/daqc_setup`, `/daqc_state` e `/daqc_errors`. A interface detalhada está no [IF-ROS](contracts/interfaces.md#if-ros--tópicos-micro-ros-de-controle-e-diagnóstico). Setup e state usam comando/estado `uint8` e identificador de perfil `uint32`; errors usa flags binárias. O MID 04 permanece reservado a XRCE e não substitui DATA MID 02.
 
-A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, Agent customizado e buffers devem usar o mesmo valor.
+A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, ponte UDP e buffers devem usar o mesmo valor.
 
 ## Autoridade de estado DAQC — 0.18.0
 
@@ -111,11 +111,15 @@ Em 10.09.2026, o usuário definiu que Play envia a mudança ENABLE→STREAMING e
 
 Em 10.09.2026, o usuário confirmou o formato persistido da configuração ADC/PWM. A seção obrigatória `adc` contém `resolution_bits` e um mapa `attenuation` com os seis canais AI do perfil, na ordem lógica GPIO32/33/34/35/36/39. A seção obrigatória `pwm` contém os dois canais GPIO18 e GPIO19, cada um com `frequency_hz` e `resolution_bits`. A GUI deve gerar todos os campos, inclusive para canais que não tenham mapa FMU, sem valores implícitos. O host valida a forma e os limites representáveis; a confirmação final de um par PWM e de sua aplicação continua sendo `DaqcState.configuration_applied` emitido pela DAQC.
 
+## Ponte local do Agent — 0.21.0
+
+Em 10.09.2026, o usuário aprovou substituir a premissa de transporte customizado dentro do Agent Humble por uma ponte UDP local. A inspeção da fonte oficial `micro-ROS-Agent` Humble no commit `c93ee764e0d2ef4907aeb29233c68cb5f4b56976` mostrou suporte direto apenas a SerialPort e UDP. O modo serial não pode ser usado, pois abriria a CH340 em concorrência com o coordenador C. O coordenador continua sendo o único leitor/escritor da UART e converte somente frames MID 04 em datagramas UDP para um Agent em loopback; o fluxo de retorno UDP é reenquadrado como MID 04 pelo mesmo coordenador. CONFIG, DATA e READ_ACK não passam pelo UDP, continuam com prioridade própria e não são visíveis ao Agent. A porta UDP local é configurável pelo integrador; `8888` é apenas o valor inicial do serviço, sem significado no enlace físico.
+
 ## Perfil compilado e XRCE HOST — 0.14.0
 
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.
 
-O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. A mensagem mais nova substitui a anterior e é enviada somente depois de CONFIG, READ_ACK e DATA pendentes. Confirmações CONFIG limpam esse mailbox, impedindo transportar controle XRCE de uma transição anterior. Isso implementa o multiplexador local; o transporte customizado do Agent e o cliente micro-ROS continuam pendentes.
+O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. A mensagem mais nova substitui a anterior e é enviada somente depois de CONFIG, READ_ACK e DATA pendentes. Confirmações CONFIG limpam esse mailbox, impedindo transportar controle XRCE de uma transição anterior. Isso implementa o multiplexador local; a ponte UDP do Agent e o cliente micro-ROS continuam pendentes de integração completa.
 
 ## Mapa funcional ESP32 — 0.15.0
 

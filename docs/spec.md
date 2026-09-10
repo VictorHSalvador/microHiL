@@ -332,7 +332,7 @@ A comunicação USB entre a main board e a DAQC deve usar a ponte CH340 pelo dri
 
 ### REQ-NF-06 — Biblioteca USB
 
-A comunicação host–CH340 deve usar a API serial POSIX em C, através de `/dev/ttyUSB*`, mantendo um único coordenador proprietário do enlace. O Agent micro-ROS recebe XRCE somente pelo transporte customizado conectado ao MID 04.
+A comunicação host–CH340 deve usar a API serial POSIX em C, através de `/dev/ttyUSB*`, mantendo um único coordenador proprietário do enlace. O Agent micro-ROS recebe XRCE somente pela ponte UDP em loopback conectada ao MID 04.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 

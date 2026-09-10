@@ -46,7 +46,7 @@ Sinais externos de processo, precisão ADC, tensão útil DAC e estado das saíd
 
 ## Topologia de comunicação
 
-Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. O coordenador C abre exclusivamente o dispositivo Linux `/dev/ttyUSB*` e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. MID 04 alimenta o transporte customizado do Micro-ROS Agent; nenhum agente serial concorrente abre a porta.
+Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. O coordenador C abre exclusivamente o dispositivo Linux `/dev/ttyUSB*` e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. MID 04 chega ao Micro-ROS Agent por ponte UDP em loopback; nenhum agente serial concorrente abre a porta.
 
 A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial. O setup e Agent Humble tiveram build HOST limpo em 09.09.2026. O usuário selecionou ESP-IDF v5.2.6, da menor série declarada como testada pelo componente Humble atual; ESP32 clássico é alvo listado tanto pelo SDK quanto pelo componente. Isso comprova compatibilidade declarada de versão/alvo, não o build integrado nem o funcionamento na placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/get-started/linux-macos-setup.html), [ESP-IDF ESP32 v5.2](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/), [micro_ros_setup Humble](https://github.com/micro-ROS/micro_ros_setup/tree/humble), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble).
 

@@ -155,7 +155,7 @@ DATA usa mailbox de capacidade um: produtor substitui valor ainda não consumido
 | Adaptação | Contrato vigente | Limite a validar |
 |---|---|---|
 | READ_ACK, MID 03 | Host confirma cumulativamente o último SEQ DAQC→host efetivamente lido; quadro de 5 bytes, sem CRC, sem retransmissão e coalescível | Cadência deve impedir falso DISABLE sem gerar carga relevante; medir wrap e saturação |
-| XRCE, MID 04 | Um único dono TTY/UART demultiplexa XRCE de CONFIG/DATA e entrega ou recebe payload pelo transporte customizado do Agent; LENGTH uint16 delimita a mensagem; mailbox HOST de 128 bytes coalesce mensagens pendentes; caminho best effort | Fixar fragmentação, executor e QoS na versão micro-ROS escolhida |
+| XRCE, MID 04 | Um único dono TTY/UART demultiplexa XRCE de CONFIG/DATA e entrega ou recebe payload por ponte UDP em loopback ao Agent; LENGTH uint16 delimita a mensagem; mailbox HOST de 128 bytes coalesce mensagens pendentes; caminho best effort | Fixar fragmentação, executor e QoS na versão micro-ROS escolhida |
 | Limpeza de execução | Transição para STREAMING limpa fragmentos/mailboxes e reinicia SEQ/ACK; DATA fora de STREAMING é descartado | Ensaiar CONFIG repetido, reconexão e bytes tardios |
 
 Não existe identificador de sessão nem extensão de integridade no contrato vigente. O SEQ uint16 é usado somente no fluxo corrente e comparado dentro da meia faixa. O watchdog de 60 s mede tempo monotônico sem avanço de READ_ACK; não converte 60 s de pacotes em distância modular e não armazena histórico para recuperar perdas.
@@ -164,7 +164,7 @@ Não existe identificador de sessão nem extensão de integridade no contrato vi
 
 Adaptar o serviço coordenador para possuir bridge USB C e agente XRCE incorporado em componente C++ não crítico. Cliente ESP32 usa callbacks de transporte que passam pelo MID 04; nenhum segundo processo/agente abre a TTY. Snapshots de I/O fazem a ponte com a thread FMI. O nó ROS host recebe setup e publica state/errors pelas interfaces do coordenador; o cliente micro-ROS recebe setup e publica state/errors. Definir um único escritor final por canal: modo HiL usa DATA do núcleo; callbacks ROS nunca competem diretamente pelo atuador.
 
-RaspDAQ demonstra o padrão de processo único, não a API micro-ROS. O transporte customizado existe no [cliente e agente micro-ROS](https://github.com/micro-ROS/micro-ros.github.io/blob/master/_docs/tutorials/advanced/create_custom_transports/index.md); isso fundamenta o MID 04, sem provar sua integração ou seu custo na placa. O multiplexador entrega uma mensagem XRCE completa delimitada por LENGTH; fragmentação acima do MTU fica a cargo do adaptador definido para a versão escolhida.
+RaspDAQ demonstra o padrão de processo único, não a API micro-ROS. O MID 04 preserva esse owner único e a ponte UDP entrega o payload XRCE ao Agent sem abrir a TTY. O multiplexador entrega uma mensagem XRCE completa delimitada por LENGTH; fragmentação acima do MTU fica a cargo do cliente/Agent na versão escolhida.
 
 ## IF-READ-PROGRESS — Regra confirmada de supervisão
 
@@ -174,7 +174,7 @@ Progresso via confirmação pode deixar de chegar porque o caminho de retorno fa
 
 ## IF-ROS — Tópicos micro-ROS de controle e diagnóstico
 
-O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent integrado ao coordenador host. Ele não substitui DATA MID 02 para aquisição e atuação real-time. Os tópicos abaixo são a interface ROS 2/micro-ROS; sua publicação, serialização e tratamento ocorrem fora do caminho crítico da FMU.
+O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent alcançado pela ponte UDP local do coordenador host. A ponte mantém a TTY exclusiva, repassa datagramas para o Agent em loopback e reenquadra o retorno como MID 04. Ela não transmite CONFIG, DATA ou READ_ACK e não substitui DATA MID 02 para aquisição e atuação real-time. Os tópicos abaixo são a interface ROS 2/micro-ROS; sua publicação, serialização e tratamento ocorrem fora do caminho crítico da FMU.
 
 | Tópico | Direção | Tipo | Finalidade |
 |---|---|---|---|
@@ -191,7 +191,7 @@ O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent
 As interfaces de controle estão materializadas no pacote `ros2/microhil_interfaces`; a build anterior no Humble está delimitada pela [evidência](../evidence/host-ros-interfaces-2026-09-09.md), anterior a esta extensão. `DaqcErrors.msg` contém somente flags `uint8`: `source_is_daqc`, `ros_error`, `communication_error`, `fmu_error`, `profile_error`, `adc_configuration_error`, `pwm_configuration_error`, `timeout_error` e `invalid_data_error`. Cada flag vale 0 ou 1. A DAQC publica `fmu_error=0`, pois não executa FMI; o host pode publicar essa flag quando a execução da FMU falhar. A GUI associa a origem e as flags ao diagnóstico estruturado local, sem depender de texto ou prints no firmware.
 
 
-O MTU XRCE selecionado é 128 bytes. Cliente, transporte customizado no Agent, buffers e testes devem usar o mesmo valor. A fragmentação XRCE é permitida acima desse limite, mas não cria prioridade sobre CONFIG, READ_ACK ou DATA. Um frame XRCE iniciado não é intercalado; por isso, em 152.000 bit/s, o pior quadro de 133 bytes ocupa cerca de 8,75 ms no fio e sua emissão permanece best effort, sujeita ao orçamento medido do STREAMING.
+O MTU XRCE selecionado é 128 bytes. Cliente, ponte UDP, buffers e testes devem usar o mesmo valor. A fragmentação XRCE é permitida acima desse limite, mas não cria prioridade sobre CONFIG, READ_ACK ou DATA. Um frame XRCE iniciado não é intercalado; por isso, em 152.000 bit/s, o pior quadro de 133 bytes ocupa cerca de 8,75 ms no fio e sua emissão permanece best effort, sujeita ao orçamento medido do STREAMING. A porta UDP em loopback é configurável pelo integrador; o valor inicial recomendado do serviço é 8888 e não integra o protocolo UART.
 
 ## IF-LOG — Registro binário e configuração: contrato HOST, não código RaspDAQ
 

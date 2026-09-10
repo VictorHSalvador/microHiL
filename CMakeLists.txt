@@ -35,6 +35,7 @@ add_library(microhil_host_components STATIC
     src/daq_link_state.c
     src/daq_serial_service.c
     src/daq_tty.c
+    src/daq_xrce_udp_bridge.c
     src/input_state.c
     src/log_converter.c
     src/log_format.c

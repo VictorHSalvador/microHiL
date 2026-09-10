@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.20.0**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.21.0**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -66,6 +66,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.18.0 | 10.09.2026 | MINOR | CONFIG passa a ser a única autoridade de estado; cliente micro-ROS usa XRCE customizado para setup/state/errors fora de STREAMING | firmware, decisões, arquitetura, ICD, plano, rastreabilidade, evidência e sdd-versions | Build cruzado ESP-IDF v5.2.6; sem placa, Agent, tópico ROS, CH340 ou HIL | f552169 |
 | 0.19.0 | 10.09.2026 | MINOR | Play exige ENABLE→STREAMING e Stop usa STREAMING→DISABLE; confirmação CONFIG tem prazo configurável de 10 ms inicial | SDD, controlador HOST, testes e evidência | Build HOST e 45 CTests; sem TTY físico, ESP32, Agent ou HIL | 6d47781 |
 | 0.20.0 | 10.09.2026 | MINOR | Formato YAML obrigatório para ADC/PWM completo do perfil ESP32, confirmado pelo usuário | ICD, TARGET, decisões, plano, código HOST, fixtures, testes, evidência e sdd-versions | Build HOST e 45 CTests; sem GUI, Agent, CH340, ESP32 ou aplicação física | 7b24226 |
+| 0.21.0 | 10.09.2026 | MINOR | Agent Humble passa a ser alcançado por ponte UDP local do MID 04, preservando a TTY exclusiva do coordenador | decisões, arquitetura, ICD, plano, implementação HOST, testes, evidência e sdd-versions | Inspeção da fonte Agent, CTest 46/46 e harness 29/29; sem Agent, CH340, ESP32 ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

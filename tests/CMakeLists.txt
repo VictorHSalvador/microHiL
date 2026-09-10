@@ -46,6 +46,9 @@ target_link_libraries(test_daq_coordinator PRIVATE microhil_host_components m)
 add_executable(test_daq_state_control test_daq_state_control.c)
 target_link_libraries(test_daq_state_control PRIVATE microhil_host_components m)
 
+add_executable(test_daq_xrce_udp_bridge test_daq_xrce_udp_bridge.c)
+target_link_libraries(test_daq_xrce_udp_bridge PRIVATE microhil_host_components m)
+
 add_executable(test_app_config test_app_config.c)
 target_link_libraries(test_app_config PRIVATE microhil_host_components m)
 
@@ -99,6 +102,7 @@ add_test(NAME daq_actuation_payload COMMAND test_daq_actuation)
 add_test(NAME daq_output_bridge_streaming COMMAND test_daq_output_bridge)
 add_test(NAME daq_coordinator_demultiplexing COMMAND test_daq_coordinator)
 add_test(NAME daq_state_control_transitions COMMAND test_daq_state_control)
+add_test(NAME daq_xrce_udp_bridge_loopback COMMAND test_daq_xrce_udp_bridge)
 add_test(NAME app_config_timing COMMAND test_app_config)
 add_test(NAME release_schedule_overrun COMMAND test_release_schedule overrun)
 add_test(NAME release_schedule_boundary COMMAND test_release_schedule boundary)

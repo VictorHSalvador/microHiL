@@ -20,7 +20,7 @@ O identificador de sessão no fio proposto na revisão 0.6 foi removido. Cada en
 
 A confirmação cumulativa de leitura exigida por F-27 permanece uma extensão mínima. Ela informa apenas o último SEQ de DATA DAQC→host efetivamente consumido pela aplicação host. Não confirma validade numérica, não confirma atuação e não solicita retransmissão. Para não reduzir o payload útil de DATA, o ICD reserva MID 03 para READ_ACK no sentido host→DAQC. READ_ACK usa o mesmo contador uint16 e é coalescido: confirmações intermediárias podem ser substituídas pela mais recente.
 
-O micro-ROS no ESP32 permanece requisito. Como esses componentes não existem no RaspDAQ, o ICD reserva MID 04 para XRCE nos dois sentidos. Um único coordenador C possui `/dev/ttyUSB*`/UART e demultiplexa CONFIG, DATA, READ_ACK e XRCE. O payload XRCE chega ao Agent por transporte customizado, sem segundo leitor serial. O transporte XRCE usa entrega best effort no caminho periódico; nenhum callback micro-ROS acessa diretamente a FMU ou concorre como segundo escritor dos atuadores.
+O micro-ROS no ESP32 permanece requisito. Como esses componentes não existem no RaspDAQ, o ICD reserva MID 04 para XRCE nos dois sentidos. Um único coordenador C possui `/dev/ttyUSB*`/UART e demultiplexa CONFIG, DATA, READ_ACK e XRCE. O payload XRCE chega ao Agent por ponte UDP em loopback, sem segundo leitor serial. O transporte XRCE usa entrega best effort no caminho periódico; nenhum callback micro-ROS acessa diretamente a FMU ou concorre como segundo escritor dos atuadores.
 
 ## Resposta a cada parte do ICD
 

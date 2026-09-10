@@ -4,7 +4,7 @@ Data: 06.09.2026. Status: decisões abaixo confirmadas; revisão documental 0.5.
 
 ## Decisões
 
-- Usar CH340 pela API serial POSIX em C, com coordenador único em `/dev/ttyUSB*` e micro-ROS no ESP32 pela USB-C. MID 04 alimenta um transporte customizado do Agent; não iniciar um agente serial concorrente. Avaliar reuso do padrão RaspDAQ de serviço/snapshot/mutex.
+- Usar CH340 pela API serial POSIX em C, com coordenador único em `/dev/ttyUSB*` e micro-ROS no ESP32 pela USB-C. MID 04 segue pela ponte UDP local do Agent; não iniciar um agente serial concorrente. Avaliar reuso do padrão RaspDAQ de serviço/snapshot/mutex.
 - Qt Quick/QML em Qt 6/C++ desacoplado, núcleo operável via terminal debug, prioridade GUI inferior à simulação e aparência inspirada no Linux Mint. Prints próprios somente debug, fora do ciclo crítico.
 - Perfil ESP32 com os recursos disponíveis do módulo; ADC/DAC internos aceitos, PWM incluído e mapa analógico em volts. Recursos multiplexados não são canais independentes simultâneos.
 - Produto independente de planta, importação FMI 2.0 CS com nomes/tipos, passo e duração configuráveis. Meta pelo menos 100 Hz, com capacidade efetiva medida por FMU/alvo. Timeout USB máximo 5 ms por transferência; descartar atrasado e usar último válido no passo até fim. Valor constante não é falha.
