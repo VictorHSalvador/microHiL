@@ -53,6 +53,35 @@ sudo apt update
 sudo apt install build-essential cmake git gnuplot-qt libcap2-bin
 ```
 
+## GUI Qt Quick/QML
+
+A GUI é opcional no build e usa Qt 6. No Ubuntu 22.04, instale os arquivos de desenvolvimento e os módulos QML usados em tempo de execução:
+
+```bash
+sudo apt install qt6-base-dev qt6-declarative-dev \
+  qml6-module-qtquick qml6-module-qtquick-controls \
+  qml6-module-qtquick-layouts qml6-module-qtquick-dialogs \
+  qml6-module-qtqml-workerscript qml6-module-qtquick-templates
+```
+
+- `qt6-base-dev` e `qt6-declarative-dev` fornecem CMake, headers, compilador de recursos e bibliotecas para compilar C++/QML.
+- `qml6-module-qtquick` fornece os tipos visuais fundamentais do QML.
+- `qml6-module-qtquick-controls` fornece controles como `ApplicationWindow`, botões, campos e caixas de seleção.
+- `qml6-module-qtquick-layouts` organiza o layout responsivo da tela.
+- `qml6-module-qtquick-dialogs` fornece a seleção de FMU e YAML.
+- `qml6-module-qtqml-workerscript` é uma dependência de execução do QML.
+- `qml6-module-qtquick-templates` fornece a base usada pelos estilos do Qt Quick Controls 2, incluindo Fusion.
+
+Compile em diretório separado:
+
+```bash
+cmake -S . -B /tmp/microhil-gui -DMICROHIL_BUILD_GUI=ON -DMICROHIL_BUILD_RUNNER=OFF -DBUILD_TESTING=OFF
+cmake --build /tmp/microhil-gui --target microhil_gui
+/tmp/microhil-gui/microhil_gui
+```
+
+Para verificar apenas o carregamento em ambiente sem tela, use `QT_QPA_PLATFORM=offscreen`. O encerramento pelo `timeout` após alguns segundos indica que a janela iniciou e permaneceu ativa; não é uma validação visual nem de integração com FMU/DAQC.
+
 ## Build HOST
 
 Use sempre um diretório novo. O build independente não procura a FMILibrary e permite compilar os componentes HOST e executar a suíte CTest:
