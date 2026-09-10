@@ -109,7 +109,7 @@ O perfil ESP32 confirmado usa os campos abaixo em ordem de GPIO crescente. DAQC�
 | Host→DAQC | 13 | `GPIO25_AO` | `float32` |
 | Host→DAQC | 17 | `GPIO26_AO` | `float32` |
 
-CONFIG 01/02/03 altera somente o estado da DAQC. A seleção do perfil usa `DaqcSetup.profile_id` pelo MID 04 em DISABLE ou ENABLE, nunca dentro do ciclo. O identificador seleciona um perfil compilado no firmware; `DaqcState.profile_id` e `profile_applied` confirmam sua aplicação. O arquivo de configuração HOST contém o mapeamento entre FMU e o perfil selecionado e deve ser validado integralmente antes do Play. Esta revisão não transporta descritores, mapa de GPIOs ou parâmetros ADC/PWM variáveis para a DAQC pelo enlace. STREAMING só é aceito quando o perfil selecionado e o schema do host são compatíveis. O perfil ESP32 tem layout fixo de 28 bytes de aquisição e 21 bytes de atuação; seu `profile_id` numérico permanece pendente. O RaspDAQ usa schemas compilados e não fornece essa seleção micro-ROS.
+CONFIG 01/02/03 altera somente o estado da DAQC. A seleção do perfil usa `DaqcSetup.profile_id` pelo MID 04 em DISABLE ou ENABLE, nunca dentro do ciclo. O identificador seleciona um perfil compilado no firmware; `DaqcState.profile_id` e `profile_applied` confirmam sua aplicação. O arquivo de configuração HOST contém o mapeamento entre FMU e o perfil selecionado e deve ser validado integralmente antes do Play. Esta revisão não transporta descritores, mapa de GPIOs ou parâmetros ADC/PWM variáveis para a DAQC pelo enlace. STREAMING só é aceito quando o perfil selecionado e o schema do host são compatíveis. O perfil ESP32 usa `profile_id = 1` e layout fixo de 28 bytes de aquisição e 21 bytes de atuação. O RaspDAQ usa schemas compilados e não fornece essa seleção micro-ROS.
 
 ## IF-PARSER — Frames, sequência e invalidade
 
@@ -203,7 +203,7 @@ O logger SPSC assíncrono usa capacidade fixa de 128 posições; o produtor não
 
 CSV é ação explícita somente após encerramento. O conversor compara hash, índice XML, nome, tipo, valueReference e ordem com o descritor reconstruído da FMU atualmente carregada; `t_start` e `h` permanecem no formato, mas não participam da identidade FMU/esquema. As colunas são `sequence`, `simulation_time_s` e, por saída, `<nome>_value`, `<nome>_valid`. Não é necessário executar a FMU para interpretar o cabeçalho. Tipo do log não é o float32 do fio. Cauda truncada exporta somente registros completos com resultado parcial; arquivo incompleto por falha de logging não é disponibilizado como log íntegro para conversão. A GUI ainda deve definir apresentação e ação de produto.
 
-Configuração usa formato separado, versionado e com seções de identidade FMU, perfil/schema, mapa ordenado e execução; GUI/gráficos são opcionais. Não permitir seções obrigatórias desconhecidas ou duplicadas. Validar o arquivo inteiro contra FMU/DAQ antes de aplicar e não serializar endereços ou objetos Qt/Python. Os vetores ESP32 já têm canais, offsets e tamanhos definidos; o `profile_id` e os testes de interoperabilidade permanecem pendentes.
+Configuração usa formato separado, versionado e com seções de identidade FMU, perfil/schema, mapa ordenado e execução; GUI/gráficos são opcionais. Não permitir seções obrigatórias desconhecidas ou duplicadas. Validar o arquivo inteiro contra FMU/DAQ antes de aplicar e não serializar endereços ou objetos Qt/Python. Os vetores ESP32 já têm canais, offsets, tamanhos e `profile_id = 1` definidos; os testes de interoperabilidade permanecem pendentes.
 
 ## IF-OUTPUT-LIFECYCLE — Atuação e zero final
 

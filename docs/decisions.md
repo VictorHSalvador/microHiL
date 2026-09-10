@@ -64,7 +64,7 @@ RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos d
 | Q-07 | IF-LOG tipado/versionado; configuração binária separada | Implementar fixtures e vetores de round-trip/corrupção |
 | Q-09 | READ_ACK 5 bytes com SEQ uint16; sem sessão/CRC/retransmissão; 60 s por relógio monotônico | Escolher cadência dentro do orçamento e medir tolerância sob saturação |
 
-Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. A enumeração funcional do perfil ESP32 foi confirmada em 10.09.2026; restam o identificador numérico do perfil, implementação integrada e critérios de ensaio.
+Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. A enumeração funcional do perfil ESP32 e `profile_id = 1` foram confirmados em 10.09.2026; restam implementação integrada e critérios de ensaio.
 
 ## Parâmetros de enlace selecionados — revisão 0.11
 
@@ -107,4 +107,4 @@ O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. 
 
 ## Mapa funcional ESP32 — 0.15.0
 
-O usuário confirmou o perfil simultâneo ESP32: AI GPIO36/39/34/35/32/33; AO GPIO25/26; DI GPIO27/14/13/4; DO GPIO16/17/21/22/23; PWM GPIO18/19. GPIO1/3 são reservados à UART0 e GPIO2/5/12/15 ao boot. O mapa usa `float32` para AI/AO/PWM e campos binários para DI/DO, resultando em DATA DAQC→host de 28 bytes e host→DAQC de 21 bytes. A ordem canônica e offsets estão no IF-MAP. O valor `uint32` de `profile_id` não foi informado e permanece pendente antes do firmware.
+O usuário confirmou o perfil simultâneo ESP32: AI GPIO36/39/34/35/32/33; AO GPIO25/26; DI GPIO27/14/13/4; DO GPIO16/17/21/22/23; PWM GPIO18/19. GPIO1/3 são reservados à UART0 e GPIO2/5/12/15 ao boot. O mapa usa `float32` para AI/AO/PWM e campos binários para DI/DO, resultando em DATA DAQC→host de 28 bytes e host→DAQC de 21 bytes. A ordem canônica e offsets estão no IF-MAP. O valor confirmado de `uint32 profile_id` é 1.

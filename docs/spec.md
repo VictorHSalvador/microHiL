@@ -41,7 +41,7 @@ A plataforma deve permitir associar inputs/outputs da FMU aos recursos do perfil
 
 **Critério de aceitação proposto (V-F-02; HOST + bancada/HIL):** Mapear canais compatíveis e rejeitar funções conflitantes, direção/tipo/unidade incompatíveis; transmitir o descritor em DISABLE/ENABLE, confirmar o mesmo hash no firmware e bloquear STREAMING se houver divergência.
 
-**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006. **Pendência:** `profile_id`, caracterização elétrica e validação em bancada.
+**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006. **Pendência:** caracterização elétrica e validação em bancada.
 
 ### REQ-F-03 — Seleção e Controle da DAQC
 
@@ -205,7 +205,7 @@ A plataforma deve suportar DATA com SYNC=0x7259, MID=0x02 e até 256 bytes de pa
 
 **Critério de aceitação proposto (V-F-19; HOST + HIL):** Testar perfis/layout, frames parciais/agregados e limite do payload. Payload contendo SYNC não pode ser truncado por busca ingênua; quadro fixo 5+N e STATUS fora do DATA. Injetar perda, gap, repetido, antigo e timeout: nenhum bloqueia o próximo pacote nem gera retransmissão.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** `profile_id`, firmware e medição da ponte; framing e layout ESP32 consolidados no ICD.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** firmware e medição da ponte; framing e layout ESP32 consolidados no ICD.
 
 ### REQ-F-20 — Controle de Estado da DAQC
 
@@ -424,7 +424,7 @@ Características DAQC devem ser modulares por perfil; o primeiro chama-se ESP32 
 
 **Critério de aceitação proposto (V-NF-16; HOST + bancada):** Catálogo identifica capacidades/exclusões; não permitir dois usos incompatíveis de um pino. Dois perfis sintéticos testam extensibilidade e perfil real é verificado separadamente.
 
-**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006, TASK-008. **Pendência:** `profile_id`, caracterização dos canais e validação em bancada.
+**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006, TASK-008. **Pendência:** caracterização dos canais e validação em bancada.
 
 ### REQ-NF-17 — Aplicação da DAQC em micro-ROS
 
@@ -448,7 +448,7 @@ As mensagens de comunicação com a DAQC devem representar a quantidade e os tip
 
 **Critério de aceitação proposto (V-NF-19; HOST + HIL):** Mensagem representa cada canal habilitado e tipo do perfil sem omissão/troca de direção; receptor rejeita perfil ou versão incompatível.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-006, TASK-007, TASK-008. **Pendência:** `profile_id`, vetores por direção e firmware.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-006, TASK-007, TASK-008. **Pendência:** vetores por direção e firmware.
 
 ### REQ-NF-20 — Codificação Numérica
 

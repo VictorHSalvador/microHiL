@@ -52,7 +52,7 @@ A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente
 
 ## Perfil ESP32 confirmado
 
-O perfil usa os seguintes nomes genéricos de I/O. Eles identificam o canal no mapa e no DATA; não identificam sensores ou atuadores. Pinos não listados abaixo não pertencem ao perfil inicial. O identificador numérico `profile_id` ainda será definido pelo usuário antes da compilação do firmware.
+O perfil usa os seguintes nomes genéricos de I/O. Eles identificam o canal no mapa e no DATA; não identificam sensores ou atuadores. Pinos não listados abaixo não pertencem ao perfil inicial. O identificador numérico confirmado é `profile_id = 1`.
 
 | Função | GPIOs confirmados | Tipo no DATA | Representação |
 |---|---|---|---|
@@ -80,7 +80,7 @@ O perfil ESP32 expõe recursos configuráveis pelo usuário, respeitando exclus�
 
 Não existe uma faixa única “padrão 0…3,3 V” com a mesma precisão para todo ADC ESP32. Como referência técnica, a documentação ESP-IDF 4.4.4 recomenda 150…2450 mV para maior precisão com atenuação 11 dB; isso não fixa a atenuação deste firmware. O perfil deverá informar atenuação, calibração e unidade real transportada. Fontes primárias: [ADC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/adc.html), [DAC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/dac.html). Versão documental consultada, não SDK selecionado.
 
-O mapa de GPIO, direção e representação do perfil ESP32 está confirmado acima. Permanecem a definição do `profile_id`, a caracterização elétrica, a calibração, a configuração válida de ADC/PWM, o circuito externo e o procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
+O mapa de GPIO, direção, representação e `profile_id = 1` do perfil ESP32 estão confirmados acima. Permanecem a caracterização elétrica, a calibração, a configuração válida de ADC/PWM, o circuito externo e o procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
 
 F-23 retém inputs no host, sem atuar em AO/DO/PWM por amostra inválida isolada. Dados de atuação só em STREAMING. No encerramento da execução, zerar saídas e cessar DATA; restart reinicializa a FMU e aplica outputs iniciais válidos. Zero físico significa DO baixo, DAC código zero nominal e PWM duty zero com nível inativo baixo. Tensão real e transitórios de reset exigem ensaio; níveis anteriores à execução do firmware não são garantidos pelo software.
 
