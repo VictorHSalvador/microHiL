@@ -178,11 +178,11 @@ O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent
 
 | Tópico | Direção | Tipo | Finalidade |
 |---|---|---|---|
-| `/daqc_setup` | Host → DAQC | `microhil_interfaces/DaqcSetup` | Solicita DISABLE, ENABLE ou STREAMING, seleciona perfil e aplica configuração ADC/PWM fora de STREAMING |
+| `/daqc_setup` | Host → DAQC | `microhil_interfaces/DaqcSetup` | Confirma o estado já solicitado por CONFIG, seleciona perfil e aplica configuração ADC/PWM fora de STREAMING |
 | `/daqc_state` | DAQC → Host | `microhil_interfaces/DaqcState` | Confirma estado efetivo, perfil e configuração aplicados |
 | `/daqc_errors` | Host e DAQC → consumidores | `microhil_interfaces/DaqcErrors` | Publica flags de falha; `source_is_daqc` identifica a origem |
 
-`DaqcSetup.msg` contém `uint8 command`, `uint32 profile_id`, `uint8 apply_configuration`, `uint8 adc_resolution_bits`, `uint8[6] adc_attenuation`, `uint32[2] pwm_frequency_hz` e `uint8[2] pwm_resolution_bits`. `command` usa DISABLE=1, ENABLE=2 e STREAMING=3, coerente com CONFIG do ICD. `profile_id=1` identifica o perfil ESP32 compilado, com schema congelado e nomes de I/O definidos antes de STREAMING; não transporta mapa de pinos ou descritores variáveis no ciclo.
+`DaqcSetup.msg` contém `uint8 command`, `uint32 profile_id`, `uint8 apply_configuration`, `uint8 adc_resolution_bits`, `uint8[6] adc_attenuation`, `uint32[2] pwm_frequency_hz` e `uint8[2] pwm_resolution_bits`. `command` usa DISABLE=1, ENABLE=2 e STREAMING=3, coerente com CONFIG do ICD. CONFIG é a única autoridade para transições de estado no enlace crítico. A DAQC rejeita um `DaqcSetup.command` diferente do estado efetivo e usa o valor coincidente como confirmação ROS da configuração solicitada. `profile_id=1` identifica o perfil ESP32 compilado, com schema congelado e nomes de I/O definidos antes de STREAMING; não transporta mapa de pinos ou descritores variáveis no ciclo.
 
 `apply_configuration` vale 0 ou 1. Com valor 1, a DAQC só aceita a configuração em DISABLE ou ENABLE; deve validá-la e aplicá-la fora do caminho crítico antes de confirmar STREAMING. `adc_attenuation` usa a ordem GPIO32/33/34/35/36/39 e os códigos 0 dB=0, 2,5 dB=1, 6 dB=2 e 11 dB=3. `pwm_frequency_hz` e `pwm_resolution_bits` usam a ordem GPIO18/19. Duty PWM é `float32` no DATA de atuação e não é parte deste setup.
 

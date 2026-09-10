@@ -99,6 +99,10 @@ O usuário definiu somente os tópicos `/daqc_setup`, `/daqc_state` e `/daqc_err
 
 A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, Agent customizado e buffers devem usar o mesmo valor.
 
+## Autoridade de estado DAQC — 0.18.0
+
+Em 10.09.2026, o usuário confirmou que CONFIG é a única autoridade das transições DISABLE, ENABLE e STREAMING no enlace crítico. `DaqcSetup.command` deve coincidir com o estado já efetivo e confirma, pelo caminho ROS, a seleção do perfil e a configuração ADC/PWM. A DAQC rejeita uma divergência e publica o diagnóstico binário apropriado; não há arbitragem por ordem de chegada entre duas autoridades. Essa separação mantém ROS fora do caminho crítico de CONFIG/DATA e evita que dois comandos concorram diretamente pelas saídas.
+
 ## Perfil compilado e XRCE HOST — 0.14.0
 
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.

@@ -120,9 +120,11 @@ No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O
 
 ## ARCH-FW — Firmware proposto
 
-O firmware possui uma base compilada para ADC/DAC internos, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. A aplicação micro-ROS de `/daqc_setup`, `/daqc_state` e `/daqc_errors` continua pendente, embora suas interfaces já integrem a build.
+O firmware possui uma base compilada para ADC/DAC internos, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. CONFIG é a única autoridade de transição. `/daqc_setup` só confirma o estado já efetivo e configura perfil/ADC/PWM fora de STREAMING; divergência de `command` é diagnosticada por `/daqc_errors`. A aplicação micro-ROS de `/daqc_setup`, `/daqc_state` e `/daqc_errors` usa MID 04 e permanece fora do caminho de aquisição/atuação.
 
 Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
+
+A implementação inicial fixa aquisição/atuação no núcleo 1 com prioridade 9, comunicação no núcleo 0 com prioridade 8 e `daqc_ros` no núcleo 0 com prioridade 4 e pilha de 6144 bytes. Esses são parâmetros de implementação para manter ROS abaixo do tráfego crítico, não evidência de orçamento, ausência de inversão de prioridade ou cumprimento de deadline; a qualificação deve medi-los no alvo.
 
 UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE não podem bloquear o caminho de CONFIG.
 
