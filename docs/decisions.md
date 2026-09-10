@@ -82,3 +82,9 @@ Aprovado usar os dois núcleos ESP32 em benefício do timing. Proposta de distri
 ## Resultado da consulta RaspDAQ e fechamento 0.7
 
 Base CONFIG/DATA, mapa posicional, sequência, ownership e workers RX/TX foram aproveitados. O MICROHIL acrescenta somente READ_ACK e XRCE para requisitos que a referência não atende. A decisão posterior remove sessão no fio, CRC e recuperação de DATA: o parser descarta o que não puder usar, conta gaps detectáveis e segue para o próximo. [ADR-003](adrs/ADR-003-raspdaq-icd.md) registra a decisão e seus limites.
+
+## Observação de baseline micro-ROS — 0.8.1
+
+Em 09.09.2026 foi feito clone limpo dos ramos `humble` e build HOST de `micro_ros_setup`, `micro_ros_msgs` e `micro_ros_agent` no Ubuntu 22.04.5 com ROS 2 Humble. Os commits observados foram `af209288676e5f02ac7c6d419b8ad157d3bed14e` (setup), `c9062eb3860d16c1bff1423923de3b0956fd4734` (mensagens), `c93ee764e0d2ef4907aeb29233c68cb5f4b56976` (Agent) e `57d086216d01ec43121845d385894a25987f8a2c` (Micro XRCE-DDS Agent baixado pelo build). O componente ESP-IDF no mesmo ramo foi obtido em `4ddd8c26e721662319ed8af981cb7cdc9ae05382`, mas ainda não foi compilado por não haver ESP-IDF instalado no host.
+
+O README desse commit do componente declara testes para ESP-IDF 5.2, 5.3, 5.4, 5.5 e 6.0; não declara ESP-IDF 4.4.8. Isso entra em conflito com a baseline DEC-006, que fixa 4.4.8. Nenhum firmware será iniciado nem o commit do componente será promovido a baseline de produto até decisão explícita entre manter ESP-IDF 4.4.8 com uma revisão de micro-ROS que a suporte, ou atualizar a baseline ESP-IDF para uma versão suportada pelo componente Humble. A evidência limitada está em [micro-ros-host-baseline-2026-09-09.md](evidence/micro-ros-host-baseline-2026-09-09.md).

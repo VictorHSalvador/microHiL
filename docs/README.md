@@ -1,6 +1,6 @@
 # Documentação de desenvolvimento do MICROHIL
 
-Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada incremental do software existente. As respostas DEC-001…012 e Q-01…09 foram consolidadas; decisões de produto estão registradas e parâmetros dependentes de medição permanecem explícitos. A implementação aguarda somente a verificação cruzada final desta revisão documental.
+Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada incremental do software existente. As respostas DEC-001…012 e Q-01…09 foram consolidadas; decisões de produto estão registradas e parâmetros dependentes de medição permanecem explícitos. A implementação avança por incrementos verificáveis, sem promover resultados HOST a validação de produto.
 
 ## Leitura e responsabilidade
 
@@ -24,6 +24,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [quality-gates.md](quality-gates.md) | Gates por escopo, com o resultado demonstrado da fundação HOST |
 | [evidence/host-build-foundation-2026-09-07.md](evidence/host-build-foundation-2026-09-07.md) | Ambiente, comandos, resultados e limites executados da TASK-001 |
 | [evidence/host-run-logging-2026-09-08.md](evidence/host-run-logging-2026-09-08.md) | Ambiente, comandos, resultados e limites executados da TASK-002 |
+| [evidence/micro-ros-host-baseline-2026-09-09.md](evidence/micro-ros-host-baseline-2026-09-09.md) | Build HOST do setup/Agent Humble e incompatibilidade observada com a baseline ESP-IDF 4.4.8 |
 
 ## Fontes e precedência
 
@@ -37,7 +38,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.8.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.8.1**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -66,3 +67,5 @@ Patch 0.7.3: a [TASK-002](tasks/TASK-002.md) sincroniza o IF-LOG implementado no
 Patch 0.7.4: ESP-IDF v4.4.8 e os ramos Humble de micro-ROS passam a ser a baseline de firmware. A UART CH340–ESP32 é 8N1 configurável entre 9.600 e 115.200 bit/s, com RTS/CTS desabilitado. A decisão documenta uma configuração aprovada; o build integrado e a capacidade de tempo real continuam pendentes de evidência.
 
 Revisão 0.8: o coordenador C passa a possuir exclusivamente a CH340 pela API serial POSIX em `/dev/ttyUSB*`. Ele entrega XRCE do MID 04 a um transporte customizado do Micro-ROS Agent; o Agent serial padrão não abre a porta. A GUI do produto será Qt Quick/QML. Esta revisão muda o contrato de transporte e não constitui execução em placa.
+
+Patch 0.8.1: o setup, as mensagens e o Agent micro-ROS dos ramos Humble tiveram build HOST limpo. O componente ESP-IDF Humble clonado declara ensaios em ESP-IDF 5.2…6.0, enquanto DEC-006 fixa 4.4.8. A [evidência](evidence/micro-ros-host-baseline-2026-09-09.md) preserva o resultado e a pendência; nenhum firmware será iniciado sem uma decisão sobre essa compatibilidade.

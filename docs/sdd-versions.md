@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.8.0**, de 09.09.2026.
+Versão vigente: **SDD-MICROHIL 0.8.1**, de 09.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -42,6 +42,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.7.3 | 09.09.2026 | PATCH | Sincronização do IF-LOG já aprovado com a implementação/evidência HOST da TASK-002, sem alterar comportamento normativo de produto | README, docs, TASK-002, matriz, gates, evidence, .spec, config e teste documental | host-run-logging-2026-09-08; CTest 23/23 normal/ASan+UBSan; verify 12/12 e audit --ci limpo | a7af739, 742febe, 1e87ac7, d6c220f; documentação nesta baseline |
 | 0.7.4 | 09.09.2026 | PATCH | Registro de baseline ESP-IDF 4.4.8/micro-ROS Humble e UART 8N1 configurável de 9.600 a 115.200 bit/s, com RTS/CTS desabilitado | decisions, TARGET, architecture, ICD e plano | Host Ubuntu 22.04.5/ROS Humble observado; build integrado de firmware pendente | bcd172f |
 | 0.8.0 | 09.09.2026 | MINOR | Troca autorizada de libusb direto por coordenador C TTY POSIX exclusivo sobre CH340, com XRCE MID 04 entregue ao Agent por transporte customizado; Qt Quick/QML selecionado | spec, decisions, contexto, alvo, arquitetura, ICD, ADRs, plano e verificação | Decisão do usuário; sem execução de CH340, Agent, firmware ou GUI | caeb299 |
+| 0.8.1 | 09.09.2026 | PATCH | Evidência de build HOST do setup/Agent micro-ROS Humble e registro da incompatibilidade observada entre o componente Humble atual e ESP-IDF 4.4.8 | decisions, TARGET, plan, evidence e sdd-versions | micro-ros-host-baseline-2026-09-09; firmware/ESP-IDF/placa não executados | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
