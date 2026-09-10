@@ -103,7 +103,8 @@ add_test(NAME app_config_timing COMMAND test_app_config)
 add_test(NAME release_schedule_overrun COMMAND test_release_schedule overrun)
 add_test(NAME release_schedule_boundary COMMAND test_release_schedule boundary)
 add_test(NAME release_schedule_wakeup COMMAND test_release_schedule wakeup)
-add_test(NAME profile_config_yaml COMMAND test_profile_config "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
+add_test(NAME profile_config_yaml COMMAND test_profile_config "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml"
+         "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile_missing_adc.yaml")
 
 if(TARGET test_fmu_model)
     add_test(NAME fmu_model_inputs COMMAND test_fmu_model "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu" "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")

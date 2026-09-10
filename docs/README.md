@@ -39,7 +39,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.19.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.20.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -90,3 +90,5 @@ Revisão 0.14: `profile_id` seleciona um perfil compilado na DAQC; o contrato n�
 Revisão 0.15: o mapa simultâneo do perfil ESP32 foi confirmado. DATA usa 28 bytes da DAQC ao host e 21 bytes do host à DAQC. O `profile_id` selecionado é 1.
 
 Revisão 0.16: `/daqc_setup` também configura ADC/PWM fora de STREAMING. O estado confirma a aplicação e erros de ADC/PWM usam flags binárias próprias.
+
+Revisão 0.20: o YAML passou a exigir a configuração completa dos seis ADCs e dois PWMs do perfil ESP32. A GUI deverá gerar esses valores de forma explícita; a validação HOST não substitui a confirmação da DAQC.

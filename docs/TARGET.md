@@ -84,6 +84,8 @@ O mapa de GPIO, direção, representação e `profile_id = 1` do perfil ESP32 es
 
 A configuração ADC/PWM vem em `DaqcSetup` somente em DISABLE ou ENABLE. Os seis códigos de atenuação seguem a ordem GPIO32/33/34/35/36/39; os parâmetros PWM seguem GPIO18/19. A DAQC rejeita antes de STREAMING resolução ADC fora de 9…12 bits, código de atenuação fora de 0…3, frequência PWM fora do envelope do perfil ou par frequência/resolução não realizável. Os erros binários de ADC/PWM e a confirmação `configuration_applied` informam o resultado sem imprimir no enlace UART.
 
+O YAML do perfil persiste essa configuração de forma completa: `adc.resolution_bits`, `adc.attenuation.GPIO32_AI`…`GPIO39_AI`, `pwm.GPIO18_PWM.frequency_hz`, `pwm.GPIO18_PWM.resolution_bits` e os equivalentes de GPIO19. A GUI deve sempre escrever os seis ADCs e os dois PWMs; I/O sem mapa FMU não recebe valor implícito. Esses valores são configuração solicitada e não caracterização elétrica comprovada.
+
 F-23 retém inputs no host, sem atuar em AO/DO/PWM por amostra inválida isolada. Dados de atuação só em STREAMING. No encerramento da execução, zerar saídas e cessar DATA; restart reinicializa a FMU e aplica outputs iniciais válidos. Zero físico significa DO baixo, DAC código zero nominal e PWM duty zero com nível inativo baixo. Tensão real e transitórios de reset exigem ensaio; níveis anteriores à execução do firmware não são garantidos pelo software.
 
 

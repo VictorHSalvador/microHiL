@@ -35,6 +35,24 @@ static bool ParseUnsigned(yaml_node_t *node, unsigned int *value) {
     return true;
 }
 
+static bool ParseUint8(yaml_node_t *node, uint8_t *value) {
+    unsigned int parsed = 0U;
+    if (!value || !ParseUnsigned(node, &parsed) || parsed > UINT8_MAX) return false;
+    *value = (uint8_t)parsed;
+    return true;
+}
+
+static bool ParseUint32(yaml_node_t *node, uint32_t *value) {
+    const char *text = Scalar(node);
+    char *end = NULL;
+    if (!text || !value) return false;
+    errno = 0;
+    const unsigned long parsed = strtoul(text, &end, 10);
+    if (errno || !end || *end != '\0' || parsed > UINT32_MAX) return false;
+    *value = (uint32_t)parsed;
+    return true;
+}
+
 static bool ParseDouble(yaml_node_t *node, double *value) {
     const char *text = Scalar(node);
     char *end = NULL;
@@ -61,6 +79,56 @@ static bool IsEsp32Channel(const char *channel) {
     };
     for (size_t index = 0U; index < sizeof(names) / sizeof(names[0]); ++index) if (strcmp(channel, names[index]) == 0) return true;
     return false;
+}
+
+static bool HasOnlyKeys(yaml_document_t *document, yaml_node_t *mapping, const char *const *keys, size_t key_count) {
+    if (!document || !mapping || mapping->type != YAML_MAPPING_NODE) return false;
+    size_t found[8] = {0};
+    if (key_count > sizeof(found) / sizeof(found[0])) return false;
+    for (yaml_node_pair_t *pair = mapping->data.mapping.pairs.start; pair < mapping->data.mapping.pairs.top; ++pair) {
+        const char *key = Scalar(yaml_document_get_node(document, pair->key));
+        bool known = false;
+        for (size_t index = 0U; index < key_count; ++index) {
+            if (key && strcmp(key, keys[index]) == 0) {
+                ++found[index];
+                known = true;
+                break;
+            }
+        }
+        if (!known) return false;
+    }
+    for (size_t index = 0U; index < key_count; ++index) if (found[index] != 1U) return false;
+    return true;
+}
+
+static bool ParseDaqcConfiguration(yaml_document_t *document, yaml_node_t *root, profile_daqc_configuration_t *configuration) {
+    static const char *const adc_keys[] = {"resolution_bits", "attenuation"};
+    static const char *const attenuation_channels[] = {"GPIO32_AI", "GPIO33_AI", "GPIO34_AI", "GPIO35_AI", "GPIO36_AI", "GPIO39_AI"};
+    static const char *const pwm_channels[] = {"GPIO18_PWM", "GPIO19_PWM"};
+    static const char *const pwm_keys[] = {"frequency_hz", "resolution_bits"};
+    yaml_node_t *adc = MappingValue(document, root, "adc");
+    yaml_node_t *pwm = MappingValue(document, root, "pwm");
+    yaml_node_t *attenuation = MappingValue(document, adc, "attenuation");
+    if (!configuration || !HasOnlyKeys(document, adc, adc_keys, sizeof(adc_keys) / sizeof(adc_keys[0])) ||
+        !HasOnlyKeys(document, attenuation, attenuation_channels, sizeof(attenuation_channels) / sizeof(attenuation_channels[0])) ||
+        !HasOnlyKeys(document, pwm, pwm_channels, sizeof(pwm_channels) / sizeof(pwm_channels[0])) ||
+        !ParseUint8(MappingValue(document, adc, "resolution_bits"), &configuration->adc_resolution_bits) ||
+        configuration->adc_resolution_bits < 9U || configuration->adc_resolution_bits > 12U) {
+        return false;
+    }
+    for (size_t index = 0U; index < PROFILE_CONFIG_ADC_CHANNELS; ++index) {
+        if (!ParseUint8(MappingValue(document, attenuation, attenuation_channels[index]), &configuration->adc_attenuation[index]) ||
+            configuration->adc_attenuation[index] > 3U) return false;
+    }
+    for (size_t index = 0U; index < PROFILE_CONFIG_PWM_CHANNELS; ++index) {
+        yaml_node_t *channel = MappingValue(document, pwm, pwm_channels[index]);
+        if (!HasOnlyKeys(document, channel, pwm_keys, sizeof(pwm_keys) / sizeof(pwm_keys[0])) ||
+            !ParseUint32(MappingValue(document, channel, "frequency_hz"), &configuration->pwm_frequency_hz[index]) ||
+            !ParseUint8(MappingValue(document, channel, "resolution_bits"), &configuration->pwm_resolution_bits[index]) ||
+            configuration->pwm_frequency_hz[index] == 0U || configuration->pwm_resolution_bits[index] == 0U ||
+            configuration->pwm_resolution_bits[index] > 20U) return false;
+    }
+    return true;
 }
 
 typedef struct {
@@ -163,7 +231,7 @@ profile_config_status_t ProfileConfigLoadYaml(const char *path, profile_config_t
     yaml_node_t *mappings = MappingValue(&document, root, "mappings");
     if (!ParseUnsigned(MappingValue(&document, root, "version"), &config->version) || !ParseUnsigned(MappingValue(&document, profile, "id"), &config->profile_id) ||
         !ParseDouble(MappingValue(&document, execution, "step_size_s"), &config->step_size_s) || !ParseDouble(MappingValue(&document, execution, "stop_time_s"), &config->stop_time_s) ||
-        !mappings || mappings->type != YAML_SEQUENCE_NODE) {
+        !mappings || mappings->type != YAML_SEQUENCE_NODE || !ParseDaqcConfiguration(&document, root, &config->daqc_configuration)) {
         yaml_document_delete(&document);
         return PROFILE_CONFIG_SCHEMA;
     }

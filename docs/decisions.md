@@ -107,6 +107,10 @@ Em 10.09.2026, o usuário confirmou que CONFIG é a única autoridade das transi
 
 Em 10.09.2026, o usuário definiu que Play envia a mudança ENABLE→STREAMING e só então inicia a simulação. Stop envia STREAMING→DISABLE. O prazo agregado para confirmar CONFIG é configurável pelo operador, com valor inicial de 10 ms; o limite de cada transferência permanece 5 ms. A espera ocorre fora da thread de simulação e uma confirmação ausente impede Play ou é reportada durante o encerramento, sem deslocar o relógio da FMU.
 
+## Formato YAML de ADC/PWM — 0.20.0
+
+Em 10.09.2026, o usuário confirmou o formato persistido da configuração ADC/PWM. A seção obrigatória `adc` contém `resolution_bits` e um mapa `attenuation` com os seis canais AI do perfil, na ordem lógica GPIO32/33/34/35/36/39. A seção obrigatória `pwm` contém os dois canais GPIO18 e GPIO19, cada um com `frequency_hz` e `resolution_bits`. A GUI deve gerar todos os campos, inclusive para canais que não tenham mapa FMU, sem valores implícitos. O host valida a forma e os limites representáveis; a confirmação final de um par PWM e de sua aplicação continua sendo `DaqcState.configuration_applied` emitido pela DAQC.
+
 ## Perfil compilado e XRCE HOST — 0.14.0
 
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.
