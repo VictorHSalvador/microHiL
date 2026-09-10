@@ -1,6 +1,6 @@
 # Arquitetura de software
 
-Revisão 0.23.2: código atual, decisões confirmadas e design do ICD consolidados. Requisitos em [spec.md](spec.md); parâmetros de implementação/ensaio restantes em [decisions.md](decisions.md). A sessão de execução compartilhada está materializada e testada no HOST; isso não declara GUI operacional, DAQC física ou qualificação temporal.
+Revisão 0.23.4: código atual, decisões confirmadas e design do ICD consolidados. Requisitos em [spec.md](spec.md); parâmetros de implementação/ensaio restantes em [decisions.md](decisions.md). A sessão de execução compartilhada está materializada e testada no HOST; a GUI também usa sua API para listar e selecionar saídas numéricas da FMU. Isso não declara GUI operacional, DAQC física ou qualificação temporal.
 
 ## ARCH-CORE — Núcleo, FMU e configuração
 

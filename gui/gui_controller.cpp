@@ -40,3 +40,37 @@ bool GuiController::LoadProfile(const QString &path) {
     if (status == EXECUTION_SESSION_OK) emit ProfileChanged();
     return status == EXECUTION_SESSION_OK;
 }
+
+QString GuiController::NumericTypeName(int type) {
+    switch (type) {
+        case 0: return QStringLiteral("Real");
+        case 1: return QStringLiteral("Integer");
+        case 2: return QStringLiteral("Boolean");
+        case 3: return QStringLiteral("Enumeration");
+        default: return QStringLiteral("Unsupported");
+    }
+}
+
+QVariantList GuiController::Outputs() const {
+    QVariantList outputs;
+    const size_t count = ExecutionSessionOutputCount(session_);
+    for (size_t index = 0U; index < count; ++index) {
+        QVariantMap output;
+        output.insert(QStringLiteral("index"), static_cast<int>(index));
+        output.insert(QStringLiteral("name"), QString::fromUtf8(ExecutionSessionOutputName(session_, index)));
+        output.insert(QStringLiteral("type"), NumericTypeName(ExecutionSessionOutputType(session_, index)));
+        output.insert(QStringLiteral("valueReference"), static_cast<qulonglong>(ExecutionSessionOutputValueReference(session_, index)));
+        output.insert(QStringLiteral("selected"), ExecutionSessionOutputSelected(session_, index));
+        outputs.append(output);
+    }
+    return outputs;
+}
+
+bool GuiController::SetOutputSelected(int index, bool selected) {
+    if (index < 0) return false;
+    const execution_session_status_t status = ExecutionSessionSetOutputSelected(session_, static_cast<size_t>(index), selected);
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
+    emit ErrorChanged();
+    if (status == EXECUTION_SESSION_OK) emit FmuChanged();
+    return status == EXECUTION_SESSION_OK;
+}

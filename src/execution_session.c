@@ -98,6 +98,63 @@ size_t ExecutionSessionListOutputs(execution_session_t *session, OutputVariable 
     return fmu_model_list_numeric_outputs(&session->model, outputs, capacity);
 }
 
+static bool GetOutputAt(const execution_session_t *session, size_t index, OutputVariable *output) {
+    OutputVariable outputs[MAX_OUTPUTS];
+    const size_t count = ExecutionSessionListOutputs((execution_session_t *)session, outputs, MAX_OUTPUTS);
+    if (!session || !output || index >= count || index >= MAX_OUTPUTS) return false;
+    *output = outputs[index];
+    return true;
+}
+
+size_t ExecutionSessionOutputCount(const execution_session_t *session) {
+    return session ? ExecutionSessionListOutputs((execution_session_t *)session, NULL, 0U) : 0U;
+}
+
+const char *ExecutionSessionOutputName(const execution_session_t *session, size_t index) {
+    static _Thread_local OutputVariable output;
+    return GetOutputAt(session, index, &output) ? output.name : "";
+}
+
+unsigned int ExecutionSessionOutputValueReference(const execution_session_t *session, size_t index) {
+    OutputVariable output;
+    return GetOutputAt(session, index, &output) ? output.value_reference : 0U;
+}
+
+int ExecutionSessionOutputType(const execution_session_t *session, size_t index) {
+    OutputVariable output;
+    return GetOutputAt(session, index, &output) ? (int)output.type : -1;
+}
+
+bool ExecutionSessionOutputSelected(const execution_session_t *session, size_t index) {
+    OutputVariable output;
+    if (!session || !GetOutputAt(session, index, &output)) return false;
+    for (size_t selected_index = 0U; selected_index < session->config.output_count; ++selected_index) {
+        if (session->config.outputs[selected_index].xml_index == output.xml_index) return true;
+    }
+    return false;
+}
+
+execution_session_status_t ExecutionSessionSetOutputSelected(execution_session_t *session, size_t index, bool selected) {
+    OutputVariable output;
+    if (!session || !session->initialized || session->prepared || session->run_started || !GetOutputAt(session, index, &output)) return EXECUTION_SESSION_NOT_READY;
+    size_t found = session->config.output_count;
+    for (size_t selected_index = 0U; selected_index < session->config.output_count; ++selected_index) {
+        if (session->config.outputs[selected_index].xml_index == output.xml_index) {
+            found = selected_index;
+            break;
+        }
+    }
+    if (selected && found == session->config.output_count) {
+        if (session->config.output_count == MAX_OUTPUTS) return EXECUTION_SESSION_NOT_READY;
+        session->config.outputs[session->config.output_count++] = output;
+    } else if (!selected && found < session->config.output_count) {
+        memmove(&session->config.outputs[found], &session->config.outputs[found + 1U],
+                (session->config.output_count - found - 1U) * sizeof(session->config.outputs[0]));
+        --session->config.output_count;
+    }
+    return EXECUTION_SESSION_OK;
+}
+
 const char *ExecutionSessionFmuPath(const execution_session_t *session) {
     return session && session->initialized ? session->config.fmu_path : "";
 }
@@ -108,6 +165,18 @@ const char *ExecutionSessionModelName(const execution_session_t *session) {
 
 size_t ExecutionSessionInputCount(const execution_session_t *session) {
     return session && session->initialized ? session->config.input_count : 0U;
+}
+
+const char *ExecutionSessionInputName(const execution_session_t *session, size_t index) {
+    return session && session->initialized && index < session->config.input_count ? session->config.inputs[index].input_name : "";
+}
+
+unsigned int ExecutionSessionInputValueReference(const execution_session_t *session, size_t index) {
+    return session && session->initialized && index < session->config.input_count ? session->config.inputs[index].value_reference : 0U;
+}
+
+int ExecutionSessionInputType(const execution_session_t *session, size_t index) {
+    return session && session->initialized && index < session->config.input_count ? (int)session->config.inputs[index].type : -1;
 }
 
 const char *ExecutionSessionProfilePath(const execution_session_t *session) {

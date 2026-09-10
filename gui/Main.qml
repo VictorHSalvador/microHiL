@@ -16,6 +16,12 @@ ApplicationWindow {
     property string fmuPath: ""
     property bool loggingEnabled: true
     property bool plotEnabled: true
+    property var outputItems: []
+    property string observedFmuPath: guiController.fmuPath
+
+    function refreshOutputs() {
+        outputItems = guiController.Outputs()
+    }
 
     palette.window: "#f4f6f5"
     palette.windowText: "#263238"
@@ -120,10 +126,28 @@ ApplicationWindow {
                     Label { text: "Abra gráficos por variável após a importação da FMU. Cada janela mantém histórico somente enquanto estiver aberta."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: guiController.fmuPath ? guiController.modelName + " — " + guiController.inputCount + " entradas, " + guiController.outputCount + " saídas" : "" }
                     Label { text: guiController.profilePath ? "Perfil ESP32 " + guiController.profileId + " — " + guiController.profileMappingCount + " mapeamento(s)" : "" }
+                    Label { text: "Saídas selecionadas para log e atuação"; font.bold: true; visible: guiController.fmuPath.length > 0 }
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Math.min(contentHeight, 180)
+                        clip: true
+                        model: window.outputItems
+                        delegate: CheckBox {
+                            required property var modelData
+                            text: modelData.name + " — " + modelData.type + " (VR " + modelData.valueReference + ")"
+                            checked: modelData.selected
+                            onToggled: {
+                                guiController.SetOutputSelected(modelData.index, checked)
+                                window.refreshOutputs()
+                            }
+                        }
+                    }
                     Label { text: guiController.errorMessage; color: "#b33a3a"; visible: text.length > 0 }
                     Button { text: "Configurar gráficos"; enabled: guiController.fmuPath.length > 0 }
                 }
             }
         }
     }
+
+    onObservedFmuPathChanged: refreshOutputs()
 }

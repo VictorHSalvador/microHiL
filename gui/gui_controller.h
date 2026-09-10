@@ -2,6 +2,7 @@
 #define GUI_CONTROLLER_H
 
 #include <QObject>
+#include <QVariantList>
 extern "C" {
 #include "execution_session.h"
 }
@@ -29,6 +30,8 @@ public:
     QString ErrorMessage() const;
     Q_INVOKABLE bool LoadFmu(const QString &path);
     Q_INVOKABLE bool LoadProfile(const QString &path);
+    Q_INVOKABLE QVariantList Outputs() const;
+    Q_INVOKABLE bool SetOutputSelected(int index, bool selected);
 signals:
     void FmuChanged();
     void ProfileChanged();
@@ -36,6 +39,7 @@ signals:
 private:
     execution_session_t *session_ = nullptr;
     QString error_message_;
+    static QString NumericTypeName(int type);
 };
 
 #endif

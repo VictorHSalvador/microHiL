@@ -23,8 +23,15 @@ int main(int argc, char **argv) {
     Require(session.config.profile_loaded && session.config.profile.mapping_count == 3U, "session did not retain the resolved YAML profile");
     const size_t output_count = ExecutionSessionListOutputs(&session, outputs, MAX_OUTPUTS);
     Require(output_count == 3U, "session did not discover the numeric FMU outputs");
-    memcpy(session.config.outputs, outputs, output_count * sizeof(outputs[0]));
-    session.config.output_count = output_count;
+    Require(ExecutionSessionOutputCount(&session) == output_count, "session did not expose the output count for the UI");
+    Require(!ExecutionSessionOutputSelected(&session, 0U), "session selected an output before a user selection");
+    Require(ExecutionSessionSetOutputSelected(&session, 0U, true) == EXECUTION_SESSION_OK, "could not select an FMU output");
+    Require(ExecutionSessionOutputSelected(&session, 0U), "session did not retain the output selection");
+    Require(ExecutionSessionSetOutputSelected(&session, 0U, false) == EXECUTION_SESSION_OK, "could not remove an FMU output selection");
+    Require(!ExecutionSessionOutputSelected(&session, 0U), "session retained a removed output selection");
+    for (size_t output_index = 0U; output_index < output_count; ++output_index) {
+        Require(ExecutionSessionSetOutputSelected(&session, output_index, true) == EXECUTION_SESSION_OK, "could not select all FMU outputs");
+    }
     session.config.binary_log_enabled = false;
     Require(ExecutionSessionSetTiming(&session, 0.01, 0.02) == EXECUTION_SESSION_OK, "could not configure session timing");
     Require(ExecutionSessionPrepare(&session) == EXECUTION_SESSION_OK, "could not prepare the session FMU");

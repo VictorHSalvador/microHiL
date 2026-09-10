@@ -53,6 +53,12 @@ execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session,
 execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *session, const char *path);
 execution_session_status_t ExecutionSessionSetTiming(execution_session_t *session, double step_size_s, double stop_time_s);
 size_t ExecutionSessionListOutputs(execution_session_t *session, OutputVariable *outputs, size_t capacity);
+size_t ExecutionSessionOutputCount(const execution_session_t *session);
+const char *ExecutionSessionOutputName(const execution_session_t *session, size_t index);
+unsigned int ExecutionSessionOutputValueReference(const execution_session_t *session, size_t index);
+int ExecutionSessionOutputType(const execution_session_t *session, size_t index);
+bool ExecutionSessionOutputSelected(const execution_session_t *session, size_t index);
+execution_session_status_t ExecutionSessionSetOutputSelected(execution_session_t *session, size_t index, bool selected);
 #ifndef __cplusplus
 execution_session_status_t ExecutionSessionPrepare(execution_session_t *session);
 execution_session_status_t ExecutionSessionStartLogging(execution_session_t *session);
@@ -66,6 +72,9 @@ const run_result_t *ExecutionSessionResult(const execution_session_t *session);
 const char *ExecutionSessionFmuPath(const execution_session_t *session);
 const char *ExecutionSessionModelName(const execution_session_t *session);
 size_t ExecutionSessionInputCount(const execution_session_t *session);
+const char *ExecutionSessionInputName(const execution_session_t *session, size_t index);
+unsigned int ExecutionSessionInputValueReference(const execution_session_t *session, size_t index);
+int ExecutionSessionInputType(const execution_session_t *session, size_t index);
 const char *ExecutionSessionProfilePath(const execution_session_t *session);
 unsigned int ExecutionSessionProfileId(const execution_session_t *session);
 size_t ExecutionSessionProfileMappingCount(const execution_session_t *session);
