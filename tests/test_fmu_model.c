@@ -57,6 +57,10 @@ int main(int argc, char **argv) {
     Require(ProfileConfigLoadYaml(argv[2], &profile) == PROFILE_CONFIG_OK, "could not load the profile fixture");
     Require(fmu_model_resolve_profile_mappings(&model, &profile) == 0 && profile.mappings[0].is_input && !profile.mappings[1].is_input,
             "profile mappings were not resolved against the FMU");
+    daq_schema_t acquisition_schema;
+    Require(ProfileConfigBuildAcquisitionSchema(&profile, &acquisition_schema) == PROFILE_CONFIG_OK && acquisition_schema.field_count == 1U &&
+            acquisition_schema.payload_size == 28U && acquisition_schema.fields[0].gpio == 32U && acquisition_schema.fields[0].offset == 4U,
+            "profile acquisition mapping did not produce the ESP32 DATA schema");
     Require(fmu_model_initialize_cosimulation(&model, 0.0, 0.1) == 0, "could not initialize the fixture FMU");
     Require(fmu_model_resolve_input_initial_values(&model, inputs, input_count) == 0, "could not resolve FMU input references");
     values[real_input].real_value = 2.5;

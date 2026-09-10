@@ -63,6 +63,54 @@ static bool IsEsp32Channel(const char *channel) {
     return false;
 }
 
+typedef struct {
+    const char *name;
+    uint8_t gpio;
+    daq_channel_function_t function;
+    daq_wire_type_t wire_type;
+    uint16_t offset;
+    uint16_t width;
+} acquisition_channel_t;
+
+static bool BuildAcquisitionField(const profile_mapping_t *mapping, daq_field_t *field) {
+    static const acquisition_channel_t channels[] = {
+        {"GPIO4_DI", 4U, DAQ_CHANNEL_DI, DAQ_WIRE_BOOLEAN, 0U, 1U}, {"GPIO13_DI", 13U, DAQ_CHANNEL_DI, DAQ_WIRE_BOOLEAN, 1U, 1U},
+        {"GPIO14_DI", 14U, DAQ_CHANNEL_DI, DAQ_WIRE_BOOLEAN, 2U, 1U}, {"GPIO27_DI", 27U, DAQ_CHANNEL_DI, DAQ_WIRE_BOOLEAN, 3U, 1U},
+        {"GPIO32_AI", 32U, DAQ_CHANNEL_AI, DAQ_WIRE_FLOAT32, 4U, 4U}, {"GPIO33_AI", 33U, DAQ_CHANNEL_AI, DAQ_WIRE_FLOAT32, 8U, 4U},
+        {"GPIO34_AI", 34U, DAQ_CHANNEL_AI, DAQ_WIRE_FLOAT32, 12U, 4U}, {"GPIO35_AI", 35U, DAQ_CHANNEL_AI, DAQ_WIRE_FLOAT32, 16U, 4U},
+        {"GPIO36_AI", 36U, DAQ_CHANNEL_AI, DAQ_WIRE_FLOAT32, 20U, 4U}, {"GPIO39_AI", 39U, DAQ_CHANNEL_AI, DAQ_WIRE_FLOAT32, 24U, 4U}
+    };
+    if (!mapping || !field) return false;
+    for (size_t index = 0U; index < sizeof(channels) / sizeof(channels[0]); ++index) {
+        if (strcmp(mapping->channel, channels[index].name) != 0) continue;
+        *field = (daq_field_t){
+            .gpio = channels[index].gpio,
+            .function = channels[index].function,
+            .wire_type = channels[index].wire_type,
+            .fmu_type = mapping->type,
+            .offset = channels[index].offset,
+            .width = channels[index].width,
+            .scale = mapping->scale,
+            .offset_value = mapping->offset,
+            .fmu_index = mapping->fmu_index
+        };
+        return true;
+    }
+    return false;
+}
+
+static void SortFieldsByOffset(daq_field_t *fields, size_t field_count) {
+    for (size_t index = 1U; index < field_count; ++index) {
+        daq_field_t current = fields[index];
+        size_t target = index;
+        while (target > 0U && fields[target - 1U].offset > current.offset) {
+            fields[target] = fields[target - 1U];
+            --target;
+        }
+        fields[target] = current;
+    }
+}
+
 profile_config_status_t ProfileConfigLoadYaml(const char *path, profile_config_t *config) {
     if (!path || !*path || !config) return PROFILE_CONFIG_INVALID_ARGUMENT;
     FILE *file = fopen(path, "rb");
@@ -127,4 +175,19 @@ const char *ProfileConfigStatusString(profile_config_status_t status) {
         case PROFILE_CONFIG_UNSUPPORTED: return "unsupported configuration version or profile";
         default: return "unknown configuration status";
     }
+}
+
+profile_config_status_t ProfileConfigBuildAcquisitionSchema(const profile_config_t *config, daq_schema_t *schema) {
+    if (!config || !schema || config->profile_id != 1U) return PROFILE_CONFIG_INVALID_ARGUMENT;
+    daq_field_t fields[10];
+    size_t count = 0U;
+    for (size_t index = 0U; index < config->mapping_count; ++index) {
+        const profile_mapping_t *mapping = &config->mappings[index];
+        if (!mapping->is_input) continue;
+        daq_field_t field;
+        if (count == sizeof(fields) / sizeof(fields[0]) || !BuildAcquisitionField(mapping, &field)) return PROFILE_CONFIG_SCHEMA;
+        fields[count++] = field;
+    }
+    SortFieldsByOffset(fields, count);
+    return DaqSchemaBuildFixedPayload(schema, fields, count, 28U) == DAQ_SCHEMA_OK ? PROFILE_CONFIG_OK : PROFILE_CONFIG_SCHEMA;
 }

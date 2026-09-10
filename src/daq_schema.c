@@ -33,7 +33,7 @@ static uint32_t ReadLe32(const uint8_t *bytes) {
     return (uint32_t)bytes[0] | ((uint32_t)bytes[1] << 8U) | ((uint32_t)bytes[2] << 16U) | ((uint32_t)bytes[3] << 24U);
 }
 
-daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fields, size_t field_count) {
+daq_schema_status_t DaqSchemaBuildFixedPayload(daq_schema_t *schema, const daq_field_t *fields, size_t field_count, size_t fixed_payload_size) {
     if (!schema || (field_count > 0U && !fields)) return DAQ_SCHEMA_INVALID_ARGUMENT;
     if (field_count > DAQ_SCHEMA_MAX_FIELDS) return DAQ_SCHEMA_TOO_MANY_FIELDS;
     *schema = (daq_schema_t){0};
@@ -48,7 +48,7 @@ daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fiel
         if (!isfinite(field->scale) || !isfinite(field->offset_value) || field->scale == 0.0 || !IsBooleanTransform(field)) {
             return DAQ_SCHEMA_INVALID_SCALE;
         }
-        if (field->width != width || field->offset != payload_size) {
+        if (field->width != width || field->offset < payload_size) {
             return DAQ_SCHEMA_INVALID_OFFSET;
         }
         for (size_t prior = 0U; prior < index; ++prior) {
@@ -59,13 +59,18 @@ daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fiel
                 return DAQ_SCHEMA_DUPLICATE_FMU_INDEX;
             }
         }
-        payload_size += width;
+        payload_size = field->offset + width;
         if (payload_size > DAQ_PROTOCOL_MAX_DATA_PAYLOAD) return DAQ_SCHEMA_PAYLOAD_TOO_LARGE;
         schema->fields[index] = *field;
     }
     schema->field_count = field_count;
-    schema->payload_size = payload_size;
+    if (fixed_payload_size && (fixed_payload_size < payload_size || fixed_payload_size > DAQ_PROTOCOL_MAX_DATA_PAYLOAD)) return DAQ_SCHEMA_PAYLOAD_TOO_LARGE;
+    schema->payload_size = fixed_payload_size ? fixed_payload_size : payload_size;
     return DAQ_SCHEMA_OK;
+}
+
+daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fields, size_t field_count) {
+    return DaqSchemaBuildFixedPayload(schema, fields, field_count, 0U);
 }
 
 daq_schema_status_t DaqSchemaDecodeInput(const daq_field_t *field, const uint8_t *payload, size_t payload_size,

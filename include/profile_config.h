@@ -16,6 +16,7 @@ typedef struct {
     double scale;
     double offset;
     uint32_t value_reference;
+    uint16_t fmu_index;
     bool is_input;
 } profile_mapping_t;
 
@@ -38,6 +39,7 @@ typedef enum {
 } profile_config_status_t;
 
 profile_config_status_t ProfileConfigLoadYaml(const char *path, profile_config_t *config);
+profile_config_status_t ProfileConfigBuildAcquisitionSchema(const profile_config_t *config, daq_schema_t *schema);
 const char *ProfileConfigStatusString(profile_config_status_t status);
 
 #endif

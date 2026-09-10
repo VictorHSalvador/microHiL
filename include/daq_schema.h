@@ -56,6 +56,7 @@ typedef enum {
 } daq_schema_status_t;
 
 daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fields, size_t field_count);
+daq_schema_status_t DaqSchemaBuildFixedPayload(daq_schema_t *schema, const daq_field_t *fields, size_t field_count, size_t payload_size);
 daq_schema_status_t DaqSchemaDecodeInput(const daq_field_t *field, const uint8_t *payload, size_t payload_size,
                                          input_value_t *value, bool *valid);
 daq_schema_status_t DaqSchemaDecodeValue(const daq_field_t *field, const uint8_t *payload, size_t payload_size, double *value);

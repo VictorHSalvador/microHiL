@@ -207,6 +207,7 @@ int fmu_model_resolve_profile_mappings(FmuModel *model, profile_config_t *config
             for (size_t candidate = 0U; candidate < input_count; ++candidate) {
                 if (inputs[candidate].type == mapping->type && strcmp(inputs[candidate].input_name, mapping->variable) == 0) {
                     mapping->value_reference = inputs[candidate].value_reference;
+                    mapping->fmu_index = (uint16_t)candidate;
                     found = true;
                     break;
                 }

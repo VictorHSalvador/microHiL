@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.17.2**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.17.3**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -58,6 +58,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.17.0 | 10.09.2026 | MINOR | YAML versionado substitui o formato binário de configuração; mapas usam nome/tipo da variável FMU e resolvem valueReference no carregamento | spec, ICD, decisions e sdd-versions | Decisão explícita do usuário; implementação e round-trip pendentes | alterações locais; registrar commit quando criado |
 | 0.17.1 | 10.09.2026 | PATCH | Carregador YAML HOST valida versão, perfil ESP32, execução e mapas de canal/variável/tipo/transform antes de aplicar | código HOST, fixture, testes, plano e sdd-versions | Build HOST e teste YAML; resolução contra FMU e integração DAQC pendentes | alterações locais; registrar commit quando criado |
 | 0.17.2 | 10.09.2026 | PATCH | Carregamento YAML resolve cada nome/tipo para o valueReference atual da FMU e valida sua direção | código HOST, fixture, testes, plano e sdd-versions | Build HOST com FMILibrary e 42 testes; schemas e integração DAQC pendentes | alterações locais; registrar commit quando criado |
+| 0.17.3 | 10.09.2026 | PATCH | Mapa YAML já resolvido constrói o schema de aquisição ESP32 de payload fixo 28 bytes, preservando offsets físicos e aceitando seleção parcial ordenada pelo próprio host | código HOST, teste FMU, plano, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e 42 testes; schema de atuação, integração DAQC e ensaio físico pendentes | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
