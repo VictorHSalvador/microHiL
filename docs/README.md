@@ -38,7 +38,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.14.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.15.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -85,3 +85,5 @@ Revisão 0.13: a interface ROS fica limitada a setup, state e errors; aquisiçã
 Patch 0.13.1: o worker serial HOST passou a ser o dono único da TTY, separado da simulação. A [evidência](evidence/host-serial-service-2026-09-10.md) registra o round-trip em pseudo-terminal, sem CH340 ou ESP32.
 
 Revisão 0.14: `profile_id` seleciona um perfil compilado na DAQC; o contrato não transfere mapa variável de pinos pelo MID 04. O coordenador HOST passou a manter XRCE de saída em mailbox de 128 bytes, depois de CONFIG, READ_ACK e DATA.
+
+Revisão 0.15: o mapa simultâneo do perfil ESP32 foi confirmado. DATA usa 28 bytes da DAQC ao host e 21 bytes do host à DAQC; o identificador numérico do perfil ainda será definido antes do firmware.

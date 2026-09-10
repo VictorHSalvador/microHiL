@@ -64,7 +64,7 @@ RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos d
 | Q-07 | IF-LOG tipado/versionado; configuração binária separada | Implementar fixtures e vetores de round-trip/corrupção |
 | Q-09 | READ_ACK 5 bytes com SEQ uint16; sem sessão/CRC/retransmissão; 60 s por relógio monotônico | Escolher cadência dentro do orçamento e medir tolerância sob saturação |
 
-Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. Restam enumeração física do perfil, implementação integrada e critérios de ensaio; não são novas perguntas sobre escolhas já confirmadas.
+Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. A enumeração funcional do perfil ESP32 foi confirmada em 10.09.2026; restam o identificador numérico do perfil, implementação integrada e critérios de ensaio.
 
 ## Parâmetros de enlace selecionados — revisão 0.11
 
@@ -104,3 +104,7 @@ A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, pe
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado, valida a compatibilidade antes do Play e não transfere mapa de GPIOs, descritores ou parâmetros ADC/PWM variáveis pelo MID 04. `DaqcState` confirma o identificador e a aplicação do perfil.
 
 O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. A mensagem mais nova substitui a anterior e é enviada somente depois de CONFIG, READ_ACK e DATA pendentes. Confirmações CONFIG limpam esse mailbox, impedindo transportar controle XRCE de uma transição anterior. Isso implementa o multiplexador local; o transporte customizado do Agent e o cliente micro-ROS continuam pendentes.
+
+## Mapa funcional ESP32 — 0.15.0
+
+O usuário confirmou o perfil simultâneo ESP32: AI GPIO36/39/34/35/32/33; AO GPIO25/26; DI GPIO27/14/13/4; DO GPIO16/17/21/22/23; PWM GPIO18/19. GPIO1/3 são reservados à UART0 e GPIO2/5/12/15 ao boot. O mapa usa `float32` para AI/AO/PWM e campos binários para DI/DO, resultando em DATA DAQC→host de 28 bytes e host→DAQC de 21 bytes. A ordem canônica e offsets estão no IF-MAP. O valor `uint32` de `profile_id` não foi informado e permanece pendente antes do firmware.

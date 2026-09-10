@@ -1,6 +1,6 @@
 # Alvo físico e ambiente
 
-Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponibilização dos I/Os disponíveis confirmados pelo usuário; mapa simultâneo/faixas de aquisição ainda em detalhamento. Fonte local: [ESP32-CONTROLADOR.md](references/ESP32-CONTROLADOR.md). As alegações de fotografia/esptool são informações recebidas; foto, comando completo, versão e saída bruta não foram inspecionados nesta sessão. Nenhuma nova consulta ao dispositivo foi executada.
+Status: perfil inicial denominado **ESP32**, com mapa funcional confirmado pelo usuário para ADC/DAC internos, digital e PWM. Fonte local: [ESP32-CONTROLADOR.md](references/ESP32-CONTROLADOR.md). As alegações de fotografia/esptool são informações recebidas; foto, comando completo, versão e saída bruta não foram inspecionados nesta sessão. Nenhuma nova consulta ao dispositivo foi executada.
 
 ## Inventário de origem
 
@@ -50,7 +50,21 @@ Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. 
 
 A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial. O setup e Agent Humble tiveram build HOST limpo em 09.09.2026. O usuário selecionou ESP-IDF v5.2.6, da menor série declarada como testada pelo componente Humble atual; ESP32 clássico é alvo listado tanto pelo SDK quanto pelo componente. Isso comprova compatibilidade declarada de versão/alvo, não o build integrado nem o funcionamento na placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/get-started/linux-macos-setup.html), [ESP-IDF ESP32 v5.2](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/), [micro_ros_setup Humble](https://github.com/micro-ROS/micro_ros_setup/tree/humble), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble).
 
-## Dados necessários para liberar o perfil
+## Perfil ESP32 confirmado
+
+O perfil usa os seguintes nomes genéricos de I/O. Eles identificam o canal no mapa e no DATA; não identificam sensores ou atuadores. Pinos não listados abaixo não pertencem ao perfil inicial. O identificador numérico `profile_id` ainda será definido pelo usuário antes da compilação do firmware.
+
+| Função | GPIOs confirmados | Tipo no DATA | Representação |
+|---|---|---|---|
+| AI | 36, 39, 34, 35, 32, 33 | `float32` | volts calibrados pela DAQC |
+| AO | 25, 26 | `float32` | volts solicitados; firmware converte para DAC de 8 bits |
+| DI | 27, 14, 13, 4 | `uint8` | 0 ou 1 |
+| DO | 16, 17, 21, 22, 23 | `uint8` | 0 ou 1 |
+| PWM | 18, 19 | `float32` | duty normalizado 0…1; frequência/resolução vêm da configuração validada |
+| Reservado UART | 1 (TX), 3 (RX) | — | UART0 da ponte CH340 |
+| Reservado boot | 2, 5, 12, 15 | — | fora do perfil para preservar boot/reset |
+
+## Dados necessários para concluir o perfil
 
 O perfil ESP32 expõe recursos configuráveis pelo usuário, respeitando exclusões por GPIO, reserva UART e compartilhamento de periféricos. ADC/PWM têm opções abaixo; SPI/I2C não receberam aplicações específicas.
 
@@ -66,7 +80,7 @@ O perfil ESP32 expõe recursos configuráveis pelo usuário, respeitando exclus�
 
 Não existe uma faixa única “padrão 0…3,3 V” com a mesma precisão para todo ADC ESP32. Como referência técnica, a documentação ESP-IDF 4.4.4 recomenda 150…2450 mV para maior precisão com atenuação 11 dB; isso não fixa a atenuação deste firmware. O perfil deverá informar atenuação, calibração e unidade real transportada. Fontes primárias: [ADC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/adc.html), [DAC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/dac.html). Versão documental consultada, não SDK selecionado.
 
-Para cada função habilitada: identidade, GPIO/conector, tipo/unidade, faixa e conversão, incompatibilidades, estado físico por modo e restrições, ciclo e procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
+O mapa de GPIO, direção e representação do perfil ESP32 está confirmado acima. Permanecem a definição do `profile_id`, a caracterização elétrica, a calibração, a configuração válida de ADC/PWM, o circuito externo e o procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
 
 F-23 retém inputs no host, sem atuar em AO/DO/PWM por amostra inválida isolada. Dados de atuação só em STREAMING. No encerramento da execução, zerar saídas e cessar DATA; restart reinicializa a FMU e aplica outputs iniciais válidos. Zero físico significa DO baixo, DAC código zero nominal e PWM duty zero com nível inativo baixo. Tensão real e transitórios de reset exigem ensaio; níveis anteriores à execução do firmware não são garantidos pelo software.
 
