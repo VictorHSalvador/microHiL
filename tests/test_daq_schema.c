@@ -17,13 +17,23 @@ int main(void) {
         {.gpio = 35U, .function = DAQ_CHANNEL_DI, .wire_type = DAQ_WIRE_BOOLEAN, .fmu_type = NUMERIC_BOOLEAN, .offset = 4U, .width = 1U, .scale = 1.0, .offset_value = 0.0, .fmu_index = 1U}
     };
     const uint8_t payload[] = {0U, 0U, 0U, 0x3fU, 1U};
+    const uint8_t invalid_payload[] = {0U, 0U, 0xc0U, 0x7fU, 2U};
     daq_schema_t schema;
     double value = 0.0;
+    input_value_t input_value;
+    bool valid = false;
     Require(DaqSchemaBuild(&schema, fields, 2U) == DAQ_SCHEMA_OK && schema.payload_size == sizeof(payload), "valid schema was rejected");
     Require(DaqSchemaDecodeValue(&schema.fields[0], payload, sizeof(payload), &value) == DAQ_SCHEMA_OK && fabs(value - 0.0) < 1e-12, "float32 mapping differs");
     Require(DaqSchemaDecodeValue(&schema.fields[1], payload, sizeof(payload), &value) == DAQ_SCHEMA_OK && value == 1.0, "boolean mapping differs");
-    daq_field_t duplicate = fields[1];
-    duplicate.gpio = 34U;
-    Require(DaqSchemaBuild(&schema, &duplicate, 1U) == DAQ_SCHEMA_INVALID_OFFSET, "noncanonical standalone field was accepted");
+    Require(DaqSchemaDecodeInput(&schema.fields[0], invalid_payload, sizeof(invalid_payload), &input_value, &valid) == DAQ_SCHEMA_OK && !valid,
+            "NaN input was not marked invalid without rejecting the frame");
+    Require(DaqSchemaDecodeInput(&schema.fields[1], invalid_payload, sizeof(invalid_payload), &input_value, &valid) == DAQ_SCHEMA_OK && !valid,
+            "invalid digital input was not marked invalid without rejecting the frame");
+    daq_field_t duplicate_fields[2] = {fields[0], fields[1]};
+    duplicate_fields[1].gpio = 34U;
+    Require(DaqSchemaBuild(&schema, duplicate_fields, 2U) == DAQ_SCHEMA_DUPLICATE_GPIO, "duplicate GPIO was accepted");
+    duplicate_fields[1] = fields[1];
+    duplicate_fields[1].fmu_index = 0U;
+    Require(DaqSchemaBuild(&schema, duplicate_fields, 2U) == DAQ_SCHEMA_DUPLICATE_FMU_INDEX, "duplicate FMU input was accepted");
     return EXIT_SUCCESS;
 }

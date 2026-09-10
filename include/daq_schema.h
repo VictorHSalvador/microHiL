@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "common.h"
+#include "input_state.h"
 
 #define DAQ_SCHEMA_MAX_FIELDS MAX_OUTPUTS
 
@@ -49,11 +50,14 @@ typedef enum {
     DAQ_SCHEMA_INVALID_FMU_TYPE,
     DAQ_SCHEMA_INVALID_OFFSET,
     DAQ_SCHEMA_DUPLICATE_GPIO,
+    DAQ_SCHEMA_DUPLICATE_FMU_INDEX,
     DAQ_SCHEMA_PAYLOAD_TOO_LARGE,
     DAQ_SCHEMA_INVALID_SCALE
 } daq_schema_status_t;
 
 daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fields, size_t field_count);
+daq_schema_status_t DaqSchemaDecodeInput(const daq_field_t *field, const uint8_t *payload, size_t payload_size,
+                                         input_value_t *value, bool *valid);
 daq_schema_status_t DaqSchemaDecodeValue(const daq_field_t *field, const uint8_t *payload, size_t payload_size, double *value);
 const char *DaqSchemaStatusString(daq_schema_status_t status);
 

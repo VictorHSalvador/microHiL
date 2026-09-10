@@ -1,5 +1,6 @@
 #include "daq_schema.h"
 
+#include <limits.h>
 #include <math.h>
 #include <string.h>
 
@@ -24,6 +25,10 @@ static bool IsTypeCompatible(const daq_field_t *field) {
     return field->wire_type == DAQ_WIRE_BOOLEAN && field->fmu_type == NUMERIC_BOOLEAN;
 }
 
+static bool IsBooleanTransform(const daq_field_t *field) {
+    return field->wire_type != DAQ_WIRE_BOOLEAN || (field->scale == 1.0 && field->offset_value == 0.0);
+}
+
 static uint32_t ReadLe32(const uint8_t *bytes) {
     return (uint32_t)bytes[0] | ((uint32_t)bytes[1] << 8U) | ((uint32_t)bytes[2] << 16U) | ((uint32_t)bytes[3] << 24U);
 }
@@ -40,10 +45,19 @@ daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fiel
         if (field->function > DAQ_CHANNEL_PWM) return DAQ_SCHEMA_INVALID_FUNCTION;
         if (width == 0U) return DAQ_SCHEMA_INVALID_WIRE_TYPE;
         if (!IsTypeCompatible(field)) return DAQ_SCHEMA_INVALID_FMU_TYPE;
-        if (!isfinite(field->scale) || !isfinite(field->offset_value) || field->scale == 0.0) return DAQ_SCHEMA_INVALID_SCALE;
-        if (field->width != width || field->offset != payload_size) return DAQ_SCHEMA_INVALID_OFFSET;
+        if (!isfinite(field->scale) || !isfinite(field->offset_value) || field->scale == 0.0 || !IsBooleanTransform(field)) {
+            return DAQ_SCHEMA_INVALID_SCALE;
+        }
+        if (field->width != width || field->offset != payload_size) {
+            return DAQ_SCHEMA_INVALID_OFFSET;
+        }
         for (size_t prior = 0U; prior < index; ++prior) {
-            if (fields[prior].gpio == field->gpio) return DAQ_SCHEMA_DUPLICATE_GPIO;
+            if (fields[prior].gpio == field->gpio) {
+                return DAQ_SCHEMA_DUPLICATE_GPIO;
+            }
+            if (fields[prior].fmu_index == field->fmu_index) {
+                return DAQ_SCHEMA_DUPLICATE_FMU_INDEX;
+            }
         }
         payload_size += width;
         if (payload_size > DAQ_PROTOCOL_MAX_DATA_PAYLOAD) return DAQ_SCHEMA_PAYLOAD_TOO_LARGE;
@@ -54,26 +68,70 @@ daq_schema_status_t DaqSchemaBuild(daq_schema_t *schema, const daq_field_t *fiel
     return DAQ_SCHEMA_OK;
 }
 
-daq_schema_status_t DaqSchemaDecodeValue(const daq_field_t *field, const uint8_t *payload, size_t payload_size, double *value) {
-    if (!field || !payload || !value || !IsInputFunction(field->function) || field->offset + field->width > payload_size) return DAQ_SCHEMA_INVALID_ARGUMENT;
+daq_schema_status_t DaqSchemaDecodeInput(const daq_field_t *field, const uint8_t *payload, size_t payload_size,
+                                         input_value_t *value, bool *valid) {
+    if (!field || !payload || !value || !valid || !IsInputFunction(field->function) || field->offset + field->width > payload_size) {
+        return DAQ_SCHEMA_INVALID_ARGUMENT;
+    }
+    *value = (input_value_t){0};
+    *valid = false;
     if (field->wire_type == DAQ_WIRE_BOOLEAN) {
-        if (payload[field->offset] > UINT8_C(1)) return DAQ_SCHEMA_INVALID_ARGUMENT;
-        *value = (double)payload[field->offset];
+        if (payload[field->offset] > UINT8_C(1)) {
+            return DAQ_SCHEMA_OK;
+        }
+        value->boolean_value = payload[field->offset];
+        *valid = true;
         return DAQ_SCHEMA_OK;
     }
     if (field->wire_type == DAQ_WIRE_INT32) {
         const int32_t raw = (int32_t)ReadLe32(payload + field->offset);
-        *value = (double)raw * field->scale + field->offset_value;
+        const double scaled = (double)raw * field->scale + field->offset_value;
+        if (!isfinite(scaled) || scaled < (double)INT32_MIN || scaled > (double)INT32_MAX || trunc(scaled) != scaled) {
+            return DAQ_SCHEMA_OK;
+        }
+        value->discrete_value = (int64_t)scaled;
+        *valid = true;
         return DAQ_SCHEMA_OK;
     }
     if (field->wire_type == DAQ_WIRE_FLOAT32) {
         float raw = 0.0F;
         const uint32_t raw_bits = ReadLe32(payload + field->offset);
         memcpy(&raw, &raw_bits, sizeof(raw));
-        *value = (double)raw * field->scale + field->offset_value;
-        return isfinite(*value) ? DAQ_SCHEMA_OK : DAQ_SCHEMA_INVALID_ARGUMENT;
+        const double scaled = (double)raw * field->scale + field->offset_value;
+        if (!isfinite(scaled)) {
+            return DAQ_SCHEMA_OK;
+        }
+        value->real_value = scaled;
+        *valid = true;
+        return DAQ_SCHEMA_OK;
     }
     return DAQ_SCHEMA_INVALID_WIRE_TYPE;
+}
+
+daq_schema_status_t DaqSchemaDecodeValue(const daq_field_t *field, const uint8_t *payload, size_t payload_size, double *value) {
+    input_value_t decoded;
+    bool valid = false;
+    if (!value) {
+        return DAQ_SCHEMA_INVALID_ARGUMENT;
+    }
+    const daq_schema_status_t status = DaqSchemaDecodeInput(field, payload, payload_size, &decoded, &valid);
+    if (status != DAQ_SCHEMA_OK || !valid) {
+        return status == DAQ_SCHEMA_OK ? DAQ_SCHEMA_INVALID_ARGUMENT : status;
+    }
+    switch (field->fmu_type) {
+        case NUMERIC_REAL:
+            *value = decoded.real_value;
+            return DAQ_SCHEMA_OK;
+        case NUMERIC_INTEGER:
+        case NUMERIC_ENUMERATION:
+            *value = (double)decoded.discrete_value;
+            return DAQ_SCHEMA_OK;
+        case NUMERIC_BOOLEAN:
+            *value = (double)decoded.boolean_value;
+            return DAQ_SCHEMA_OK;
+        default:
+            return DAQ_SCHEMA_INVALID_FMU_TYPE;
+    }
 }
 
 const char *DaqSchemaStatusString(daq_schema_status_t status) {
@@ -86,6 +144,7 @@ const char *DaqSchemaStatusString(daq_schema_status_t status) {
         case DAQ_SCHEMA_INVALID_FMU_TYPE: return "wire and FMU types are incompatible";
         case DAQ_SCHEMA_INVALID_OFFSET: return "field offsets are not canonical";
         case DAQ_SCHEMA_DUPLICATE_GPIO: return "GPIO used by multiple fields";
+        case DAQ_SCHEMA_DUPLICATE_FMU_INDEX: return "FMU input mapped by multiple fields";
         case DAQ_SCHEMA_PAYLOAD_TOO_LARGE: return "payload exceeds 256 bytes";
         case DAQ_SCHEMA_INVALID_SCALE: return "invalid scale";
         default: return "unknown schema status";
