@@ -1,8 +1,8 @@
 # MICROHIL
 
-O projeto está sendo retomado por desenvolvimento orientado à especificação, preservando o executor de FMU existente. A baseline vigente é a SDD-MICROHIL 0.7.3: a fundação de build HOST da TASK-001 e o logging HOST da TASK-002 foram implementados, evidenciados e auditados. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
+O projeto é desenvolvido por especificação. A baseline vigente é a SDD-MICROHIL 0.23.2. O HOST já inclui executor FMI, sessão de execução compartilhada pela CLI e pela base Qt, logging binário, perfil YAML, comunicação host e firmware ainda sem validação física. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
 
-O código atual implementa um protótipo HOST com terminal de debug, logging binário e gnuplot. GUI Qt, DAQC, ROS 2/micro-ROS e comunicação física ainda não estão implementados. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra limitações históricas; a [evidência da TASK-002](docs/evidence/host-run-logging-2026-09-08.md) delimita o que foi testado no HOST. Não reutilize o diretório `build/` preexistente: os comandos abaixo usam diretórios limpos.
+O código atual inclui terminal de debug, logging binário, gnuplot transitório e uma base Qt Quick/QML para importar e inspecionar FMU. O suporte ROS 2/micro-ROS e a comunicação física permanecem sem validação em equipamento. A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra limitações históricas; a [evidência da sessão](docs/evidence/host-execution-session-2026-09-10.md) delimita a verificação HOST atual. Não reutilize o diretório `build/` preexistente: os comandos abaixo usam diretórios limpos.
 
 ## Runner HOST atual
 
@@ -77,7 +77,7 @@ sudo apt install qt6-base-dev qt6-declarative-dev \
 Compile em diretório separado:
 
 ```bash
-cmake -S . -B /tmp/microhil-gui -DMICROHIL_BUILD_GUI=ON -DMICROHIL_BUILD_RUNNER=OFF -DBUILD_TESTING=OFF
+cmake -S . -B /tmp/microhil-gui -DMICROHIL_BUILD_GUI=ON -DMICROHIL_BUILD_RUNNER=OFF -DMICROHIL_FETCH_FMILIB=ON -DBUILD_TESTING=OFF
 cmake --build /tmp/microhil-gui --target microhil_gui
 /tmp/microhil-gui/microhil_gui
 ```

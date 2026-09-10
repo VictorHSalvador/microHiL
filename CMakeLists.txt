@@ -86,18 +86,6 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
         m
     )
 
-    add_library(microhil_execution_session STATIC src/execution_session.c)
-    target_include_directories(microhil_execution_session PUBLIC include)
-    target_link_libraries(microhil_execution_session PUBLIC microhil_project_warnings microhil_host_components microhil_fmu_wrapper)
-
-    if(MICROHIL_BUILD_GUI)
-        find_package(Qt6 6.2 REQUIRED COMPONENTS Quick QuickControls2)
-        qt_add_executable(microhil_gui gui/main.cpp)
-        qt_add_resources(microhil_gui "microhil_gui_resources" PREFIX "/" FILES gui/Main.qml)
-        target_link_libraries(microhil_gui PRIVATE Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
-    endif()
-
-    if(MICROHIL_BUILD_RUNNER)
     add_library(microhil_rt_simulation STATIC src/rt_simulation.c)
     target_include_directories(microhil_rt_simulation PUBLIC include)
     target_link_libraries(microhil_rt_simulation PUBLIC
@@ -108,6 +96,20 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
         m
     )
 
+    add_library(microhil_execution_session STATIC src/execution_session.c)
+    target_include_directories(microhil_execution_session PUBLIC include)
+    target_link_libraries(microhil_execution_session PUBLIC microhil_project_warnings microhil_host_components microhil_fmu_wrapper microhil_rt_simulation)
+
+    if(MICROHIL_BUILD_GUI)
+        find_package(Qt6 6.2 REQUIRED COMPONENTS Quick QuickControls2)
+        qt_add_executable(microhil_gui gui/main.cpp gui/gui_controller.cpp)
+        set_target_properties(microhil_gui PROPERTIES AUTOMOC ON)
+        qt_add_resources(microhil_gui "microhil_gui_resources" PREFIX "/" FILES gui/Main.qml)
+        target_link_libraries(microhil_gui PRIVATE Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
+    endif()
+
+    if(MICROHIL_BUILD_RUNNER)
+
     add_executable(fmu_rt_runner
         src/main.c
     )
@@ -117,6 +119,7 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
         microhil_host_components
         microhil_fmu_wrapper
         microhil_rt_simulation
+        microhil_execution_session
         Threads::Threads
         dl
         m

@@ -61,6 +61,9 @@ target_link_libraries(test_profile_config PRIVATE microhil_host_components m)
 if(TARGET microhil_fmu_wrapper)
     add_executable(test_fmu_model test_fmu_model.c)
     target_link_libraries(test_fmu_model PRIVATE microhil_rt_simulation microhil_fmu_wrapper microhil_host_components m)
+
+    add_executable(test_execution_session test_execution_session.c)
+    target_link_libraries(test_execution_session PRIVATE microhil_execution_session)
 endif()
 
 if(TARGET microhil_ros_control)
@@ -118,6 +121,7 @@ add_test(NAME profile_config_yaml COMMAND test_profile_config "${CMAKE_SOURCE_DI
 
 if(TARGET test_fmu_model)
     add_test(NAME fmu_model_inputs COMMAND test_fmu_model "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu" "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
+    add_test(NAME execution_session_lifecycle COMMAND test_execution_session "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu")
 endif()
 
 if(TARGET test_daqc_ros_control)

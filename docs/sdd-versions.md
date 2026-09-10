@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.23.1**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.23.2**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -74,6 +74,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.22.1 | 10.09.2026 | PATCH | Componente `rcl` do runner publica `DaqcSetup` e recebe estado/erros em thread própria, isolado da simulação; prazo ROS de configuração permanece pendente | código HOST, CMake, teste, plano, rastreabilidade, evidence e sdd-versions | Build ROS Humble e CTest 47/47; sem Agent, DAQC, CH340, sessão XRCE ou HIL | 59b1c83 |
 | 0.23.0 | 10.09.2026 | MINOR | Confirmação ROS de `DaqcSetup` recebe prazo inicial configurável de 100 ms, separado de CONFIG crítico de 10 ms e fora da simulação | decisões, arquitetura, ICD, plano, implementação e sdd-versions | Decisão explícita do usuário; implementação registrada em 0.23.1 | cc47e2f |
 | 0.23.1 | 10.09.2026 | PATCH | Runner passa a preparar enlace, confirmar `DaqcSetup`, entrar em STREAMING e conectar a bridge de saída antes de criar a thread FMI; preflight SCHED_FIFO impede Play HiL sem política efetiva | runner HOST, arquitetura, plano, rastreabilidade, evidence e sdd-versions | Build ROS Humble e CTest 47/47; sem Agent, CH340, ESP32, DAQC ou HIL | cc47e2f |
+| 0.23.2 | 10.09.2026 | PATCH | Sessão de execução comum centraliza lifecycle FMI, logging, Stop e resultado; CLI passa a usá-la e a base Qt importa FMU por essa interface | execução HOST, GUI Qt, testes, arquitetura, plano, matriz, evidence e sdd-versions | Build HOST/CTest 47/47, GUI offscreen e teste documental 29/29; `onp-spec audit` não iniciou por incompatibilidade ESM/CommonJS local; GUI visual, DAQC, Agent, CH340, ESP32 e HIL pendentes | 0ecbd3b |
 
 ## Procedimento de atualização
 

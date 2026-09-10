@@ -1,19 +1,20 @@
 # Arquitetura de software
 
-Revisão 0.7: código atual, decisões confirmadas e design do ICD consolidado. Implementação suspensa até concluir a revisão dos Markdown, conforme usuário. Requisitos em [spec.md](spec.md); parâmetros de implementação/ensaio restantes em [decisions.md](decisions.md). Não há implementação dos módulos futuros apenas porque aparecem neste documento.
+Revisão 0.23.2: código atual, decisões confirmadas e design do ICD consolidados. Requisitos em [spec.md](spec.md); parâmetros de implementação/ensaio restantes em [decisions.md](decisions.md). A sessão de execução compartilhada está materializada e testada no HOST; isso não declara GUI operacional, DAQC física ou qualificação temporal.
 
 ## ARCH-CORE — Núcleo, FMU e configuração
 
 Preservar `src/fmu_model.c`, `src/rt_simulation.c`, `src/app_config.c` e headers como base. O wrapper já importa FMI 2.0 CS, enumera outputs e encapsula instância. Deve evoluir para validar inputs, tipos, unidades e mapeamento antes de executar. A capacidade de último passo variável precisa ser considerada: o exemplo permite, mas o loader aceita outros modelos. A meta é interpretar qualquer FMU 2.0 CS; Q-08 autoriza reconhecer e diagnosticar capacidades não suportadas, como Pending/String quando fora do incremento. Não declarar suporte universal enquanto o wrapper os rejeita ou ignora. Formato compatível não comprova binário compatível com CPU nem custo computacional dentro do passo.
 
-Qt e terminal debug desacoplados do núcleo foram confirmados. Proposta de implementação: separar a orquestração hoje contida em `main.c` em serviço testável, reutilizado por ambos. Um proprietário coordena inicialização, execução, parada e resultado final. Configuração é validada e congelada por execução; controles virtuais chegam por comando e são aplicados na fronteira de ciclo. Nenhum callback GUI/ROS chama a FMU diretamente.
+Qt e terminal debug desacoplados do núcleo foram confirmados. `execution_session` materializa a orquestração reutilizável: prepara a FMU, inicia logging, inicia a thread de simulação, recebe Stop e agrega o resultado. O terminal usa a mesma sessão; a GUI já a usa para importar e inspecionar uma FMU e usará suas operações de execução nos incrementos seguintes. Configuração é validada e congelada por execução; controles virtuais chegam por comando e são aplicados na fronteira de ciclo. Nenhum callback GUI/ROS chama a FMU diretamente.
 
 | Módulo atual | Preservar | Ajustar/estender |
 |---|---|---|
 | app_config | Dados de execução | Validação finita, faixa, coerência e perfil |
 | fmu_model | Importação, lifecycle, tipos de outputs | Inputs, capacidade/arquitetura, fixtures, falhas e diagnóstico limitado |
 | rt_simulation | Thread dedicada, relógio monotônico absoluto | Estado, wakeup de stop, métricas completas, entradas/saídas consistentes |
-| main | Fluxo CLI útil para diagnóstico | Extrair lógica compartilhável com GUI e propagação de falha |
+| execution_session | Sessão de FMU, ciclo e resultado comum a CLI/GUI | Expor comandos e eventos não bloqueantes para Qt, sem acesso direto à FMU |
+| main | Fluxo CLI útil para diagnóstico | Delegar toda a execução à sessão e manter somente interação/diagnóstico |
 | sample_queue | Cópia SPSC e atomics | Testes concorrentes, limites e política por consumidor |
 | csv_logger | Consumidor assíncrono | Falhas/encerramento como reuso; novo sink binário tipado e CSV apenas pós-execução |
 | plotter | Prova de desacoplamento | Instrumento transitório até Qt; não satisfaz janelas individuais/controle ao vivo |

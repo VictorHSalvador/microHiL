@@ -28,7 +28,7 @@ ApplicationWindow {
     FileDialog {
         id: fmuDialog
         nameFilters: ["FMU files (*.fmu)"]
-        onAccepted: window.fmuPath = selectedFile.toString().replace("file://", "")
+        onAccepted: guiController.LoadFmu(selectedFile.toString().replace("file://", ""))
     }
 
     FileDialog {
@@ -73,7 +73,7 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         Button { text: "Importar FMU"; onClicked: fmuDialog.open() }
-                        Label { text: window.fmuPath || "Nenhuma FMU selecionada"; Layout.fillWidth: true; elide: Text.ElideMiddle }
+                        Label { text: guiController.fmuPath || "Nenhuma FMU selecionada"; Layout.fillWidth: true; elide: Text.ElideMiddle }
                     }
                     RowLayout {
                         Layout.fillWidth: true
@@ -119,7 +119,9 @@ ApplicationWindow {
                     anchors.fill: parent
                     Label { text: "Gráficos de saída"; font.bold: true; font.pixelSize: 18 }
                     Label { text: "Abra gráficos por variável após a importação da FMU. Cada janela mantém histórico somente enquanto estiver aberta."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                    Button { text: "Configurar gráficos"; enabled: window.fmuPath.length > 0 }
+                    Label { text: guiController.fmuPath ? guiController.modelName + " — " + guiController.inputCount + " entradas, " + guiController.outputCount + " saídas" : "" }
+                    Label { text: guiController.errorMessage; color: "#b33a3a"; visible: text.length > 0 }
+                    Button { text: "Configurar gráficos"; enabled: guiController.fmuPath.length > 0 }
                 }
             }
         }

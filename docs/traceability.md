@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade
 
-Revisão 0.8, baseline conjunta [SDD-MICROHIL 0.8.0](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). TASK-001 e TASK-002 avançaram somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, bancada, HIL ou deadlines.
+Revisão 0.23.2, baseline conjunta [SDD-MICROHIL 0.23.2](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de GUI, Raspberry Pi, DAQC, USB, ROS, bancada, HIL ou deadlines.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 
@@ -10,8 +10,8 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-02 | ARCH-IO / IF-CORE | TASK-006 | src/profile_config.c; src/fmu_model.c | P | V-F-02 / HOST + bancada/HIL | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): YAML/FMU e schema de aquisição HOST; sem DAQC ou bancada |
 | REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-F-03 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): schema/codificador HOST; sem enlace ou HIL |
 | REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | src/main.c; src/profile_config.c | P | V-F-04 / HOST + GUI | [host-cli-yaml-profile-2026-09-10](evidence/host-cli-yaml-profile-2026-09-10.md): fluxo terminal de configuração; GUI e persistência completa pendentes |
-| REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-05 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-06 | ARCH-STATE / IF-CORE | TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-06 / HOST + GUI | Sem execução do caso de aceitação |
+| REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/execution_session.c; src/main.c; gui/gui_controller.cpp | P | V-F-05 / HOST + GUI | [host-execution-session-2026-09-10](evidence/host-execution-session-2026-09-10.md): ciclo curto pela sessão; GUI e FMU de produto pendentes |
+| REQ-F-06 | ARCH-STATE / IF-CORE | TASK-003, TASK-009 | src/execution_session.c; src/main.c; src/rt_simulation.c | P | V-F-06 / HOST + GUI | [host-execution-session-2026-09-10](evidence/host-execution-session-2026-09-10.md): ciclo Finished e resultado agregado; Stop/Error pela GUI pendentes |
 | REQ-F-07 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c; src/run_logging.c | P | V-F-07 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): fechamento/drenagem HOST; sem Stop/FMU/zero físico/HIL |
 | REQ-F-08 | ARCH-STATE | TASK-003, TASK-009 | Não implementado | A | V-F-08 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-09 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/run_logging.c; src/binary_logger.c | P | V-F-09 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): erro de log estruturado; GUI, falha FMI/link e prints legados pendentes |

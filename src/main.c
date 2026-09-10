@@ -8,12 +8,9 @@
 #ifdef MICROHIL_WITH_ROS2_CONTROL
 #include "daqc_ros_control.h"
 #endif
-#include "fmu_model.h"
+#include "execution_session.h"
 #include "log_converter.h"
 #include "plotter.h"
-#include "rt_simulation.h"
-#include "run_logging.h"
-#include "run_result.h"
 #include "sample_queue.h"
 #include <ctype.h>
 #include <signal.h>
@@ -27,7 +24,7 @@
 #define MAX_CANDIDATE_OUTPUTS 512
 #define MAX_CANDIDATE_INPUTS 512
 
-static _Atomic bool g_stop_requested = false;
+static _Atomic bool *g_stop_requested = NULL;
 
 #ifdef MICROHIL_WITH_ROS2_CONTROL
 typedef struct {
@@ -99,7 +96,7 @@ fail:
 
 static void signal_handler(int signal_number) {
     (void)signal_number;
-    atomic_store_explicit(&g_stop_requested, true, memory_order_relaxed);
+    if (g_stop_requested) atomic_store_explicit(g_stop_requested, true, memory_order_relaxed);
 }
 
 static void read_line(const char *prompt, char *buffer, size_t size) {
@@ -403,7 +400,9 @@ static const char *SimulationStateName(simulation_run_state_t state) {
     }
 }
 
-static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path[PATH_LEN], bool *last_log_closed) {
+static int run_simulation(execution_session_t *session, char last_log_path[PATH_LEN], bool *last_log_closed) {
+    FmuModel *model = &session->model;
+    AppConfig *config = &session->config;
     if (!model->fmu) {
         printf("Load an FMU first.\n");
         return -1;
@@ -440,22 +439,14 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
     SampleQueue plot_queue;
     sample_queue_init(&plot_queue);
 
-    _Atomic bool plot_producer_done = false;
-    atomic_store_explicit(&g_stop_requested, false, memory_order_relaxed);
-
     PlotterContext plot_context;
-    RtSimulationContext sim_context;
 #ifdef MICROHIL_WITH_ROS2_CONTROL
     daqc_runtime_t daqc_runtime;
     daq_output_bridge_t *output_bridge = NULL;
 #endif
-    run_logging_t logging;
-    run_result_t run_result;
-    log_descriptor_t descriptor;
-    run_logging_status_t descriptor_status;
     bool plot_started = false;
     *last_log_closed = false;
-    if (RtSimulationPrepare(&sim_context, model, config) != 0) {
+    if (ExecutionSessionPrepare(session) != EXECUTION_SESSION_OK) {
         printf("Could not initialize the FMU and establish valid input references.\n");
         return -1;
     }
@@ -463,12 +454,12 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
     if (config->daqc_enabled) {
         if (!config->profile_loaded || !config->daqc_device_path[0]) {
             printf("DAQC integration requires a loaded YAML profile and a configured TTY path.\n");
-            RtSimulationAbort(&sim_context);
+            ExecutionSessionAbort(session);
             return -1;
         }
-        if (StartDaqcRuntime(&daqc_runtime, config, &sim_context) != 0) {
+        if (StartDaqcRuntime(&daqc_runtime, config, &session->simulation) != 0) {
             printf("Could not prepare the DAQC, Agent bridge, or ROS confirmation.\n");
-            RtSimulationAbort(&sim_context);
+            ExecutionSessionAbort(session);
             return -1;
         }
         output_bridge = &daqc_runtime.output_bridge;
@@ -476,76 +467,64 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
 #else
     if (config->daqc_enabled) {
         printf("This runner was built without ROS 2 DAQC support.\n");
-        RtSimulationAbort(&sim_context);
+        ExecutionSessionAbort(session);
         return -1;
     }
 #endif
-    RunLoggingInit(&logging, config->binary_log_enabled);
-
-    if (config->binary_log_enabled) {
-        descriptor_status = RunLoggingBuildDescriptor(config->fmu_path, config->outputs, config->output_count, config->step_size_s, &descriptor);
-        if (descriptor_status == RUN_LOGGING_STATUS_OK) {
-            if (RunLoggingStartFile(&logging, &descriptor, config->binary_log_path) == RUN_LOGGING_STATUS_OK) {
-                snprintf(last_log_path, PATH_LEN, "%s", config->binary_log_path);
-            }
-        } else {
-            (void)RunLoggingStart(&logging, NULL, NULL);
-            logging.result.status = descriptor_status;
-            snprintf(logging.result.logger.error_message, sizeof(logging.result.logger.error_message), "%s", RunLoggingStatusString(descriptor_status));
-        }
-    }
+    (void)ExecutionSessionStartLogging(session);
+    if (session->logging.result.started) snprintf(last_log_path, PATH_LEN, "%s", config->binary_log_path);
     if (config->plot_enabled) {
-        if (plotter_start(&plot_context, &plot_queue, config, &plot_producer_done) == 0) plot_started = true;
+        if (plotter_start(&plot_context, &plot_queue, config, &session->producer_done) == 0) plot_started = true;
         else fprintf(stderr, "Could not start plotter thread.\n");
     }
 
     printf("\nStarting simulation. Press Ctrl+C to request a clean stop.\n");
-    int rc = RtSimulationStart(&sim_context, logging.result.started ? &logging : NULL,
-                                 plot_started ? &plot_queue : NULL,
+    atomic_store_explicit(&session->stop_requested, false, memory_order_relaxed);
+    g_stop_requested = &session->stop_requested;
+    int rc = ExecutionSessionStart(session, plot_started ? &plot_queue : NULL,
 #ifdef MICROHIL_WITH_ROS2_CONTROL
-                                 output_bridge,
+                                   output_bridge
 #else
-                                 NULL,
+                                   NULL
 #endif
-                                 &g_stop_requested, &plot_producer_done);
-    if (rc != 0) {
+    );
+    if (rc != EXECUTION_SESSION_OK) {
+        g_stop_requested = NULL;
         fprintf(stderr, "Could not create simulation thread.\n");
-        RunLoggingProducerDone(&logging);
-        RunLoggingFinish(&logging);
-        atomic_store_explicit(&plot_producer_done, true, memory_order_release);
+        ExecutionSessionAbort(session);
         if (plot_started) plotter_join(&plot_context);
-        RtSimulationAbort(&sim_context);
 #ifdef MICROHIL_WITH_ROS2_CONTROL
         if (config->daqc_enabled) StopDaqcRuntime(&daqc_runtime, config);
 #endif
-        PrintLoggingResult(RunLoggingResult(&logging));
+        PrintLoggingResult(RunLoggingResult(&session->logging));
         return -1;
     }
 
-    rc = RtSimulationJoin(&sim_context);
+    rc = ExecutionSessionJoin(session);
+    g_stop_requested = NULL;
 #ifdef MICROHIL_WITH_ROS2_CONTROL
     if (config->daqc_enabled) StopDaqcRuntime(&daqc_runtime, config);
 #endif
-    RunLoggingFinish(&logging);
     if (plot_started) (void)plotter_join(&plot_context);
-    RunResultAggregate(&run_result, &sim_context.run_result, RunLoggingResult(&logging));
-    *last_log_closed = config->binary_log_enabled && run_result.logging.status == RUN_LOGGING_STATUS_OK && !run_result.logging.logger.incomplete;
+    const run_result_t *run_result = ExecutionSessionResult(session);
+    if (!run_result) return -1;
+    *last_log_closed = config->binary_log_enabled && run_result->logging.status == RUN_LOGGING_STATUS_OK && !run_result->logging.logger.incomplete;
 
     printf("\n=== Simulation statistics ===\n");
-    printf("State:                     %s\n", SimulationStateName(run_result.simulation.state));
-    printf("Code:                      %d\n", run_result.simulation.code);
-    printf("Stage:                     %s\n", run_result.simulation.stage);
-    printf("Message:                   %s\n", run_result.simulation.message);
-    printf("SCHED_FIFO active:         %s\n", run_result.simulation.stats.sched_fifo_active ? "yes" : "no");
-    printf("Completed steps:           %llu\n", (unsigned long long)run_result.simulation.stats.completed_steps);
-    printf("Deadline misses:           %llu\n", (unsigned long long)run_result.simulation.stats.deadline_misses);
-    printf("Unused releases:           %llu\n", (unsigned long long)run_result.simulation.stats.unused_releases);
-    printf("Max FMU computation time:  %.6f ms\n", run_result.simulation.stats.max_computation_s * 1000.0);
-    printf("Max deadline lateness:     %.6f ms\n", run_result.simulation.stats.max_lateness_s * 1000.0);
+    printf("State:                     %s\n", SimulationStateName(run_result->simulation.state));
+    printf("Code:                      %d\n", run_result->simulation.code);
+    printf("Stage:                     %s\n", run_result->simulation.stage);
+    printf("Message:                   %s\n", run_result->simulation.message);
+    printf("SCHED_FIFO active:         %s\n", run_result->simulation.stats.sched_fifo_active ? "yes" : "no");
+    printf("Completed steps:           %llu\n", (unsigned long long)run_result->simulation.stats.completed_steps);
+    printf("Deadline misses:           %llu\n", (unsigned long long)run_result->simulation.stats.deadline_misses);
+    printf("Unused releases:           %llu\n", (unsigned long long)run_result->simulation.stats.unused_releases);
+    printf("Max FMU computation time:  %.6f ms\n", run_result->simulation.stats.max_computation_s * 1000.0);
+    printf("Max deadline lateness:     %.6f ms\n", run_result->simulation.stats.max_lateness_s * 1000.0);
     if (plot_started) printf("Dropped plot samples:      %llu\n", (unsigned long long)sample_queue_dropped(&plot_queue));
     printf("=============================\n\n");
-    PrintLoggingResult(&run_result.logging);
-    return rc;
+    PrintLoggingResult(&run_result->logging);
+    return rc == EXECUTION_SESSION_OK ? 0 : -1;
 }
 
 static void ConvertClosedLog(AppConfig *config, const char *binary_path, bool log_closed) {
@@ -595,10 +574,10 @@ int main(void) {
     signal(SIGTERM, signal_handler);
     signal(SIGPIPE, SIG_IGN);
 
-    AppConfig config;
-    FmuModel model;
-    app_config_set_defaults(&config);
-    fmu_model_init(&model);
+    execution_session_t session;
+    ExecutionSessionInit(&session);
+    AppConfig *config = &session.config;
+    FmuModel *model = &session.model;
     char last_log_path[PATH_LEN] = {0};
     bool last_log_closed = false;
 
@@ -609,21 +588,21 @@ int main(void) {
         print_menu();
         int option = read_int("Option: ", -1);
         switch (option) {
-            case 1: (void)load_fmu_menu(&model, &config); break;
-            case 2: if (model.fmu) list_outputs(&model); else printf("Load an FMU first.\n"); break;
-            case 3: if (model.fmu) select_outputs(&model, &config); else printf("Load an FMU first.\n"); break;
-            case 4: configure_timing(&config); break;
-            case 5: configure_realtime(&config); break;
-            case 6: ConfigureBinaryLogging(&config); break;
-            case 7: configure_plot(&config); break;
-            case 8: app_config_print(&config); break;
-            case 9: (void)run_simulation(&model, &config, last_log_path, &last_log_closed); break;
-            case 10: ConvertClosedLog(&config, last_log_path, last_log_closed); break;
-            case 11: if (model.fmu) list_inputs(&model); else printf("Load an FMU first.\n"); break;
-            case 12: (void)load_profile_menu(&model, &config); break;
-            case 13: configure_daqc_timeout(&config); break;
-            case 14: ConfigureDaqcLink(&config); break;
-            case 0: fmu_model_unload(&model); return 0;
+            case 1: (void)load_fmu_menu(model, config); break;
+            case 2: if (model->fmu) list_outputs(model); else printf("Load an FMU first.\n"); break;
+            case 3: if (model->fmu) select_outputs(model, config); else printf("Load an FMU first.\n"); break;
+            case 4: configure_timing(config); break;
+            case 5: configure_realtime(config); break;
+            case 6: ConfigureBinaryLogging(config); break;
+            case 7: configure_plot(config); break;
+            case 8: app_config_print(config); break;
+            case 9: (void)run_simulation(&session, last_log_path, &last_log_closed); break;
+            case 10: ConvertClosedLog(config, last_log_path, last_log_closed); break;
+            case 11: if (model->fmu) list_inputs(model); else printf("Load an FMU first.\n"); break;
+            case 12: (void)load_profile_menu(model, config); break;
+            case 13: configure_daqc_timeout(config); break;
+            case 14: ConfigureDaqcLink(config); break;
+            case 0: ExecutionSessionDestroy(&session); return 0;
             default: printf("Invalid option.\n"); break;
         }
     }
