@@ -245,6 +245,15 @@ static void configure_timing(AppConfig *config) {
     config->stop_time_s = stop_time_s;
 }
 
+static void configure_daqc_timeout(AppConfig *config) {
+    const int timeout_ms = read_int("DAQC CONFIG confirmation timeout in milliseconds: ", (int)config->daqc_config_timeout_ms);
+    if (timeout_ms <= 0) {
+        printf("DAQC CONFIG confirmation timeout must be positive.\n");
+        return;
+    }
+    config->daqc_config_timeout_ms = (uint32_t)timeout_ms;
+}
+
 static void configure_realtime(AppConfig *config) {
     config->rt_priority = read_int("SCHED_FIFO priority (1..99): ", config->rt_priority);
     if (config->rt_priority < 1) config->rt_priority = 1;
@@ -418,6 +427,7 @@ static void ConvertClosedLog(AppConfig *config, const char *binary_path, bool lo
 static void print_menu(void) {
     printf("1) Load/import FMU\n");
     printf("12) Load YAML DAQC profile\n");
+    printf("13) Configure DAQC CONFIG confirmation timeout\n");
     printf("2) List numeric FMU outputs\n");
     printf("11) List numeric FMU inputs\n");
     printf("3) Select outputs for binary log/plot\n");
@@ -462,6 +472,7 @@ int main(void) {
             case 10: ConvertClosedLog(&config, last_log_path, last_log_closed); break;
             case 11: if (model.fmu) list_inputs(&model); else printf("Load an FMU first.\n"); break;
             case 12: (void)load_profile_menu(&model, &config); break;
+            case 13: configure_daqc_timeout(&config); break;
             case 0: fmu_model_unload(&model); return 0;
             default: printf("Invalid option.\n"); break;
         }

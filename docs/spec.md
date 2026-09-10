@@ -195,7 +195,7 @@ A plataforma deve suportar CONFIG no protocolo próprio, com SYNC de dois bytes 
 
 **Critério de aceitação proposto (V-F-18; HOST + bancada):** Vetores CONFIG com SYNC/MID/COMMAND definidos; usar bytes SYNC 59 72, COMMAND/STATUS uint8 e quadros 4/5 bytes. Confirmar idempotência, estado efetivo e prioridade sobre DATA; STATUS usa códigos COMMAND, não MID.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** prazo agregado/tentativas de CONFIG serão medidos; base Q-02 consolidada.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Configuração confirmada:** prazo agregado de CONFIG é configurável, com valor inicial de 10 ms e transferências individuais de no máximo 5 ms; Play só inicia depois da confirmação STREAMING. **Pendência:** medir esse valor no enlace físico.
 
 ### REQ-F-19 — Comunicação de Streaming com a DAQC
 

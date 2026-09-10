@@ -94,6 +94,11 @@ daq_coordinator_status_t DaqCoordinatorReceive(daq_coordinator_t *coordinator, c
         ? DAQ_COORDINATOR_OK : DAQ_COORDINATOR_PROTOCOL;
 }
 
+daq_coordinator_status_t DaqCoordinatorGetMode(daq_coordinator_t *coordinator, daq_link_mode_t *mode) {
+    if (!coordinator || !coordinator->initialized || !mode) return DAQ_COORDINATOR_INVALID_ARGUMENT;
+    return DaqLinkStateGetMode(&coordinator->link_state, mode) == DAQ_LINK_OK ? DAQ_COORDINATOR_OK : DAQ_COORDINATOR_STATE;
+}
+
 daq_coordinator_status_t DaqCoordinatorQueueCommand(daq_coordinator_t *coordinator, daq_protocol_command_t command) {
     if (!coordinator || !coordinator->initialized || !IsCommandValid(command)) {
         return DAQ_COORDINATOR_INVALID_ARGUMENT;

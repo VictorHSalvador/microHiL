@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
     AppConfig config;
     app_config_set_defaults(&config);
     Require(app_config_timing_is_valid(&config), "default timing must be valid");
+    Require(config.daqc_config_timeout_ms == 10U, "default DAQC CONFIG timeout must be 10 ms");
     config.step_size_s = 0.0;
     Require(!app_config_timing_is_valid(&config), "zero step must be rejected");
     config.step_size_s = -0.1;

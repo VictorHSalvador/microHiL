@@ -64,6 +64,7 @@ typedef enum {
 daq_coordinator_status_t DaqCoordinatorInit(daq_coordinator_t *coordinator, const daq_coordinator_config_t *config);
 void DaqCoordinatorDestroy(daq_coordinator_t *coordinator);
 daq_coordinator_status_t DaqCoordinatorReceive(daq_coordinator_t *coordinator, const uint8_t *bytes, size_t byte_count);
+daq_coordinator_status_t DaqCoordinatorGetMode(daq_coordinator_t *coordinator, daq_link_mode_t *mode);
 daq_coordinator_status_t DaqCoordinatorQueueCommand(daq_coordinator_t *coordinator, daq_protocol_command_t command);
 daq_coordinator_status_t DaqCoordinatorPublishOutput(daq_coordinator_t *coordinator, uint16_t sequence, const uint8_t *payload, size_t payload_size);
 daq_coordinator_status_t DaqCoordinatorQueueXrce(daq_coordinator_t *coordinator, const uint8_t *payload, size_t payload_size);

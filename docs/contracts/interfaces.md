@@ -129,18 +129,18 @@ Invalidade numérica é por canal no host, separada de corrupção do quadro. Na
 |---|---|
 | Inicialização do serviço/firmware | DISABLE, sem DATA; recepção CONFIG permanece ativa |
 | ENABLE válido | Entra em ENABLE/IDLE, sem DATA; não reinicia a FMU por iniciativa do firmware |
-| Play | Host valida perfil/schema, limpa mailboxes/sequências, inicializa FMU e prepara outputs iniciais válidos; solicita STREAMING e só publica atuação após confirmação |
+| Play | Requer DAQC em ENABLE; host valida perfil/schema, limpa mailboxes/sequências, inicializa FMU e prepara outputs iniciais válidos; solicita ENABLE→STREAMING e só inicia a thread de simulação/publica atuação após confirmação |
 | Primeiro output da execução | Escrito após STREAMING a partir da FMU inicializada; não copiar cache de execução anterior |
 | STREAMING repetido sem saída intermediária do estado | Confirmar estado sem reiniciar sequência, relógios ou outputs; comando idempotente |
-| Fim/Stop/Error do host | Congelar produção, invalidar DATA pendente, solicitar saída de streaming com zero físico e aguardar confirmação fora do núcleo |
+| Fim/Stop/Error do host | Congelar produção, invalidar DATA pendente, solicitar STREAMING→DISABLE com zero físico e aguardar confirmação fora do núcleo |
 | ENABLE recebido durante STREAMING | Adaptação de STOP_STREAM/ENABLE da referência: zero físico coordenado, parar DATA, limpar mailboxes e confirmar ENABLE |
 | DISABLE explícito | Zero físico coordenado quando houver execução ativa, parar DATA, limpar mailboxes e confirmar DISABLE; manter parser disponível |
 | 60 s sem avanço de confirmação de leitura | Desativação local conforme F-27; não confundir esse evento com zeramento coordenado pedido pelo host |
 | Reinício/reconexão | DISABLE, nova validação de configuração e sequências reiniciadas; nunca retomar automaticamente atuação ou cache antigo |
 
-Não copiar o quarto comando STOP_STREAM de RaspDAQ: três COMMANDs MICROHIL já permitem mapear parada normal para ENABLE e fechamento para DISABLE. Estado reportado é o efetivo, não o comando simplesmente ecoado. Comando desconhecido é rejeitado sem mudar estado; diagnóstico precisa da extensão de resposta ou estado divergente, não de um valor oficial inventado dentro de STATUS.
+Não copiar o quarto comando STOP_STREAM de RaspDAQ: três COMMANDs MICROHIL já permitem mapear Stop, término e Error para DISABLE. ENABLE permanece um estado preparado, anterior ao Play. Estado reportado é o efetivo, não o comando simplesmente ecoado. Comando desconhecido é rejeitado sem mudar estado; diagnóstico precisa da extensão de resposta ou estado divergente, não de um valor oficial inventado dentro de STATUS.
 
-CONFIG é idempotente e confirmado pelo estado efetivo. Antes de mudar para STREAMING, o dono do enlace descarta fragmentos e DATA pendentes e redefine as sequências; DATA fora de STREAMING é rejeitado. O host pode repetir CONFIG dentro de um prazo agregado limitado, sem retransmitir DATA. Limite de tentativas e prazo agregado são parâmetros a medir, distintos do timeout de no máximo 5 ms por transferência. Nenhum worker mantém bloqueio ilimitado esperando confirmação.
+CONFIG é idempotente e confirmado pelo estado efetivo. Antes de mudar para STREAMING, o dono do enlace descarta fragmentos e DATA pendentes e redefine as sequências; DATA fora de STREAMING é rejeitado. O prazo agregado de confirmação é configurável e inicia em 10 ms. O host tenta CONFIG no início e pode repetir após 5 ms, sem retransmitir DATA; se não houver confirmação até o prazo, Play não cria a thread de simulação e Stop/Error informa a falta de confirmação. O prazo agregado é distinto do timeout de no máximo 5 ms por transferência. Nenhum worker mantém bloqueio ilimitado esperando confirmação.
 
 ## IF-QUEUES — Filas, ownership e prioridades
 

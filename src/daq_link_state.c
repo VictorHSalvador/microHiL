@@ -56,6 +56,14 @@ daq_link_status_t DaqLinkStateConfirm(daq_link_state_t *state, daq_protocol_comm
     return Unlock(state);
 }
 
+daq_link_status_t DaqLinkStateGetMode(daq_link_state_t *state, daq_link_mode_t *mode) {
+    if (!state || !state->initialized || !mode) return DAQ_LINK_INVALID_ARGUMENT;
+    const daq_link_status_t lock_status = Lock(state);
+    if (lock_status != DAQ_LINK_OK) return lock_status;
+    *mode = state->mode;
+    return Unlock(state);
+}
+
 daq_link_status_t DaqLinkStatePublishOutput(daq_link_state_t *state, uint16_t sequence, const uint8_t *payload, size_t payload_size) {
     if (!state || !state->initialized || (payload_size > 0U && !payload) || payload_size > DAQ_PROTOCOL_MAX_DATA_PAYLOAD) {
         return DAQ_LINK_INVALID_ARGUMENT;

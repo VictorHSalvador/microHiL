@@ -103,6 +103,10 @@ A mensagem `DaqcErrors` contém flags binárias para ROS, comunicação, FMU, pe
 
 Em 10.09.2026, o usuário confirmou que CONFIG é a única autoridade das transições DISABLE, ENABLE e STREAMING no enlace crítico. `DaqcSetup.command` deve coincidir com o estado já efetivo e confirma, pelo caminho ROS, a seleção do perfil e a configuração ADC/PWM. A DAQC rejeita uma divergência e publica o diagnóstico binário apropriado; não há arbitragem por ordem de chegada entre duas autoridades. Essa separação mantém ROS fora do caminho crítico de CONFIG/DATA e evita que dois comandos concorram diretamente pelas saídas.
 
+## Ciclo Play/Stop e confirmação CONFIG — 0.19.0
+
+Em 10.09.2026, o usuário definiu que Play envia a mudança ENABLE→STREAMING e só então inicia a simulação. Stop envia STREAMING→DISABLE. O prazo agregado para confirmar CONFIG é configurável pelo operador, com valor inicial de 10 ms; o limite de cada transferência permanece 5 ms. A espera ocorre fora da thread de simulação e uma confirmação ausente impede Play ou é reportada durante o encerramento, sem deslocar o relógio da FMU.
+
 ## Perfil compilado e XRCE HOST — 0.14.0
 
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.

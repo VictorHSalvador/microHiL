@@ -42,6 +42,7 @@ typedef enum {
 daq_link_status_t DaqLinkStateInit(daq_link_state_t *state);
 void DaqLinkStateDestroy(daq_link_state_t *state);
 daq_link_status_t DaqLinkStateConfirm(daq_link_state_t *state, daq_protocol_command_t command, uint8_t status);
+daq_link_status_t DaqLinkStateGetMode(daq_link_state_t *state, daq_link_mode_t *mode);
 daq_link_status_t DaqLinkStatePublishOutput(daq_link_state_t *state, uint16_t sequence, const uint8_t *payload, size_t payload_size);
 daq_link_status_t DaqLinkStateTakeOutput(daq_link_state_t *state, daq_output_mailbox_t *mailbox);
 daq_link_status_t DaqLinkStateAcceptAcquisition(daq_link_state_t *state, uint16_t sequence, bool *accepted);

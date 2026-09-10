@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.18.0**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.19.0**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -64,6 +64,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.17.6 | 10.09.2026 | PATCH | Modo terminal carrega YAML após a FMU, valida/resolve os mapas, constrói schemas, aplica timing do arquivo e exige seleção das saídas mapeadas antes de Play | código HOST, plano, contratos, rastreabilidade, evidência e sdd-versions | Build HOST com FMILibrary e execução manual controlada do menu; DAQC não é iniciada pelo runner e HIL permanece pendente | alterações locais; registrar commit quando criado |
 | 0.17.7 | 10.09.2026 | PATCH | Transporte do firmware passa a ser o único proprietário de TX UART; watchdog STREAMING só renova com avanço modular do READ_ACK | firmware, plano, rastreabilidade, evidência e sdd-versions | Build cruzado ESP-IDF v5.2.6; sem placa, CH340, medição de 60 s, Agent ou HIL | fe8f076 |
 | 0.18.0 | 10.09.2026 | MINOR | CONFIG passa a ser a única autoridade de estado; cliente micro-ROS usa XRCE customizado para setup/state/errors fora de STREAMING | firmware, decisões, arquitetura, ICD, plano, rastreabilidade, evidência e sdd-versions | Build cruzado ESP-IDF v5.2.6; sem placa, Agent, tópico ROS, CH340 ou HIL | f552169 |
+| 0.19.0 | 10.09.2026 | MINOR | Play exige ENABLE→STREAMING e Stop usa STREAMING→DISABLE; confirmação CONFIG tem prazo configurável de 10 ms inicial | SDD, controlador HOST, testes e evidência | Build HOST e 45 CTests; sem TTY físico, ESP32, Agent ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
