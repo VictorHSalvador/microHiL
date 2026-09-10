@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include "common.h"
 #include "input_state.h"
+#include "profile_config.h"
 
 typedef struct {
     char fmu_path[PATH_LEN];
@@ -23,6 +24,11 @@ typedef struct {
     input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
     size_t input_count;
     bool stop_on_invalid_input_limit;
+    char profile_path[PATH_LEN];
+    profile_config_t profile;
+    daq_schema_t acquisition_schema;
+    daq_schema_t actuation_schema;
+    bool profile_loaded;
 } AppConfig;
 
 void app_config_set_defaults(AppConfig *config);

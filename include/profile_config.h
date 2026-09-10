@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 
-#include "app_config.h"
 #include "daq_schema.h"
 
 #define PROFILE_CONFIG_VERSION 1U

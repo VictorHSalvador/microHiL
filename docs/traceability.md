@@ -9,7 +9,7 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-01 | ARCH-CORE / IF-CORE | TASK-003 | src/fmu_model.c; src/main.c; src/app_config.c | I | V-F-01 / HOST | [EV-AUD-03](evidence/audit-2026-09-06/README.md): metadados; sem run |
 | REQ-F-02 | ARCH-IO / IF-CORE | TASK-006 | src/profile_config.c; src/fmu_model.c | P | V-F-02 / HOST + bancada/HIL | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): YAML/FMU e schema de aquisição HOST; sem DAQC ou bancada |
 | REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-F-03 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): schema/codificador HOST; sem enlace ou HIL |
-| REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | Não implementado | A | V-F-04 / HOST + GUI | Sem execução do caso de aceitação |
+| REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | src/main.c; src/profile_config.c | P | V-F-04 / HOST + GUI | [host-cli-yaml-profile-2026-09-10](evidence/host-cli-yaml-profile-2026-09-10.md): fluxo terminal de configuração; GUI e persistência completa pendentes |
 | REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-05 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-06 | ARCH-STATE / IF-CORE | TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-06 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-07 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c; src/run_logging.c | P | V-F-07 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): fechamento/drenagem HOST; sem Stop/FMU/zero físico/HIL |
@@ -22,7 +22,7 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-F-14 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-F-14 / GUI | Sem execução do caso de aceitação |
 | REQ-F-15 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-F-15 / GUI | Sem execução do caso de aceitação |
 | REQ-F-16 | ARCH-GUI | TASK-009 | Não implementado | A | V-F-16 / GUI + alvo | Sem execução do caso de aceitação |
-| REQ-F-17 | ARCH-CORE / IF-CORE | TASK-006, TASK-009 | Não implementado | A | V-F-17 / HOST + GUI | Sem execução do caso de aceitação |
+| REQ-F-17 | ARCH-CORE / IF-CORE | TASK-006, TASK-009 | src/main.c; src/profile_config.c | P | V-F-17 / HOST + GUI | [host-cli-yaml-profile-2026-09-10](evidence/host-cli-yaml-profile-2026-09-10.md): validação YAML/FMU/perfil no terminal; GUI e aplicação DAQC pendentes |
 | REQ-F-18 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-F-18 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-F-19 | ARCH-IO / IF-DAQ | TASK-007 | src/daq_output_bridge.c; src/daq_coordinator.c | P | V-F-19 / HOST + HIL | [host-output-bridge-2026-09-10](evidence/host-output-bridge-2026-09-10.md): mailbox DATA HOST; sem TTY, DAQC ou HIL |
 | REQ-F-20 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-F-20 / HOST + HIL | Sem execução do caso de aceitação |

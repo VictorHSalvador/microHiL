@@ -21,6 +21,7 @@ void app_config_set_defaults(AppConfig *config) {
 void app_config_print(const AppConfig *config) {
     printf("\n=== Current configuration ===\n");
     printf("FMU:                 %s\n", config->fmu_path[0] ? config->fmu_path : "<not loaded>");
+    printf("YAML profile:        %s\n", config->profile_loaded ? config->profile_path : "<not loaded>");
     printf("Step size:           %.9g s (%.3f Hz)\n", config->step_size_s, 1.0 / config->step_size_s);
     printf("Stop time:           %.9g s\n", config->stop_time_s);
     printf("RT policy:           SCHED_FIFO\n");
@@ -37,6 +38,10 @@ void app_config_print(const AppConfig *config) {
     printf("Selected outputs:    %zu\n", config->output_count);
     for (size_t i = 0; i < config->output_count; ++i) printf("  [XML %u] %s\n", config->outputs[i].xml_index, config->outputs[i].name);
     printf("FMU inputs:          %zu\n", config->input_count);
+    if (config->profile_loaded) {
+        printf("DAQC profile ID:     %u\n", config->profile.profile_id);
+        printf("DAQC mappings:       %zu\n", config->profile.mapping_count);
+    }
     printf("Invalid input stop:  %s\n", config->stop_on_invalid_input_limit ? "enabled at 100 steps" : "disabled");
     for (size_t i = 0; i < config->input_count; ++i) {
         printf("  [VR %u] %s\n", config->inputs[i].value_reference, config->inputs[i].input_name);

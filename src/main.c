@@ -163,6 +163,8 @@ static int load_fmu_menu(FmuModel *model, AppConfig *config) {
     if (fmu_model_load(model, path) != 0) return -1;
     snprintf(config->fmu_path, sizeof(config->fmu_path), "%s", path);
     config->output_count = 0;
+    config->profile_loaded = false;
+    config->profile_path[0] = '\0';
     config->input_count = fmu_model_list_numeric_inputs(model, config->inputs, INPUT_STATE_MAX_CHANNELS);
     if (config->input_count > INPUT_STATE_MAX_CHANNELS) {
         fprintf(stderr, "FMU has too many numeric inputs for the current HOST limit.\n");
@@ -172,6 +174,62 @@ static int load_fmu_menu(FmuModel *model, AppConfig *config) {
     printf("Loaded FMI 2.0 Co-Simulation model: %s\n", fmu_model_name(model));
     list_outputs(model);
     list_inputs(model);
+    return 0;
+}
+
+static bool IsMappedOutputSelected(const AppConfig *config, const profile_mapping_t *mapping) {
+    for (size_t index = 0U; index < config->output_count; ++index) {
+        const OutputVariable *output = &config->outputs[index];
+        if (output->fmu_index == mapping->fmu_index && output->value_reference == mapping->value_reference && output->type == mapping->type) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool ProfileOutputsAreSelected(const AppConfig *config) {
+    for (size_t index = 0U; index < config->profile.mapping_count; ++index) {
+        const profile_mapping_t *mapping = &config->profile.mappings[index];
+        if (!mapping->is_input && !IsMappedOutputSelected(config, mapping)) {
+            printf("Mapped DAQC output is not selected: %s (%s).\n", mapping->variable, mapping->channel);
+            return false;
+        }
+    }
+    return true;
+}
+
+static int load_profile_menu(FmuModel *model, AppConfig *config) {
+    if (!model->fmu) {
+        printf("Load an FMU first.\n");
+        return -1;
+    }
+    char path[PATH_LEN];
+    profile_config_t candidate;
+    daq_schema_t acquisition_schema;
+    daq_schema_t actuation_schema;
+    read_line("YAML profile path: ", path, sizeof(path));
+    if (!path[0]) return -1;
+    if (ProfileConfigLoadYaml(path, &candidate) != PROFILE_CONFIG_OK) {
+        printf("Could not load the YAML profile.\n");
+        return -1;
+    }
+    if (fmu_model_resolve_profile_mappings(model, &candidate) != 0) {
+        printf("YAML mappings are incompatible with the loaded FMU.\n");
+        return -1;
+    }
+    if (ProfileConfigBuildAcquisitionSchema(&candidate, &acquisition_schema) != PROFILE_CONFIG_OK ||
+        ProfileConfigBuildActuationSchema(&candidate, &actuation_schema) != PROFILE_CONFIG_OK) {
+        printf("YAML mappings are incompatible with the ESP32 profile.\n");
+        return -1;
+    }
+    config->profile = candidate;
+    config->acquisition_schema = acquisition_schema;
+    config->actuation_schema = actuation_schema;
+    config->step_size_s = candidate.step_size_s;
+    config->stop_time_s = candidate.stop_time_s;
+    config->profile_loaded = true;
+    snprintf(config->profile_path, sizeof(config->profile_path), "%s", path);
+    printf("Loaded YAML profile %u with %zu mapping(s). Timing was updated from the profile.\n", candidate.profile_id, candidate.mapping_count);
     return 0;
 }
 
@@ -251,6 +309,10 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
     }
     if (config->output_count == 0) {
         printf("Select at least one output first.\n");
+        return -1;
+    }
+    if (config->profile_loaded && !ProfileOutputsAreSelected(config)) {
+        printf("Select every FMU output mapped to the DAQC before starting the simulation.\n");
         return -1;
     }
 
@@ -355,6 +417,7 @@ static void ConvertClosedLog(AppConfig *config, const char *binary_path, bool lo
 
 static void print_menu(void) {
     printf("1) Load/import FMU\n");
+    printf("12) Load YAML DAQC profile\n");
     printf("2) List numeric FMU outputs\n");
     printf("11) List numeric FMU inputs\n");
     printf("3) Select outputs for binary log/plot\n");
@@ -398,6 +461,7 @@ int main(void) {
             case 9: (void)run_simulation(&model, &config, last_log_path, &last_log_closed); break;
             case 10: ConvertClosedLog(&config, last_log_path, last_log_closed); break;
             case 11: if (model.fmu) list_inputs(&model); else printf("Load an FMU first.\n"); break;
+            case 12: (void)load_profile_menu(&model, &config); break;
             case 0: fmu_model_unload(&model); return 0;
             default: printf("Invalid option.\n"); break;
         }
