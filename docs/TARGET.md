@@ -17,7 +17,7 @@ Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponi
 | Módulo | Blindagem/antena PCB no relato | Modelo comercial e conexões adicionais pendentes |
 | Host produto | Raspberry Pi 4 com 2 GB, confirmado pelo usuário | Arquitetura do SO, kernel e recursos reservados pendentes; etapa inicial em máquina Linux Ubuntu 22.04/ROS 2 Humble |
 | Host auditado | Ubuntu 22.04.5, x86-64, kernel 6.8.0-138-generic | Não representa o alvo Raspberry Pi |
-| Software alvo | ROS 2 Humble, FMILibrary, Qt 6; ESP-IDF v4.4.8 e ramos Humble de micro-ROS | O componente Humble atual declara ensaios com ESP-IDF 5.2…6.0, não 4.4.8; decisão de compatibilidade pendente antes do firmware |
+| Software alvo | ROS 2 Humble, FMILibrary, Qt 6; ESP-IDF v5.2.6 e ramos Humble de micro-ROS | ESP32 clássico é alvo listado pelo ESP-IDF 5.2 e pelo componente Humble; build integrado e placa continuam pendentes |
 
 ## Evidência do host de build
 
@@ -48,7 +48,7 @@ Sinais externos de processo, precisão ADC, tensão útil DAC e estado das saíd
 
 Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. O coordenador C abre exclusivamente o dispositivo Linux `/dev/ttyUSB*` e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. MID 04 alimenta o transporte customizado do Micro-ROS Agent; nenhum agente serial concorrente abre a porta.
 
-A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial. O setup e Agent Humble tiveram build HOST limpo em 09.09.2026, mas o componente ESP-IDF Humble atual declara testes com ESP-IDF 5.2…6.0, não com a baseline DEC-006 de 4.4.8. A escolha entre manter 4.4.8 com revisão compatível ou atualizar o ESP-IDF precisa de decisão antes do build integrado e do firmware; não há alegação de compatibilidade na placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/establish-serial-connection.html), [micro_ros_setup Humble](https://github.com/micro-ROS/micro_ros_setup/tree/humble), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble).
+A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial. O setup e Agent Humble tiveram build HOST limpo em 09.09.2026. O usuário selecionou ESP-IDF v5.2.6, da menor série declarada como testada pelo componente Humble atual; ESP32 clássico é alvo listado tanto pelo SDK quanto pelo componente. Isso comprova compatibilidade declarada de versão/alvo, não o build integrado nem o funcionamento na placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/get-started/linux-macos-setup.html), [ESP-IDF ESP32 v5.2](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/), [micro_ros_setup Humble](https://github.com/micro-ROS/micro_ros_setup/tree/humble), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble).
 
 ## Dados necessários para liberar o perfil
 
@@ -83,7 +83,7 @@ A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Lin
 
 ## Baseline de firmware e UART
 
-DEC-006 fixa ESP-IDF v4.4.8. O host ROS é Humble; `micro_ros_setup`, `micro_ros_msgs` e Agent Humble foram compilados no host, enquanto o componente ESP-IDF Humble atual não declara suporte a 4.4.8. Não trocar silenciosamente para ramo rolling ou ESP-IDF 5/6: a incompatibilidade observada exige decisão explícita e somente então o commit do componente será fixado como baseline de firmware.
+DEC-006 fixa ESP-IDF **v5.2.6** (`9ef24e3e2a2c96e720d83c574a3f8699177573da`), tag oficial da série 5.2 escolhida pelo usuário. O comando `idf.py --list-targets` deste SDK listou `esp32` no host em 09.09.2026. `micro_ros_setup`, `micro_ros_msgs` e Agent Humble foram compilados no host; o componente ESP-IDF Humble permanece em `4ddd8c26e721662319ed8af981cb7cdc9ae05382` até o build integrado. Não trocar para ramo rolling ou outra série ESP-IDF sem nova decisão.
 
 A configuração do enlace é UART 8N1, sem RTS/CTS, com baud rate escolhido pelo usuário entre 9.600 e 115.200 bit/s e aplicado simetricamente à ponte e ao ESP32. Essa faixa é um limite de configuração, não uma garantia de throughput: antes de habilitar STREAMING, validar o orçamento do frame e do passo. Para o quadro DATA máximo de 261 bytes, 115.200 bit/s representa aproximadamente 22,66 ms de transmissão serial 8N1; logo, uma execução de 100 Hz só é possível com payloads suficientemente menores e com orçamento completo medido.
 
