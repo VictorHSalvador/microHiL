@@ -6,7 +6,7 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 
 | ID | Confirmado | Detalhamento restante |
 |---|---|---|
-| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data` | Escolher MTU XRCE, implementar transporte integrado e medir custo |
+| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data` | MTU XRCE 128 bytes selecionado; implementar transporte integrado e medir custo |
 | DEC-002 | Qt 6/C++ com Qt Quick/QML desacoplado, terminal debug, prioridade GUI inferior ao núcleo, aparência Mint; log binário tipado e CSV posterior | Validar UX e formatos por fixtures |
 | DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM configurável | Caracterização elétrica continua requisito de bancada |
 | DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; grade fixa, sem compensação; USB ≤5 ms por transferência | Medir orçamento fim a fim por modelo/perfil |
@@ -17,13 +17,13 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 | DEC-009 | Sem pausa; gráfico até 10 Hz, ticks Y configuráveis, janela temporal comum deslizante; fechar destrói histórico, reabrir começa dali; configuração e abertura separadas, abertura antes de Play permitida | Sem conflito pendente com proteção: ela termina em Error |
 | DEC-010 | Preservar APIs Qt; convenção própria C++ e estilo definidos na constituição | Nenhuma decisão de toolkit reaberta |
 | DEC-011 | Importação de FMU separada da configuração binária; diagnosticar incompatibilidades específicas com FMU/DAQ/mapa | Pode identificar e informar capacidades não suportadas no incremento inicial (Q-08 resolvida) |
-| DEC-012 | SYNC 0x7259; MID CONFIG=01, DATA=02, READ_ACK=03, XRCE=04; COMMAND 01/02/03; payload DATA até 256; STATUS só no CONFIG ESP32→host; sem CRC/retransmissão | Cadência do ACK, MTU XRCE e prazo agregado CONFIG serão medidos |
+| DEC-012 | SYNC 0x7259; MID CONFIG=01, DATA=02, READ_ACK=03, XRCE=04; COMMAND 01/02/03; payload DATA até 256; STATUS só no CONFIG ESP32→host; sem CRC/retransmissão | Cadência do ACK e prazo agregado CONFIG serão medidos; MTU XRCE é 128 bytes |
 
 ## Decisões de toolchain e UART — 0.7.4
 
 O host auditado executa Ubuntu 22.04.5 com `ROS_DISTRO=humble`. A baseline original ESP-IDF v4.4.8 foi substituída por decisão do usuário em 09.09.2026: a baseline de firmware passa a ESP-IDF **v5.2.6**, tag oficial que pertence à série 5.2 selecionada por ser a menor declarada como testada pelo componente micro-ROS Humble atual. O ESP32 clássico é alvo suportado pelo ESP-IDF 5.2 e é listado pelo componente. `micro_ros_setup`, componente ESP-IDF e Agent permanecem nos ramos Humble. A compatibilidade integrada ainda requer build reproduzível e ensaio na placa.
 
-A UART da ponte CH340 é configurável de 9.600 a 115.200 bit/s, com 8N1 e RTS/CTS desabilitado. A escolha de taxa é uma propriedade do perfil/enlace e deve ser aplicada nos dois extremos antes de STREAMING. O limite superior não garante a meta de 100 Hz: um DATA de 261 bytes em 115.200 bit/s ocupa aproximadamente 22,66 ms no fio. A validação pré-Play e os ensaios devem rejeitar uma configuração cujo orçamento observado não caiba no passo, sem mudar `h` ou recuperar etapas.
+A UART da ponte CH340 é configurável de 9.600 a 152.000 bit/s, com 8N1 e RTS/CTS desabilitado. A baseline selecionada é 152.000 bit/s e deve ser aplicada nos dois extremos antes de STREAMING. Como não é uma taxa POSIX convencional, o host exigirá configuração Linux específica e confirmação da taxa efetiva; CH340–ESP32 ainda requer ensaio em placa. O limite superior não garante a meta de 100 Hz: um DATA de 261 bytes em 152.000 bit/s ocupa aproximadamente 17,17 ms no fio. A validação pré-Play e os ensaios devem rejeitar uma configuração cujo orçamento observado não caiba no passo, sem mudar `h` ou recuperar etapas.
 
 RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos de controle de fluxo e não comprovam consumo pelo host; READ_ACK continua sendo a confirmação cumulativa requerida por F-27.
 
@@ -57,14 +57,18 @@ RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos d
 
 | ID | Contrato consolidado | Parâmetro/evidência restante |
 |---|---|---|
-| Q-01 | RaspDAQ tem rclpy/FunctionFS; MICROHIL acrescenta MID 04 XRCE sob coordenador único | Fixar micro-ROS/agent, MTU, fragmentação, QoS e medir interferência |
+| Q-01 | RaspDAQ tem rclpy/FunctionFS; MICROHIL acrescenta MID 04 XRCE sob coordenador único | Fixar micro-ROS/Agent, MTU XRCE 128, fragmentação, QoS e medir interferência |
 | Q-02 | Consolidado com o serviço RaspDAQ: little-endian, SYNC 59 72; CONFIG 4/5 bytes, STATUS uint8 só no retorno CONFIG; DATA base com SEQ e N fixo por direção | Base definida em ADR-003; não repetir pergunta de ordem/tamanho/STATUS. Extensões têm status próprio |
 | Q-05 | Configuração ADC/PWM segundo opções/limites do TARGET e validação antes de Play | Caracterizar circuito, faixa útil e combinações no alvo |
 | Q-06 | Última atualização na inserção FMI; leitor próprio; ausência separada; próximo instante fixo; DATA perdido segue adiante | Medir scheduler, timeout e orçamento fim a fim |
 | Q-07 | IF-LOG tipado/versionado; configuração binária separada | Implementar fixtures e vetores de round-trip/corrupção |
 | Q-09 | READ_ACK 5 bytes com SEQ uint16; sem sessão/CRC/retransmissão; 60 s por relógio monotônico | Escolher cadência dentro do orçamento e medir tolerância sob saturação |
 
-Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. Restam detalhamentos do ICD, versões e critérios de ensaio; não são novas perguntas sobre escolhas já confirmadas.
+Respostas 1…5 e esclarecimento de grade fixa foram incorporados. Não reabrir seleção por passo, ausência separada, configuração ADC/PWM, zero físico no fim, restart pela FMU ou política temporal. Restam enumeração física do perfil, implementação integrada e critérios de ensaio; não são novas perguntas sobre escolhas já confirmadas.
+
+## Parâmetros de enlace selecionados — revisão 0.11
+
+O usuário selecionou UART **152.000 bit/s** como baseline e MTU XRCE **128 bytes**. São decisões de configuração, não evidência de operação. No fio, um frame XRCE completo tem 133 bytes (`SYNC`, `MID`, `LENGTH` e payload), ocupando aproximadamente 8,75 ms a 8N1. O escalonador TX deve preservar a prioridade de CONFIG, READ_ACK e DATA; XRCE continua best effort e pode ser descartado antes de atrasar tráfego crítico. A implementação TTY atual não aceita 152.000 bit/s e será corrigida e verificada em HOST; a taxa efetiva da ponte CH340 e da placa ainda precisa de ensaio físico.
 ## Correção de direção e uso dos núcleos
 
 Mundo real → AI/DI DAQC → USB → host → input FMU é aquisição; output FMU → USB → AO/DO/PWM DAQC → mundo real é atuação. “Saída da DAQC” na GUI não deve designar ambiguamente o canal de aquisição com erro: informar canal físico adquirido e input FMU mapeado. A redação 0.3 que mandava zerar atuadores por ausência de host foi substituída, não mantida como política adicional.
@@ -93,4 +97,4 @@ O README desse commit do componente declara testes para ESP-IDF 5.2, 5.3, 5.4, 5
 
 O usuário definiu os tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data`. A interface detalhada está no [IF-ROS](contracts/interfaces.md#if-ros--tópicos-micro-ros-e-mensagens-por-perfil). Setup e state usam comando/estado `uint8` e identificador de perfil `uint32`; errors usa flags binárias. `/daqc_data` é telemetria não crítica por perfil e não substitui DATA MID 02.
 
-Foi definida a mensagem `DaqcErrors` com flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. A telemetria ESP32 aguarda a enumeração aprovada dos I/O e nomes dos campos: não usar GPIOs ou capacidades possíveis como se fossem o perfil simultâneo. MTU XRCE continua pendente de escolha do usuário.
+Foi definida a mensagem `DaqcErrors` com flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. A telemetria ESP32 aguarda a enumeração aprovada dos I/O e nomes dos campos: não usar GPIOs ou capacidades possíveis como se fossem o perfil simultâneo. MTU XRCE de 128 bytes foi escolhido pelo usuário. Cliente, Agent customizado e buffers devem usar o mesmo valor; a enumeração física dos I/O ESP32 continua pendente.

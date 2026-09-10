@@ -39,7 +39,7 @@ Outputs da FMU seguem o caminho de atuação. DATA é aplicado/transmitido somen
 
 **U:** placa informada usa CH340/CH341, VID:PID 1a86:7523, conectando USB do host à UART do ESP32. Os VID/PID 1d6b:0104 e caminhos ep0/ep1/ep2 do RaspDAQ pertencem ao gadget Linux, não à placa atual. O coordenador abre um único `/dev/ttyUSB*`, configura 8N1/baud aprovado e preserva a política de reset fora de STREAMING. Não abrir um segundo processo, agente serial ou cliente libusb para consumir os mesmos bytes.
 
-RaspDAQ não fornece inicialização CH340. A referência técnica complementar é o [driver CH341 Linux v6.8](https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/usb/serial/ch341.c), sem copiar código licenciado por inferência de compatibilidade. UART usa 8N1, RTS/CTS desabilitado e baud rate configurável de 9.600 a 115.200 bit/s, aplicado antes de STREAMING nos dois extremos. Medir a combinação de payload, placa, clock e firmware; 200 Hz no RaspDAQ não prova essa cadência no ESP32. Toda transferência MICROHIL permanece com timeout ≤5 ms; os 200/1000 ms do CLI de referência não são adotados.
+RaspDAQ não fornece inicialização CH340. A referência técnica complementar é o [driver CH341 Linux v6.8](https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/usb/serial/ch341.c), sem copiar código licenciado por inferência de compatibilidade. UART usa 8N1, RTS/CTS desabilitado e baud rate configurável de 9.600 a 152.000 bit/s, aplicado antes de STREAMING nos dois extremos; a baseline selecionada é 152.000 bit/s. Medir a combinação de payload, placa, clock e firmware; 200 Hz no RaspDAQ não prova essa cadência no ESP32. Toda transferência MICROHIL permanece com timeout ≤5 ms; os 200/1000 ms do CLI de referência não são adotados.
 
 ## IF-WIRE-BASE — Formato derivado de RaspDAQ
 
@@ -167,7 +167,7 @@ O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent
 
 Cada perfil possui uma mensagem de telemetria própria, não uma lista dinâmica. Ela contém todos os I/O habilitados do perfil, usando nomes de I/O como campos; digitais usam `uint8` limitado a 0/1 e analógicos usam `float32`. O perfil ESP32 ainda é um catálogo configurável, sem nomes concretos de canais simultaneamente aprovados. Portanto `Esp32Data.msg` não será inventada antes de a configuração do perfil enumerar os I/O e seus nomes. A telemetria é best effort e não carrega a decisão de atuação nem altera a cadência de DATA.
 
-O MTU XRCE continua pendente de decisão. Cliente, transporte customizado no Agent, buffers e testes devem usar o mesmo valor. A fragmentação XRCE é permitida acima desse limite, mas não cria prioridade sobre CONFIG, READ_ACK ou DATA.
+O MTU XRCE selecionado é 128 bytes. Cliente, transporte customizado no Agent, buffers e testes devem usar o mesmo valor. A fragmentação XRCE é permitida acima desse limite, mas não cria prioridade sobre CONFIG, READ_ACK ou DATA. Um frame XRCE iniciado não é intercalado; por isso, em 152.000 bit/s, o pior quadro de 133 bytes ocupa cerca de 8,75 ms no fio e sua emissão permanece best effort, sujeita ao orçamento medido do STREAMING.
 
 ## IF-LOG — Registro binário e configuração: contrato HOST, não código RaspDAQ
 

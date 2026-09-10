@@ -10,7 +10,7 @@ Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponi
 | Identificador provisório | DAQC-PROT-ESP32-DEVKIT-30P-USB-C | Identifica protótipo, não perfil aprovado de produto |
 | MCU | ESP32-D0WDQ5, revisão 3, informado por esptool | Preservar saída bruta antes de consolidar nomenclatura comercial/ECO |
 | CPU/cristal | Dual-core, capacidade até 240 MHz; cristal informado 40 MHz | Clock configurado de firmware ainda não definido |
-| USB–UART | CH340/CH341, VID:PID 1a86:7523; UART 8N1 configurável de 9.600 a 115.200 bit/s; RTS/CTS desabilitado | Confirmar variante, driver, reset e exclusividade do dispositivo; medir capacidade por perfil/passo |
+| USB–UART | CH340/CH341, VID:PID 1a86:7523; UART 8N1 configurável de 9.600 a 152.000 bit/s; baseline selecionada: 152.000 bit/s; RTS/CTS desabilitado | Confirmar variante, driver, reset e exclusividade do dispositivo; medir capacidade por perfil/passo |
 | Porta | /dev/ttyUSB0 na identificação fornecida | Não é identificador persistente nem prova de presença atual |
 | Flash | 4 MB informados | Partições, modo e frequência pendentes |
 | ADC | Referência VRef em eFuse informada | Não comprova calibração de sistema ou exatidão da DAQC |
@@ -83,9 +83,9 @@ A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Lin
 
 ## Baseline de firmware e UART
 
-DEC-006 fixa ESP-IDF **v5.2.6** (`9ef24e3e2a2c96e720d83c574a3f8699177573da`), tag oficial da série 5.2 escolhida pelo usuário. O comando `idf.py --list-targets` deste SDK listou `esp32` no host em 09.09.2026. `micro_ros_setup`, `micro_ros_msgs` e Agent Humble foram compilados no host; o componente ESP-IDF Humble permanece em `4ddd8c26e721662319ed8af981cb7cdc9ae05382` até o build integrado. Não trocar para ramo rolling ou outra série ESP-IDF sem nova decisão.
+DEC-006 fixa ESP-IDF **v5.2.6** (`9ef24e3e2a2c96e720d83c574a3f8699177573da`), tag oficial da série 5.2 escolhida pelo usuário. O comando `idf.py --list-targets` deste SDK listou `esp32` no host em 09.09.2026. `micro_ros_setup`, `micro_ros_msgs` e Agent Humble foram compilados no host; o componente ESP-IDF Humble permanece em `4ddd8c26e721662319ed8af981cb7cdc9ae05382` até o build integrado. Não trocar para ramo rolling ou outra série ESP-IDF sem nova decisão. O MTU XRCE selecionado é 128 bytes; um quadro MID 04 completo de 133 bytes ocupa aproximadamente 8,75 ms em UART 8N1 a 152.000 bit/s. Esse é um limite aritmético do enlace, não uma medição de latência ou deadline.
 
-A configuração do enlace é UART 8N1, sem RTS/CTS, com baud rate escolhido pelo usuário entre 9.600 e 115.200 bit/s e aplicado simetricamente à ponte e ao ESP32. Essa faixa é um limite de configuração, não uma garantia de throughput: antes de habilitar STREAMING, validar o orçamento do frame e do passo. Para o quadro DATA máximo de 261 bytes, 115.200 bit/s representa aproximadamente 22,66 ms de transmissão serial 8N1; logo, uma execução de 100 Hz só é possível com payloads suficientemente menores e com orçamento completo medido.
+A configuração do enlace é UART 8N1, sem RTS/CTS, configurável de 9.600 a 152.000 bit/s e aplicada simetricamente à ponte e ao ESP32. A baseline selecionada é 152.000 bit/s. Como 152.000 bit/s não é um valor `termios` POSIX convencional, o coordenador host deve configurá-lo por mecanismo Linux apropriado e confirmar a taxa efetiva; a implementação TTY atual ainda não o suporta. A compatibilidade CH340–ESP32 e o erro de taxa exigem ensaio em placa. A faixa não garante throughput: antes de STREAMING, validar o orçamento do frame e do passo. Para o quadro DATA máximo de 261 bytes, 152.000 bit/s representa aproximadamente 17,17 ms de transmissão serial 8N1; logo, uma execução de 100 Hz só é possível com payloads suficientemente menores e com orçamento completo medido.
 
 ## Opções configuráveis do perfil ESP32
 

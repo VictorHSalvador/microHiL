@@ -72,4 +72,6 @@ Patch 0.8.1: o setup, as mensagens e o Agent micro-ROS dos ramos Humble tiveram 
 
 Revisão 0.9: o usuário substituiu ESP-IDF 4.4.8 por **ESP-IDF v5.2.6**, a tag oficial da menor série declarada como testada pelo componente micro-ROS Humble atual. A verificação local do SDK lista o alvo `esp32`, compatível com o ESP32-D0WDQ5 clássico. O build integrado e a validação na placa continuam necessários.
 
-Revisão 0.10: tópicos e mensagens micro-ROS foram definidos: setup, state, errors e data por perfil. O MTU XRCE e a enumeração física do perfil ESP32 permanecem pendentes e não foram convertidos em código.
+Revisão 0.10: tópicos e mensagens micro-ROS foram definidos: setup, state, errors e data por perfil. A enumeração física do perfil ESP32 permanece pendente e não foi convertida em código.
+
+Revisão 0.11: UART 152.000 bit/s e MTU XRCE de 128 bytes foram selecionados como baseline. O host ainda precisa suportar a taxa não padronizada e a ponte CH340–ESP32 precisa de ensaio; XRCE continua best effort e não comprova deadline.
