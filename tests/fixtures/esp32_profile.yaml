@@ -6,12 +6,12 @@ execution:
   stop_time_s: 5.0
 mappings:
   - channel: GPIO32_AI
-    variable: battery_voltage
+    variable: u_real
     type: real
     scale: 1.0
     offset: 0.0
   - channel: GPIO16_DO
-    variable: contactor_enable
+    variable: y_boolean
     type: boolean
     scale: 1.0
     offset: 0.0

@@ -193,6 +193,38 @@ size_t fmu_model_list_numeric_inputs(FmuModel *model, input_channel_descriptor_t
     return count;
 }
 
+int fmu_model_resolve_profile_mappings(FmuModel *model, profile_config_t *config) {
+    if (!model || !model->fmu || !config) return -1;
+    input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
+    OutputVariable outputs[MAX_OUTPUTS];
+    const size_t input_count = fmu_model_list_numeric_inputs(model, inputs, INPUT_STATE_MAX_CHANNELS);
+    const size_t output_count = fmu_model_list_numeric_outputs(model, outputs, MAX_OUTPUTS);
+    for (size_t index = 0U; index < config->mapping_count; ++index) {
+        profile_mapping_t *mapping = &config->mappings[index];
+        mapping->is_input = strstr(mapping->channel, "_AI") != NULL || strstr(mapping->channel, "_DI") != NULL;
+        bool found = false;
+        if (mapping->is_input) {
+            for (size_t candidate = 0U; candidate < input_count; ++candidate) {
+                if (inputs[candidate].type == mapping->type && strcmp(inputs[candidate].input_name, mapping->variable) == 0) {
+                    mapping->value_reference = inputs[candidate].value_reference;
+                    found = true;
+                    break;
+                }
+            }
+        } else {
+            for (size_t candidate = 0U; candidate < output_count; ++candidate) {
+                if (outputs[candidate].type == mapping->type && strcmp(outputs[candidate].name, mapping->variable) == 0) {
+                    mapping->value_reference = outputs[candidate].value_reference;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) return -1;
+    }
+    return 0;
+}
+
 int fmu_model_initialize_cosimulation(FmuModel *model, double start_time_s, double stop_time_s) {
     if (!model || !model->fmu || !model->dll_created) return -1;
 

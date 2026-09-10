@@ -15,6 +15,8 @@ typedef struct {
     NumericType type;
     double scale;
     double offset;
+    uint32_t value_reference;
+    bool is_input;
 } profile_mapping_t;
 
 typedef struct {

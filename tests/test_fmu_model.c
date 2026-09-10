@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "fmu_model.h"
+#include "profile_config.h"
 
 static void Require(bool condition, const char *message) {
     if (!condition) {
@@ -28,7 +29,7 @@ static size_t FindOutput(const OutputVariable *outputs, size_t count, const char
 }
 
 int main(int argc, char **argv) {
-    Require(argc == 2, "expected the fixture FMU path");
+    Require(argc == 3, "expected the fixture FMU and YAML paths");
     FmuModel model;
     input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
     input_value_t values[INPUT_STATE_MAX_CHANNELS] = {0};
@@ -52,6 +53,10 @@ int main(int argc, char **argv) {
     Require(inputs[real_input].type == NUMERIC_REAL && inputs[integer_input].type == NUMERIC_INTEGER && inputs[boolean_input].type == NUMERIC_BOOLEAN,
             "fixture input types were not preserved");
 
+    profile_config_t profile;
+    Require(ProfileConfigLoadYaml(argv[2], &profile) == PROFILE_CONFIG_OK, "could not load the profile fixture");
+    Require(fmu_model_resolve_profile_mappings(&model, &profile) == 0 && profile.mappings[0].is_input && !profile.mappings[1].is_input,
+            "profile mappings were not resolved against the FMU");
     Require(fmu_model_initialize_cosimulation(&model, 0.0, 0.1) == 0, "could not initialize the fixture FMU");
     Require(fmu_model_resolve_input_initial_values(&model, inputs, input_count) == 0, "could not resolve FMU input references");
     values[real_input].real_value = 2.5;
