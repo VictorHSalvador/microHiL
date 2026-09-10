@@ -1,0 +1,7 @@
+uint8 source_is_daqc
+uint8 ros_error
+uint8 communication_error
+uint8 fmu_error
+uint8 profile_error
+uint8 timeout_error
+uint8 invalid_data_error

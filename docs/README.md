@@ -77,3 +77,5 @@ Revisão 0.10: tópicos e mensagens micro-ROS foram definidos: setup, state, err
 Revisão 0.11: UART 152.000 bit/s e MTU XRCE de 128 bytes foram selecionados como baseline. A ponte CH340–ESP32 precisa de ensaio; XRCE continua best effort e não comprova deadline.
 
 Patch 0.11.1: a TTY HOST passou a configurar 152.000 bit/s via `termios2`/`BOTHER` e o codec limita XRCE a 128 bytes. A [evidência HOST](evidence/host-uart-152000-2026-09-09.md) registra 39 testes em pseudo-terminal; não é ensaio da CH340 ou do ESP32.
+
+Patch 0.11.2: o pacote `microhil_interfaces` gerou e inspecionou em ROS 2 Humble as mensagens de setup, state e errors. A [evidência](evidence/host-ros-interfaces-2026-09-09.md) não declara firmware, Agent ou tópicos em execução.
