@@ -8,7 +8,7 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 |---|---|---|---|---|---|---|
 | REQ-F-01 | ARCH-CORE / IF-CORE | TASK-003 | src/fmu_model.c; src/main.c; src/app_config.c | I | V-F-01 / HOST | [EV-AUD-03](evidence/audit-2026-09-06/README.md): metadados; sem run |
 | REQ-F-02 | ARCH-IO / IF-CORE | TASK-006 | src/profile_config.c; src/fmu_model.c | P | V-F-02 / HOST + bancada/HIL | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): YAML/FMU e schema de aquisição HOST; sem DAQC ou bancada |
-| REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | Não implementado | A | V-F-03 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-F-03 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): schema/codificador HOST; sem enlace ou HIL |
 | REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | Não implementado | A | V-F-04 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-05 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-06 | ARCH-STATE / IF-CORE | TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-06 / HOST + GUI | Sem execução do caso de aceitação |
@@ -51,9 +51,9 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-NF-16 | ARCH-IO / IF-CORE | TASK-006, TASK-008 | src/profile_config.c; include/daq_schema.h | P | V-NF-16 / HOST + bancada | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): perfil ESP32 e schema de aquisição HOST; sem extensibilidade completa ou bancada |
 | REQ-NF-17 | ARCH-FW / IF-DAQ | TASK-008 | Não implementado | A | V-NF-17 / Bancada + HIL | Sem execução do caso de aceitação |
 | REQ-NF-18 | ARCH-IO | TASK-001, TASK-007 | Separação modular do build HOST/runner, sem componentes ROS ainda | I | V-NF-18 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): preparação modular, não organização ROS validada |
-| REQ-NF-19 | ARCH-IO / IF-DAQ | TASK-006, TASK-007, TASK-008 | Não implementado | A | V-NF-19 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-NF-19 | ARCH-IO / IF-DAQ | TASK-006, TASK-007, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-NF-19 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): tipos digitais/analógicos do perfil no HOST; sem firmware ou HIL |
 | REQ-NF-20 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-20 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-21 | ARCH-IO / IF-DAQ | TASK-007 | src/profile_config.c; src/daq_schema.c | P | V-NF-21 / HOST + HIL | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): offsets do schema de aquisição HOST; atuação e interoperabilidade pendentes |
+| REQ-NF-21 | ARCH-IO / IF-DAQ | TASK-007 | src/profile_config.c; src/daq_schema.c; src/daq_actuation.c | P | V-NF-21 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): offsets dos dois schemas HOST; interoperabilidade pendente |
 | REQ-NF-22 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-22 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-23 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-23 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-24 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-NF-24 / HOST + HIL | Sem execução do caso de aceitação |

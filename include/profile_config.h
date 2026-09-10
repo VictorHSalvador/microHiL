@@ -40,6 +40,7 @@ typedef enum {
 
 profile_config_status_t ProfileConfigLoadYaml(const char *path, profile_config_t *config);
 profile_config_status_t ProfileConfigBuildAcquisitionSchema(const profile_config_t *config, daq_schema_t *schema);
+profile_config_status_t ProfileConfigBuildActuationSchema(const profile_config_t *config, daq_schema_t *schema);
 const char *ProfileConfigStatusString(profile_config_status_t status);
 
 #endif

@@ -15,3 +15,8 @@ mappings:
     type: boolean
     scale: 1.0
     offset: 0.0
+  - channel: GPIO25_AO
+    variable: y_real
+    type: real
+    scale: 1.0
+    offset: 0.0

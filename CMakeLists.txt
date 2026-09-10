@@ -26,6 +26,7 @@ add_library(microhil_host_components STATIC
     src/app_config.c
     src/binary_logger.c
     src/daq_acquisition.c
+    src/daq_actuation.c
     src/daq_coordinator.c
     src/daq_protocol.c
     src/daq_schema.c

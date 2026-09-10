@@ -99,6 +99,33 @@ static bool BuildAcquisitionField(const profile_mapping_t *mapping, daq_field_t 
     return false;
 }
 
+static bool BuildActuationField(const profile_mapping_t *mapping, daq_field_t *field) {
+    static const acquisition_channel_t channels[] = {
+        {"GPIO16_DO", 16U, DAQ_CHANNEL_DO, DAQ_WIRE_BOOLEAN, 0U, 1U}, {"GPIO17_DO", 17U, DAQ_CHANNEL_DO, DAQ_WIRE_BOOLEAN, 1U, 1U},
+        {"GPIO18_PWM", 18U, DAQ_CHANNEL_PWM, DAQ_WIRE_FLOAT32, 2U, 4U}, {"GPIO19_PWM", 19U, DAQ_CHANNEL_PWM, DAQ_WIRE_FLOAT32, 6U, 4U},
+        {"GPIO21_DO", 21U, DAQ_CHANNEL_DO, DAQ_WIRE_BOOLEAN, 10U, 1U}, {"GPIO22_DO", 22U, DAQ_CHANNEL_DO, DAQ_WIRE_BOOLEAN, 11U, 1U},
+        {"GPIO23_DO", 23U, DAQ_CHANNEL_DO, DAQ_WIRE_BOOLEAN, 12U, 1U}, {"GPIO25_AO", 25U, DAQ_CHANNEL_AO, DAQ_WIRE_FLOAT32, 13U, 4U},
+        {"GPIO26_AO", 26U, DAQ_CHANNEL_AO, DAQ_WIRE_FLOAT32, 17U, 4U}
+    };
+    if (!mapping || !field) return false;
+    for (size_t index = 0U; index < sizeof(channels) / sizeof(channels[0]); ++index) {
+        if (strcmp(mapping->channel, channels[index].name) != 0) continue;
+        *field = (daq_field_t){
+            .gpio = channels[index].gpio,
+            .function = channels[index].function,
+            .wire_type = channels[index].wire_type,
+            .fmu_type = mapping->type,
+            .offset = channels[index].offset,
+            .width = channels[index].width,
+            .scale = mapping->scale,
+            .offset_value = mapping->offset,
+            .fmu_index = mapping->fmu_index
+        };
+        return true;
+    }
+    return false;
+}
+
 static void SortFieldsByOffset(daq_field_t *fields, size_t field_count) {
     for (size_t index = 1U; index < field_count; ++index) {
         daq_field_t current = fields[index];
@@ -190,4 +217,19 @@ profile_config_status_t ProfileConfigBuildAcquisitionSchema(const profile_config
     }
     SortFieldsByOffset(fields, count);
     return DaqSchemaBuildFixedPayload(schema, fields, count, 28U) == DAQ_SCHEMA_OK ? PROFILE_CONFIG_OK : PROFILE_CONFIG_SCHEMA;
+}
+
+profile_config_status_t ProfileConfigBuildActuationSchema(const profile_config_t *config, daq_schema_t *schema) {
+    if (!config || !schema || config->profile_id != 1U) return PROFILE_CONFIG_INVALID_ARGUMENT;
+    daq_field_t fields[9];
+    size_t count = 0U;
+    for (size_t index = 0U; index < config->mapping_count; ++index) {
+        const profile_mapping_t *mapping = &config->mappings[index];
+        if (mapping->is_input) continue;
+        daq_field_t field;
+        if (count == sizeof(fields) / sizeof(fields[0]) || !BuildActuationField(mapping, &field)) return PROFILE_CONFIG_SCHEMA;
+        fields[count++] = field;
+    }
+    SortFieldsByOffset(fields, count);
+    return DaqSchemaBuildFixedPayload(schema, fields, count, 21U) == DAQ_SCHEMA_OK ? PROFILE_CONFIG_OK : PROFILE_CONFIG_SCHEMA;
 }
