@@ -1,5 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 #include "app_config.h"
+#include "daq_coordinator.h"
+#include "daq_output_bridge.h"
+#include "daq_serial_service.h"
+#include "daq_state_control.h"
+#include "daq_xrce_udp_bridge.h"
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+#include "daqc_ros_control.h"
+#endif
 #include "fmu_model.h"
 #include "log_converter.h"
 #include "plotter.h"
@@ -20,6 +28,74 @@
 #define MAX_CANDIDATE_INPUTS 512
 
 static _Atomic bool g_stop_requested = false;
+
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+typedef struct {
+    daq_coordinator_t coordinator;
+    daq_xrce_udp_bridge_t xrce_bridge;
+    daq_serial_service_t serial_service;
+    daqc_ros_control_t ros_control;
+    daq_output_bridge_t output_bridge;
+    bool coordinator_initialized;
+    bool xrce_bridge_started;
+    bool serial_service_started;
+    bool ros_control_initialized;
+} daqc_runtime_t;
+
+static void StopDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config) {
+    if (!runtime) return;
+    if (runtime->coordinator_initialized && runtime->serial_service_started) {
+        daq_link_mode_t mode;
+        if (DaqCoordinatorGetMode(&runtime->coordinator, &mode) == DAQ_COORDINATOR_OK && mode != DAQ_LINK_DISABLED) {
+            (void)DaqStateControlTransition(&runtime->coordinator, mode, DAQ_PROTOCOL_COMMAND_DISABLE, config->daqc_config_timeout_ms);
+        }
+    }
+    if (runtime->serial_service_started) DaqSerialServiceStop(&runtime->serial_service);
+    if (runtime->ros_control_initialized) DaqcRosControlStop(&runtime->ros_control);
+    if (runtime->xrce_bridge_started) DaqXrceUdpBridgeStop(&runtime->xrce_bridge);
+    if (runtime->coordinator_initialized) DaqCoordinatorDestroy(&runtime->coordinator);
+    *runtime = (daqc_runtime_t){0};
+}
+
+static int StartDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config, RtSimulationContext *simulation) {
+    if (!runtime || !config || !simulation || !simulation->input_state_ready || !config->profile_loaded || !config->daqc_device_path[0]) return -1;
+    *runtime = (daqc_runtime_t){0};
+    const daq_coordinator_config_t coordinator_config = {
+        .acquisition_schema = &config->acquisition_schema,
+        .input_state = &simulation->input_state,
+        .xrce_mtu = DAQ_PROTOCOL_XRCE_MTU,
+        .xrce_receive = DaqXrceUdpBridgeReceiveFromDaqc,
+        .xrce_context = &runtime->xrce_bridge,
+    };
+    if (DaqCoordinatorInit(&runtime->coordinator, &coordinator_config) != DAQ_COORDINATOR_OK) goto fail;
+    runtime->coordinator_initialized = true;
+    const daq_xrce_udp_bridge_config_t bridge_config = {.coordinator = &runtime->coordinator, .agent_port = config->daqc_agent_port};
+    if (DaqXrceUdpBridgeStart(&runtime->xrce_bridge, &bridge_config) != DAQ_XRCE_UDP_BRIDGE_OK) goto fail;
+    runtime->xrce_bridge_started = true;
+    const daq_serial_service_config_t serial_config = {
+        .coordinator = &runtime->coordinator,
+        .device_path = config->daqc_device_path,
+        .baud_rate = config->daqc_baud_rate,
+    };
+    if (DaqSerialServiceStart(&runtime->serial_service, &serial_config) != DAQ_SERIAL_SERVICE_OK) goto fail;
+    runtime->serial_service_started = true;
+    if (DaqcRosControlInit(&runtime->ros_control) != DAQC_ROS_CONTROL_OK) goto fail;
+    runtime->ros_control_initialized = true;
+    if (DaqcRosControlStart(&runtime->ros_control) != DAQC_ROS_CONTROL_OK) goto fail;
+    if (DaqStateControlTransition(&runtime->coordinator, DAQ_LINK_DISABLED, DAQ_PROTOCOL_COMMAND_ENABLE, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK ||
+        DaqcRosControlPublishSetup(&runtime->ros_control, DAQ_PROTOCOL_COMMAND_ENABLE, &config->profile, true) != DAQC_ROS_CONTROL_OK ||
+        DaqcRosControlWaitConfiguration(&runtime->ros_control, DAQ_PROTOCOL_COMMAND_ENABLE, config->profile.profile_id, config->daqc_ros_timeout_ms) != DAQC_ROS_CONTROL_OK ||
+        DaqOutputBridgeInit(&runtime->output_bridge, &config->actuation_schema, &runtime->coordinator) != DAQ_OUTPUT_BRIDGE_OK ||
+        DaqStateControlPlay(&runtime->coordinator, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK) {
+        goto fail;
+    }
+    return 0;
+
+fail:
+    StopDaqcRuntime(runtime, config);
+    return -1;
+}
+#endif
 
 static void signal_handler(int signal_number) {
     (void)signal_number;
@@ -252,6 +328,26 @@ static void configure_daqc_timeout(AppConfig *config) {
         return;
     }
     config->daqc_config_timeout_ms = (uint32_t)timeout_ms;
+    const int ros_timeout_ms = read_int("DAQC ROS setup confirmation timeout in milliseconds: ", (int)config->daqc_ros_timeout_ms);
+    if (ros_timeout_ms <= 0) {
+        printf("DAQC ROS setup confirmation timeout must be positive.\n");
+        return;
+    }
+    config->daqc_ros_timeout_ms = (uint32_t)ros_timeout_ms;
+}
+
+static void ConfigureDaqcLink(AppConfig *config) {
+    config->daqc_enabled = read_bool("Enable DAQC integration? [y/n]: ", config->daqc_enabled);
+    if (!config->daqc_enabled) return;
+    char device_path[PATH_LEN];
+    read_line("DAQC TTY path [Enter keeps current]: ", device_path, sizeof(device_path));
+    if (device_path[0]) snprintf(config->daqc_device_path, sizeof(config->daqc_device_path), "%s", device_path);
+    const int agent_port = read_int("Local micro-ROS Agent UDP port [Enter keeps current]: ", (int)config->daqc_agent_port);
+    if (agent_port < 1 || agent_port > 65535) {
+        printf("Agent UDP port must be between 1 and 65535.\n");
+        return;
+    }
+    config->daqc_agent_port = (uint16_t)agent_port;
 }
 
 static void configure_realtime(AppConfig *config) {
@@ -325,6 +421,16 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
         return -1;
     }
 
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    if (config->daqc_enabled) {
+        char realtime_message[160];
+        if (RtSimulationCheckHilRealtime(config, realtime_message, sizeof(realtime_message)) != 0) {
+            printf("DAQC Play requires SCHED_FIFO before streaming: %s.\n", realtime_message);
+            return -1;
+        }
+    }
+#endif
+
     if (app_config_normalize_outputs(config) != 0) {
         printf("Output selection has duplicate XML indices.\n");
         return -1;
@@ -339,6 +445,10 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
 
     PlotterContext plot_context;
     RtSimulationContext sim_context;
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    daqc_runtime_t daqc_runtime;
+    daq_output_bridge_t *output_bridge = NULL;
+#endif
     run_logging_t logging;
     run_result_t run_result;
     log_descriptor_t descriptor;
@@ -349,6 +459,27 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
         printf("Could not initialize the FMU and establish valid input references.\n");
         return -1;
     }
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    if (config->daqc_enabled) {
+        if (!config->profile_loaded || !config->daqc_device_path[0]) {
+            printf("DAQC integration requires a loaded YAML profile and a configured TTY path.\n");
+            RtSimulationAbort(&sim_context);
+            return -1;
+        }
+        if (StartDaqcRuntime(&daqc_runtime, config, &sim_context) != 0) {
+            printf("Could not prepare the DAQC, Agent bridge, or ROS confirmation.\n");
+            RtSimulationAbort(&sim_context);
+            return -1;
+        }
+        output_bridge = &daqc_runtime.output_bridge;
+    }
+#else
+    if (config->daqc_enabled) {
+        printf("This runner was built without ROS 2 DAQC support.\n");
+        RtSimulationAbort(&sim_context);
+        return -1;
+    }
+#endif
     RunLoggingInit(&logging, config->binary_log_enabled);
 
     if (config->binary_log_enabled) {
@@ -370,7 +501,13 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
 
     printf("\nStarting simulation. Press Ctrl+C to request a clean stop.\n");
     int rc = RtSimulationStart(&sim_context, logging.result.started ? &logging : NULL,
-                                 plot_started ? &plot_queue : NULL, &g_stop_requested, &plot_producer_done);
+                                 plot_started ? &plot_queue : NULL,
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+                                 output_bridge,
+#else
+                                 NULL,
+#endif
+                                 &g_stop_requested, &plot_producer_done);
     if (rc != 0) {
         fprintf(stderr, "Could not create simulation thread.\n");
         RunLoggingProducerDone(&logging);
@@ -378,11 +515,17 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
         atomic_store_explicit(&plot_producer_done, true, memory_order_release);
         if (plot_started) plotter_join(&plot_context);
         RtSimulationAbort(&sim_context);
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+        if (config->daqc_enabled) StopDaqcRuntime(&daqc_runtime, config);
+#endif
         PrintLoggingResult(RunLoggingResult(&logging));
         return -1;
     }
 
     rc = RtSimulationJoin(&sim_context);
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    if (config->daqc_enabled) StopDaqcRuntime(&daqc_runtime, config);
+#endif
     RunLoggingFinish(&logging);
     if (plot_started) (void)plotter_join(&plot_context);
     RunResultAggregate(&run_result, &sim_context.run_result, RunLoggingResult(&logging));
@@ -433,6 +576,7 @@ static void print_menu(void) {
     printf("1) Load/import FMU\n");
     printf("12) Load YAML DAQC profile\n");
     printf("13) Configure DAQC CONFIG confirmation timeout\n");
+    printf("14) Configure DAQC link\n");
     printf("2) List numeric FMU outputs\n");
     printf("11) List numeric FMU inputs\n");
     printf("3) Select outputs for binary log/plot\n");
@@ -478,6 +622,7 @@ int main(void) {
             case 11: if (model.fmu) list_inputs(&model); else printf("Load an FMU first.\n"); break;
             case 12: (void)load_profile_menu(&model, &config); break;
             case 13: configure_daqc_timeout(&config); break;
+            case 14: ConfigureDaqcLink(&config); break;
             case 0: fmu_model_unload(&model); return 0;
             default: printf("Invalid option.\n"); break;
         }

@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.22.1**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.23.1**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -72,6 +72,8 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.21.3 | 10.09.2026 | PATCH | Correção do ICD: `DaqcSetup` já transporta somente a configuração ADC/PWM aprovada; mapa e descritores continuam compilados | ICD, README, teste documental e sdd-versions | Correção de consistência documental; não há nova execução | c8ffce2 |
 | 0.22.0 | 10.09.2026 | MINOR | O runner C torna-se nó ROS 2 por `rcl`; controle ROS ocorre em thread própria e Play somente prossegue depois da confirmação DAQC | decisões, arquitetura, ICD, plano, rastreabilidade e sdd-versions | Decisão explícita do usuário; implementação e ensaio pendentes | 1b2bc4f |
 | 0.22.1 | 10.09.2026 | PATCH | Componente `rcl` do runner publica `DaqcSetup` e recebe estado/erros em thread própria, isolado da simulação; prazo ROS de configuração permanece pendente | código HOST, CMake, teste, plano, rastreabilidade, evidence e sdd-versions | Build ROS Humble e CTest 47/47; sem Agent, DAQC, CH340, sessão XRCE ou HIL | 59b1c83 |
+| 0.23.0 | 10.09.2026 | MINOR | Confirmação ROS de `DaqcSetup` recebe prazo inicial configurável de 100 ms, separado de CONFIG crítico de 10 ms e fora da simulação | decisões, arquitetura, ICD, plano, implementação e sdd-versions | Decisão explícita do usuário; implementação registrada em 0.23.1 | alterações locais; registrar commit quando criado |
+| 0.23.1 | 10.09.2026 | PATCH | Runner passa a preparar enlace, confirmar `DaqcSetup`, entrar em STREAMING e conectar a bridge de saída antes de criar a thread FMI; preflight SCHED_FIFO impede Play HiL sem política efetiva | runner HOST, arquitetura, plano, rastreabilidade, evidence e sdd-versions | Build ROS Humble e CTest 47/47; sem Agent, CH340, ESP32, DAQC ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

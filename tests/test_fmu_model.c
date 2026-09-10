@@ -32,12 +32,18 @@ static size_t FindOutput(const OutputVariable *outputs, size_t count, const char
 int main(int argc, char **argv) {
     Require(argc == 3, "expected the fixture FMU and YAML paths");
     FmuModel model;
+    AppConfig invalid_realtime_config;
     input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
     input_value_t values[INPUT_STATE_MAX_CHANNELS] = {0};
     OutputVariable outputs[MAX_OUTPUTS];
     log_value_t output_values[MAX_OUTPUTS] = {0};
 
     fmu_model_init(&model);
+    app_config_set_defaults(&invalid_realtime_config);
+    invalid_realtime_config.rt_priority = 0;
+    char realtime_message[96];
+    Require(RtSimulationCheckHilRealtime(&invalid_realtime_config, realtime_message, sizeof(realtime_message)) != 0,
+            "HiL real-time preflight must reject an invalid priority");
     Require(fmu_model_load(&model, argv[1]) == 0, "could not load the input fixture FMU");
     const size_t input_count = fmu_model_list_numeric_inputs(&model, inputs, INPUT_STATE_MAX_CHANNELS);
     const size_t output_count = fmu_model_list_numeric_outputs(&model, outputs, MAX_OUTPUTS);
@@ -99,7 +105,7 @@ int main(int argc, char **argv) {
     Require(RtSimulationPrepare(&simulation, &model, &config) == 0, "could not prepare the FMU before starting the simulation thread");
     Require(simulation.input_state_ready && simulation.prepared && simulation.stats.completed_steps == 0U,
             "preparation did not leave initialized inputs without executing a simulation step");
-    Require(RtSimulationStart(&simulation, NULL, NULL, &stop_requested, &producer_done) == 0,
+    Require(RtSimulationStart(&simulation, NULL, NULL, NULL, &stop_requested, &producer_done) == 0,
             "could not start a prepared simulation");
     Require(RtSimulationJoin(&simulation) == 0 && simulation.run_result.stats.completed_steps == 2U,
             "prepared simulation did not execute the requested fixed steps");

@@ -39,7 +39,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.22.1**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.23.1**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -100,3 +100,7 @@ Patch 0.21.2: o runner inicializa a FMU e resolve as referências iniciais dos i
 Revisão 0.22: o `fmu_rt_runner` será um nó ROS 2 em C por `rcl`. A publicação e recepção ROS ocorrem em thread de controle própria, sem chamadas FMI, acesso à TTY ou espera no ciclo HiL. O Play aguarda a confirmação de configuração da DAQC antes de solicitar STREAMING e criar a thread de simulação.
 
 Patch 0.22.1: o componente ROS do runner foi materializado e compilado com ROS 2 Humble. Ele inicia a thread `rcl`, publica `DaqcSetup` e armazena `DaqcState`/`DaqcErrors`, mas ainda não está ligado ao ciclo de Play porque o prazo de confirmação ROS precisa ser definido. A [evidência](evidence/host-rcl-control-2026-09-10.md) limita o resultado ao HOST.
+
+Revisão 0.23: a confirmação ROS de `DaqcSetup` inicia em 100 ms e permanece configurável, enquanto CONFIG UART crítico continua com 10 ms. O prazo ROS ocorre uma vez antes de STREAMING e não participa do orçamento FMI.
+
+Patch 0.23.1: em modo DAQC, o runner valida SCHED_FIFO antes de abrir STREAMING, prepara o coordenador/TTY/ponte UDP/nó ROS, confirma ENABLE e a configuração pelo `DaqcState`, e só então inicia a thread FMI. Ao encerrar, solicita DISABLE e encerra os workers. A [evidência](evidence/host-runner-daqc-lifecycle-2026-09-10.md) cobre build e testes HOST, sem declarar que o enlace físico foi exercitado.

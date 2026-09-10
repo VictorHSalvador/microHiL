@@ -25,6 +25,11 @@ typedef struct {
     size_t input_count;
     bool stop_on_invalid_input_limit;
     uint32_t daqc_config_timeout_ms;
+    uint32_t daqc_ros_timeout_ms;
+    bool daqc_enabled;
+    char daqc_device_path[PATH_LEN];
+    unsigned int daqc_baud_rate;
+    uint16_t daqc_agent_port;
     char profile_path[PATH_LEN];
     profile_config_t profile;
     daq_schema_t acquisition_schema;

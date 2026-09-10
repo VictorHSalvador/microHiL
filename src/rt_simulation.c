@@ -62,11 +62,24 @@ static int ConfigureRealtimeThread(RtSimulationContext *context) {
         fprintf(stderr, "Warning: SCHED_FIFO priority %d could not be enabled: %s\n", context->config->rt_priority, strerror(rc));
         fprintf(stderr, "Grant CAP_SYS_NICE to the executable or configure RLIMIT_RTPRIO.\n");
         context->stats.sched_fifo_active = false;
-        return context->config->strict_realtime ? -1 : 0;
+        return (context->config->strict_realtime || context->require_realtime) ? -1 : 0;
     }
 
     context->stats.sched_fifo_active = true;
     return 0;
+}
+
+typedef struct {
+    const AppConfig *config;
+    int result;
+} hil_realtime_check_t;
+
+static void *CheckHilRealtimeThread(void *argument) {
+    hil_realtime_check_t *check = argument;
+    RtSimulationContext context = {.config = check->config};
+    check->result = ConfigureRealtimeThread(&context);
+    if (check->result == 0 && !context.stats.sched_fifo_active) check->result = -1;
+    return NULL;
 }
 
 static void MarkInvalid(log_sample_t *sample, size_t index) {
@@ -212,6 +225,10 @@ static void *SimulationThread(void *arg) {
             goto finish;
         }
         NormalizeLogSample(context->config, &log_sample);
+        if (context->output_bridge && DaqOutputBridgePublish(context->output_bridge, context->config->outputs, log_sample.values, context->config->output_count) != DAQ_OUTPUT_BRIDGE_OK) {
+            SetRunFailure(context, "actuation", "could not publish the FMU output snapshot to the DAQC");
+            goto finish;
+        }
         for (size_t index = 0U; index < context->config->output_count; ++index) plot_sample.values[index] = PlotValue(&log_sample.values[index], context->config->outputs[index].type);
 
         clock_gettime(CLOCK_MONOTONIC, &compute_end);
@@ -271,16 +288,35 @@ int RtSimulationPrepare(RtSimulationContext *context, FmuModel *model, const App
     return 0;
 }
 
+int RtSimulationCheckHilRealtime(const AppConfig *config, char *message, size_t message_size) {
+    if (!config || config->rt_priority < 1 || config->rt_priority > 99 || !message || message_size == 0U) return -1;
+    message[0] = '\0';
+    hil_realtime_check_t check = {.config = config, .result = -1};
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, CheckHilRealtimeThread, &check) != 0 || pthread_join(thread, NULL) != 0) {
+        snprintf(message, message_size, "%s", "could not create the real-time preflight thread");
+        return -1;
+    }
+    if (check.result != 0) {
+        snprintf(message, message_size, "SCHED_FIFO priority %d is unavailable for the HiL simulation thread", config->rt_priority);
+        return -1;
+    }
+    snprintf(message, message_size, "%s", "SCHED_FIFO preflight passed");
+    return 0;
+}
+
 void RtSimulationAbort(RtSimulationContext *context) {
     if (!context || context->thread_started) return;
     ReleasePreparedSimulation(context);
 }
 
-int RtSimulationStart(RtSimulationContext *context, run_logging_t *logging, SampleQueue *plot_queue,
+int RtSimulationStart(RtSimulationContext *context, run_logging_t *logging, SampleQueue *plot_queue, daq_output_bridge_t *output_bridge,
                       _Atomic bool *stop_requested, _Atomic bool *plot_producer_done) {
     if (!context || !context->prepared || context->thread_started || !stop_requested) return -1;
     context->logging = logging;
     context->plot_queue = plot_queue;
+    context->output_bridge = output_bridge;
+    context->require_realtime = output_bridge != NULL;
     context->stop_requested = stop_requested;
     context->plot_producer_done = plot_producer_done;
     context->result = -1;
