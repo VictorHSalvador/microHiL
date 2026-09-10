@@ -10,7 +10,7 @@ As decisões MICROHIL prevalecem sobre os valores da referência: SYNC 0x7259, M
 
 ## Decisão
 
-O MICROHIL reutilizará o padrão arquitetural do RaspDAQ: coordenador único do enlace, instância persistente de estado compartilhado, snapshots imutáveis ou substituídos atomicamente sob seção crítica curta, workers RX/TX separados, controle processado durante streaming, schema posicional fixo por execução e número de sequência por direção.
+O MICROHIL reutilizará o padrão arquitetural do RaspDAQ: coordenador único do enlace, instância persistente de estado compartilhado, snapshots imutáveis ou substituídos atomicamente sob seção crítica curta, controle processado durante streaming, schema posicional fixo por execução e número de sequência por direção. No HOST, um worker serial único possui a TTY e alterna RX e TX com operações limitadas; ele é separado da thread de simulação e impede leitores ou escritores concorrentes no enlace.
 
 DATA é tráfego de tempo real sem confirmação individual, retransmissão, fila crescente ou recuperação. Pacote ausente, perdido, repetido, antigo, incompleto ou fora do prazo é descartado; o receptor segue para o próximo. Um salto de SEQ contabiliza a lacuna e aceita o pacote novo. No host, a thread da simulação usa o último snapshot publicado antes de inserir os inputs na FMU e mantém o último valor válido por canal conforme F-23/F-24.
 

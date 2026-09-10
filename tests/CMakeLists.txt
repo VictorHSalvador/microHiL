@@ -22,6 +22,9 @@ target_link_libraries(test_daq_protocol PRIVATE microhil_host_components m)
 add_executable(test_daq_tty test_daq_tty.c)
 target_link_libraries(test_daq_tty PRIVATE microhil_host_components m)
 
+add_executable(test_daq_serial_service test_daq_serial_service.c)
+target_link_libraries(test_daq_serial_service PRIVATE microhil_host_components m)
+
 add_executable(test_daq_schema test_daq_schema.c)
 target_link_libraries(test_daq_schema PRIVATE microhil_host_components m)
 
@@ -76,6 +79,7 @@ add_test(NAME daq_protocol_fragmentation COMMAND test_daq_protocol fragmentation
 add_test(NAME daq_protocol_sequence COMMAND test_daq_protocol sequence)
 add_test(NAME daq_protocol_xrce_mtu COMMAND test_daq_protocol xrce_mtu)
 add_test(NAME daq_tty_validation COMMAND test_daq_tty)
+add_test(NAME daq_serial_service_round_trip COMMAND test_daq_serial_service)
 add_test(NAME daq_schema_validation COMMAND test_daq_schema)
 add_test(NAME daq_link_state_transitions COMMAND test_daq_link_state)
 add_test(NAME daq_acquisition_snapshot COMMAND test_daq_acquisition)

@@ -85,7 +85,7 @@ Aprovado usar os dois núcleos ESP32 em benefício do timing. Proposta de distri
 
 ## Resultado da consulta RaspDAQ e fechamento 0.7
 
-Base CONFIG/DATA, mapa posicional, sequência, ownership e workers RX/TX foram aproveitados. O MICROHIL acrescenta somente READ_ACK e XRCE para requisitos que a referência não atende. A decisão posterior remove sessão no fio, CRC e recuperação de DATA: o parser descarta o que não puder usar, conta gaps detectáveis e segue para o próximo. [ADR-003](adrs/ADR-003-raspdaq-icd.md) registra a decisão e seus limites.
+Base CONFIG/DATA, mapa posicional, sequência e ownership foram aproveitados. O MICROHIL implementa o ownership da TTY com um worker serial único que alterna RX e TX limitados, separado da simulação; isso preserva o processo único da referência sem introduzir dois leitores ou escritores concorrentes. O MICROHIL acrescenta somente READ_ACK e XRCE para requisitos que a referência não atende. A decisão posterior remove sessão no fio, CRC e recuperação de DATA: o parser descarta o que não puder usar, conta gaps detectáveis e segue para o próximo. [ADR-003](adrs/ADR-003-raspdaq-icd.md) registra a decisão e seus limites.
 
 ## Observação de baseline micro-ROS — 0.8.1
 

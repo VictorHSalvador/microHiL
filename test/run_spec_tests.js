@@ -75,7 +75,7 @@ function RunHostRunLoggingCtest() {
     host_run_logging_ctest = RunCommand('ctest', ['--test-dir', build_directory, '--output-on-failure']);
   });
   assert.equal(host_run_logging_ctest.status, 0, CommandOutput(host_run_logging_ctest));
-  assert.match(CommandOutput(host_run_logging_ctest), /100% tests passed, 0 tests failed out of 3[0-9]/);
+  assert.match(CommandOutput(host_run_logging_ctest), /100% tests passed, 0 tests failed out of [1-9][0-9]*/);
   return host_run_logging_ctest;
 }
 

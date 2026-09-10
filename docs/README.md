@@ -81,3 +81,5 @@ Patch 0.11.1: a TTY HOST passou a configurar 152.000 bit/s via `termios2`/`BOTHE
 Patch 0.11.2: o pacote `microhil_interfaces` gerou e inspecionou em ROS 2 Humble as mensagens de setup, state e errors. A [evidência](evidence/host-ros-interfaces-2026-09-09.md) não declara firmware, Agent ou tópicos em execução.
 
 Revisão 0.13: a interface ROS fica limitada a setup, state e errors; aquisição e atuação seguem exclusivamente pelo DATA do ICD.
+
+Patch 0.13.1: o worker serial HOST passou a ser o dono único da TTY, separado da simulação. A [evidência](evidence/host-serial-service-2026-09-10.md) registra o round-trip em pseudo-terminal, sem CH340 ou ESP32.
