@@ -47,13 +47,16 @@ int main(void) {
     daq_coordinator_config_t config = {
         .acquisition_schema = &schema,
         .input_state = &input_state,
-        .xrce_mtu = 16U,
+        .xrce_mtu = DAQ_PROTOCOL_XRCE_MTU,
         .xrce_receive = CaptureXrce,
         .xrce_context = &capture
     };
 
     Require(DaqSchemaBuild(&schema, fields, 1U) == DAQ_SCHEMA_OK, "could not build schema");
     Require(InputStateInit(&input_state, inputs, 1U, true) == INPUT_STATE_STATUS_OK, "could not initialize input state");
+    config.xrce_mtu = 64U;
+    Require(DaqCoordinatorInit(&coordinator, &config) == DAQ_COORDINATOR_INVALID_ARGUMENT, "coordinator accepted a mismatched XRCE MTU");
+    config.xrce_mtu = DAQ_PROTOCOL_XRCE_MTU;
     Require(DaqCoordinatorInit(&coordinator, &config) == DAQ_COORDINATOR_OK, "could not initialize coordinator");
     Require(DaqCoordinatorReceive(&coordinator, acquisition_payload, sizeof(acquisition_payload)) == DAQ_COORDINATOR_OK &&
             coordinator.rejected_frames == 0U, "unframed bytes were not handled by the parser");

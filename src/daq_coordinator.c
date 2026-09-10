@@ -38,7 +38,7 @@ static bool IsCommandValid(daq_protocol_command_t command) {
 }
 
 daq_coordinator_status_t DaqCoordinatorInit(daq_coordinator_t *coordinator, const daq_coordinator_config_t *config) {
-    if (!coordinator || !config || !config->acquisition_schema || !config->input_state || config->xrce_mtu == 0U) {
+    if (!coordinator || !config || !config->acquisition_schema || !config->input_state || config->xrce_mtu != DAQ_PROTOCOL_XRCE_MTU) {
         return DAQ_COORDINATOR_INVALID_ARGUMENT;
     }
     *coordinator = (daq_coordinator_t){0};

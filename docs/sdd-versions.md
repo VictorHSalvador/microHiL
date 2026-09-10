@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.11.0**, de 09.09.2026.
+Versão vigente: **SDD-MICROHIL 0.11.1**, de 09.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -46,6 +46,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.9.0 | 09.09.2026 | MINOR | Decisão do usuário de substituir ESP-IDF 4.4.8 por ESP-IDF v5.2.6, série mínima declarada pelo componente micro-ROS Humble atual, para o ESP32 clássico | decisions, TARGET, plan, README e sdd-versions | SDK v5.2.6 instalado no host; `idf.py --list-targets` lista esp32; build integrado e placa pendentes | alterações locais; registrar commit quando criado |
 | 0.10.0 | 09.09.2026 | MINOR | Definição dos tópicos micro-ROS, mensagens de setup/state/errors e regra de telemetria por perfil | ICD, architecture, decisions, plan e sdd-versions | Decisão do usuário; MTU XRCE, firmware e perfil físico ainda pendentes | alterações locais; registrar commit quando criado |
 | 0.11.0 | 09.09.2026 | MINOR | Seleção de UART 152.000 bit/s e MTU XRCE de 128 bytes; orçamento explícito do frame e adaptação TTY pendente | TARGET, ICD, architecture, decisions, plan, README e sdd-versions | Decisão do usuário; sem ensaio CH340–ESP32, sem build integrado ou validação temporal | alterações locais; registrar commit quando criado |
+| 0.11.1 | 09.09.2026 | PATCH | Implementação HOST de UART 152.000 bit/s com `termios2`/`BOTHER` e limite XRCE de 128 bytes | Código TTY/protocolo, testes, TARGET, decisions, plan, README, evidence e sdd-versions | Build HOST e 39 testes em pseudo-terminal; sem CH340, ESP32, Agent ou teste temporal | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

@@ -6,18 +6,41 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <termios.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
-static bool BaudToSpeed(unsigned int baud_rate, speed_t *speed) {
+#include <asm/ioctls.h>
+#include <asm/termbits.h>
+
+static bool IsSupportedBaud(unsigned int baud_rate) {
     switch (baud_rate) {
-        case 9600U: *speed = B9600; return true;
-        case 19200U: *speed = B19200; return true;
-        case 38400U: *speed = B38400; return true;
-        case 57600U: *speed = B57600; return true;
-        case 115200U: *speed = B115200; return true;
+        case 9600U:
+        case 19200U:
+        case 38400U:
+        case 57600U:
+        case 115200U:
+        case 152000U: return true;
         default: return false;
     }
+}
+
+static daq_tty_status_t ConfigurePort(int file_descriptor, unsigned int baud_rate) {
+    struct termios2 settings;
+    if (ioctl(file_descriptor, TCGETS2, &settings) != 0) return DAQ_TTY_STATUS_CONFIGURE_FAILED;
+
+    settings.c_iflag &= (tcflag_t)~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON | IXOFF | IXANY);
+    settings.c_oflag &= (tcflag_t)~OPOST;
+    settings.c_lflag &= (tcflag_t)~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    settings.c_cflag &= (tcflag_t)~(CBAUD | CSIZE | PARENB | CSTOPB | CRTSCTS);
+    // BOTHER preserves the selected non-standard UART rate in the Linux TTY driver.
+    settings.c_cflag |= (tcflag_t)(BOTHER | CLOCAL | CREAD | CS8);
+    settings.c_cc[VMIN] = 0;
+    settings.c_cc[VTIME] = 0;
+    settings.c_ispeed = baud_rate;
+    settings.c_ospeed = baud_rate;
+
+    if (ioctl(file_descriptor, TCSETS2, &settings) != 0) return DAQ_TTY_STATUS_CONFIGURE_FAILED;
+    return DAQ_TTY_STATUS_OK;
 }
 
 static daq_tty_status_t WaitForEvent(int file_descriptor, short events, uint32_t timeout_ms) {
@@ -31,28 +54,13 @@ static daq_tty_status_t WaitForEvent(int file_descriptor, short events, uint32_t
 }
 
 daq_tty_status_t DaqTtyOpen(daq_tty_t *tty, const char *path, unsigned int baud_rate) {
-    speed_t speed;
     if (!tty || !path || !path[0]) return DAQ_TTY_STATUS_INVALID_ARGUMENT;
-    if (!BaudToSpeed(baud_rate, &speed)) return DAQ_TTY_STATUS_UNSUPPORTED_BAUD;
+    if (!IsSupportedBaud(baud_rate)) return DAQ_TTY_STATUS_UNSUPPORTED_BAUD;
     *tty = (daq_tty_t){.file_descriptor = -1};
     const int file_descriptor = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (file_descriptor < 0) return DAQ_TTY_STATUS_OPEN_FAILED;
 
-    struct termios settings;
-    if (tcgetattr(file_descriptor, &settings) != 0) {
-        (void)close(file_descriptor);
-        return DAQ_TTY_STATUS_CONFIGURE_FAILED;
-    }
-    cfmakeraw(&settings);
-    settings.c_cflag |= (tcflag_t)(CLOCAL | CREAD | CS8);
-    settings.c_cflag &= (tcflag_t)~(PARENB | CSTOPB);
-#ifdef CRTSCTS
-    settings.c_cflag &= (tcflag_t)~CRTSCTS;
-#endif
-    settings.c_iflag &= (tcflag_t)~(IXON | IXOFF | IXANY);
-    settings.c_cc[VMIN] = 0;
-    settings.c_cc[VTIME] = 0;
-    if (cfsetispeed(&settings, speed) != 0 || cfsetospeed(&settings, speed) != 0 || tcsetattr(file_descriptor, TCSANOW, &settings) != 0) {
+    if (ConfigurePort(file_descriptor, baud_rate) != DAQ_TTY_STATUS_OK) {
         (void)close(file_descriptor);
         return DAQ_TTY_STATUS_CONFIGURE_FAILED;
     }

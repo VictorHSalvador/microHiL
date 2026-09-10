@@ -69,6 +69,16 @@ static void TestFragmentationAndResync(void) {
     Require(capture.frames[0].sequence == UINT16_C(0xffff) && parser.discarded_bytes >= 2U, "resync metrics or wrapped sequence differ");
 }
 
+static void TestXrceMtu(void) {
+    uint8_t frame[5U + DAQ_PROTOCOL_XRCE_MTU];
+    uint8_t oversized[DAQ_PROTOCOL_XRCE_MTU + 1U] = {0};
+
+    Require(DaqProtocolEncodeXrce(frame, sizeof(frame), oversized, DAQ_PROTOCOL_XRCE_MTU) == sizeof(frame),
+            "XRCE frame at the configured MTU was rejected");
+    Require(DaqProtocolEncodeXrce(frame, sizeof(frame), oversized, sizeof(oversized)) == 0U,
+            "XRCE frame larger than the configured MTU was accepted");
+}
+
 static void TestSequence(void) {
     daq_sequence_tracker_t tracker = {0};
     Require(DaqSequenceTrack(&tracker, UINT16_C(0xffff)) == DAQ_SEQUENCE_FIRST, "first sequence not accepted");
@@ -83,6 +93,7 @@ int main(int argc, char **argv) {
     if (strcmp(argv[1], "frames") == 0) TestFrames();
     else if (strcmp(argv[1], "fragmentation") == 0) TestFragmentationAndResync();
     else if (strcmp(argv[1], "sequence") == 0) TestSequence();
+    else if (strcmp(argv[1], "xrce_mtu") == 0) TestXrceMtu();
     else return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

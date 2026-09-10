@@ -156,7 +156,7 @@ size_t DaqProtocolEncodeReadAck(uint8_t *destination, size_t capacity, uint16_t 
 }
 
 size_t DaqProtocolEncodeXrce(uint8_t *destination, size_t capacity, const uint8_t *payload, size_t payload_size) {
-    if (!destination || (payload_size > 0U && !payload) || payload_size > UINT16_MAX || capacity < 5U + payload_size) return 0U;
+    if (!destination || (payload_size > 0U && !payload) || payload_size > DAQ_PROTOCOL_XRCE_MTU || capacity < 5U + payload_size) return 0U;
     destination[0] = DAQ_PROTOCOL_SYNC_FIRST;
     destination[1] = DAQ_PROTOCOL_SYNC_SECOND;
     destination[2] = DAQ_PROTOCOL_MID_XRCE;

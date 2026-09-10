@@ -74,4 +74,6 @@ Revisão 0.9: o usuário substituiu ESP-IDF 4.4.8 por **ESP-IDF v5.2.6**, a tag 
 
 Revisão 0.10: tópicos e mensagens micro-ROS foram definidos: setup, state, errors e data por perfil. A enumeração física do perfil ESP32 permanece pendente e não foi convertida em código.
 
-Revisão 0.11: UART 152.000 bit/s e MTU XRCE de 128 bytes foram selecionados como baseline. O host ainda precisa suportar a taxa não padronizada e a ponte CH340–ESP32 precisa de ensaio; XRCE continua best effort e não comprova deadline.
+Revisão 0.11: UART 152.000 bit/s e MTU XRCE de 128 bytes foram selecionados como baseline. A ponte CH340–ESP32 precisa de ensaio; XRCE continua best effort e não comprova deadline.
+
+Patch 0.11.1: a TTY HOST passou a configurar 152.000 bit/s via `termios2`/`BOTHER` e o codec limita XRCE a 128 bytes. A [evidência HOST](evidence/host-uart-152000-2026-09-09.md) registra 39 testes em pseudo-terminal; não é ensaio da CH340 ou do ESP32.
