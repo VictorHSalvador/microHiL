@@ -6,7 +6,7 @@ Registro de origem e diferenças: [ADR-003](../adrs/ADR-003-raspdaq-icd.md). Evi
 
 ## IF-CORE — Importação, configuração e controle
 
-Confirmado: FMU e configuração binária carregadas por ações separadas. Importação verifica FMI 2.0 Co-Simulation, nomes/tipos de inputs/outputs e compatibilidade de execução no host. Compatibilidade de formato não basta se a FMU só trouxer binário para outra arquitetura ou capacidade ainda não suportada; diagnosticar a causa específica. Q-08 autoriza identificar e informar capacidades não suportadas; a matriz do incremento explicitará String/Pending e demais capacidades.
+Confirmado: FMU e configuração YAML carregadas por ações separadas. Importação verifica FMI 2.0 Co-Simulation, nomes/tipos de inputs/outputs e compatibilidade de execução no host. Compatibilidade de formato não basta se a FMU só trouxer binário para outra arquitetura ou capacidade ainda não suportada; diagnosticar a causa específica. Q-08 autoriza identificar e informar capacidades não suportadas; a matriz do incremento explicitará String/Pending e demais capacidades.
 
 Configuração é comparada à FMU atual e ao perfil DAQC ESP32: variável, tipo, direção, função/pino, escala/unidade e parâmetros de execução. Listar divergências antes de aplicar, sem atualização parcial. Um GPIO não pode cumprir funções simultâneas incompatíveis. Step/duração são configuráveis na GUI/terminal e validados antes de iniciar.
 
@@ -205,7 +205,7 @@ O logger SPSC assíncrono usa capacidade fixa de 128 posições; o produtor não
 
 CSV é ação explícita somente após encerramento. O conversor compara hash, índice XML, nome, tipo, valueReference e ordem com o descritor reconstruído da FMU atualmente carregada; `t_start` e `h` permanecem no formato, mas não participam da identidade FMU/esquema. As colunas são `sequence`, `simulation_time_s` e, por saída, `<nome>_value`, `<nome>_valid`. Não é necessário executar a FMU para interpretar o cabeçalho. Tipo do log não é o float32 do fio. Cauda truncada exporta somente registros completos com resultado parcial; arquivo incompleto por falha de logging não é disponibilizado como log íntegro para conversão. A GUI ainda deve definir apresentação e ação de produto.
 
-Configuração usa formato separado, versionado e com seções de identidade FMU, perfil/schema, mapa ordenado e execução; GUI/gráficos são opcionais. Não permitir seções obrigatórias desconhecidas ou duplicadas. Validar o arquivo inteiro contra FMU/DAQ antes de aplicar e não serializar endereços ou objetos Qt/Python. Os vetores ESP32 já têm canais, offsets, tamanhos e `profile_id = 1` definidos; os testes de interoperabilidade permanecem pendentes.
+Configuração usa YAML separado, versionado e com seções `version`, `fmu`, `profile`, `execution`, `adc`, `pwm`, `inputs` e `outputs`; GUI/gráficos são opcionais. Cada mapa usa o nome da variável FMU como identidade, seu tipo esperado e o canal genérico do perfil. O carregador resolve o `valueReference` na FMU carregada e pode comparar o valor registrado apenas como diagnóstico; ele não é a identidade portátil do arquivo. Não permitir seções obrigatórias desconhecidas ou duplicadas. Validar o arquivo inteiro contra FMU/DAQ antes de aplicar e não serializar endereços ou objetos Qt/Python. Os vetores ESP32 já têm canais, offsets, tamanhos e `profile_id = 1` definidos; os testes de interoperabilidade permanecem pendentes.
 
 ## IF-OUTPUT-LIFECYCLE — Atuação e zero final
 

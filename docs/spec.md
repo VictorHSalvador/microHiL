@@ -55,7 +55,7 @@ A plataforma deve permitir selecionar perfil DAQC compatível, inicialmente deno
 
 ### REQ-F-04 — Persistência do Perfil de Configuração
 
-A interface deve salvar/carregar configuração em arquivo binário, incluindo I/O, mapa FMU–DAQC e parâmetros de execução. Carregamento usa botão distinto do de FMU e valida o arquivo contra a FMU carregada e a DAQC selecionada, informando quais variáveis, tipos, recursos ou parâmetros divergem antes de aplicar a configuração.
+A interface deve salvar/carregar configuração em arquivo YAML versionado, incluindo I/O, mapa FMU–DAQC e parâmetros de execução. Carregamento usa botão distinto do de FMU e valida o arquivo contra a FMU carregada e a DAQC selecionada, informando quais variáveis, tipos, recursos ou parâmetros divergem antes de aplicar a configuração.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
