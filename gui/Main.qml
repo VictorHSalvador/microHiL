@@ -14,7 +14,6 @@ ApplicationWindow {
 
     property string simulationState: "Idle"
     property string fmuPath: ""
-    property string profilePath: ""
     property bool loggingEnabled: true
     property bool plotEnabled: true
 
@@ -34,7 +33,7 @@ ApplicationWindow {
     FileDialog {
         id: profileDialog
         nameFilters: ["YAML files (*.yaml *.yml)"]
-        onAccepted: window.profilePath = selectedFile.toString().replace("file://", "")
+        onAccepted: guiController.LoadProfile(selectedFile.toString().replace("file://", ""))
     }
 
     header: ToolBar {
@@ -78,7 +77,7 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         Button { text: "Carregar perfil YAML"; onClicked: profileDialog.open() }
-                        Label { text: window.profilePath || "Nenhum perfil selecionado"; Layout.fillWidth: true; elide: Text.ElideMiddle }
+                        Label { text: guiController.profilePath || "Nenhum perfil selecionado"; Layout.fillWidth: true; elide: Text.ElideMiddle }
                     }
                 }
             }
@@ -120,6 +119,7 @@ ApplicationWindow {
                     Label { text: "Gráficos de saída"; font.bold: true; font.pixelSize: 18 }
                     Label { text: "Abra gráficos por variável após a importação da FMU. Cada janela mantém histórico somente enquanto estiver aberta."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: guiController.fmuPath ? guiController.modelName + " — " + guiController.inputCount + " entradas, " + guiController.outputCount + " saídas" : "" }
+                    Label { text: guiController.profilePath ? "Perfil ESP32 " + guiController.profileId + " — " + guiController.profileMappingCount + " mapeamento(s)" : "" }
                     Label { text: guiController.errorMessage; color: "#b33a3a"; visible: text.length > 0 }
                     Button { text: "Configurar gráficos"; enabled: guiController.fmuPath.length > 0 }
                 }

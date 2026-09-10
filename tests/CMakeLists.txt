@@ -121,7 +121,7 @@ add_test(NAME profile_config_yaml COMMAND test_profile_config "${CMAKE_SOURCE_DI
 
 if(TARGET test_fmu_model)
     add_test(NAME fmu_model_inputs COMMAND test_fmu_model "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu" "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
-    add_test(NAME execution_session_lifecycle COMMAND test_execution_session "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu")
+    add_test(NAME execution_session_lifecycle COMMAND test_execution_session "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu" "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
 endif()
 
 if(TARGET test_daqc_ros_control)

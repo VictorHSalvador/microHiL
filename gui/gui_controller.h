@@ -12,6 +12,9 @@ class GuiController : public QObject {
     Q_PROPERTY(QString modelName READ ModelName NOTIFY FmuChanged)
     Q_PROPERTY(int inputCount READ InputCount NOTIFY FmuChanged)
     Q_PROPERTY(int outputCount READ OutputCount NOTIFY FmuChanged)
+    Q_PROPERTY(QString profilePath READ ProfilePath NOTIFY ProfileChanged)
+    Q_PROPERTY(int profileId READ ProfileId NOTIFY ProfileChanged)
+    Q_PROPERTY(int profileMappingCount READ ProfileMappingCount NOTIFY ProfileChanged)
     Q_PROPERTY(QString errorMessage READ ErrorMessage NOTIFY ErrorChanged)
 public:
     explicit GuiController(QObject *parent = nullptr);
@@ -20,10 +23,15 @@ public:
     QString ModelName() const;
     int InputCount() const;
     int OutputCount() const;
+    QString ProfilePath() const;
+    int ProfileId() const;
+    int ProfileMappingCount() const;
     QString ErrorMessage() const;
     Q_INVOKABLE bool LoadFmu(const QString &path);
+    Q_INVOKABLE bool LoadProfile(const QString &path);
 signals:
     void FmuChanged();
+    void ProfileChanged();
     void ErrorChanged();
 private:
     execution_session_t *session_ = nullptr;

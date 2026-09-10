@@ -12,13 +12,15 @@ static void Require(bool condition, const char *message) {
 }
 
 int main(int argc, char **argv) {
-    Require(argc == 2, "expected the fixture FMU path");
+    Require(argc == 3, "expected the fixture FMU and profile paths");
     execution_session_t session;
     OutputVariable outputs[MAX_OUTPUTS];
 
     ExecutionSessionInit(&session);
     Require(ExecutionSessionLoadFmu(&session, argv[1]) == EXECUTION_SESSION_OK, "could not load the fixture FMU into the session");
     Require(fmu_model_name(&session.model)[0] != '\0', "session did not preserve the FMU model name");
+    Require(ExecutionSessionLoadProfile(&session, argv[2]) == EXECUTION_SESSION_OK, "could not load the compatible YAML profile into the session");
+    Require(session.config.profile_loaded && session.config.profile.mapping_count == 3U, "session did not retain the resolved YAML profile");
     const size_t output_count = ExecutionSessionListOutputs(&session, outputs, MAX_OUTPUTS);
     Require(output_count == 3U, "session did not discover the numeric FMU outputs");
     memcpy(session.config.outputs, outputs, output_count * sizeof(outputs[0]));

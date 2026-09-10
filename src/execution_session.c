@@ -62,6 +62,27 @@ execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session,
     return EXECUTION_SESSION_OK;
 }
 
+execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *session, const char *path) {
+    profile_config_t candidate;
+    daq_schema_t acquisition_schema;
+    daq_schema_t actuation_schema;
+
+    if (!session || !session->initialized || !path || !path[0]) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    if (!session->model.fmu) return EXECUTION_SESSION_NOT_READY;
+    if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
+    if (ProfileConfigLoadYaml(path, &candidate) != PROFILE_CONFIG_OK || fmu_model_resolve_profile_mappings(&session->model, &candidate) != 0 ||
+        ProfileConfigBuildAcquisitionSchema(&candidate, &acquisition_schema) != PROFILE_CONFIG_OK ||
+        ProfileConfigBuildActuationSchema(&candidate, &actuation_schema) != PROFILE_CONFIG_OK) return EXECUTION_SESSION_PROFILE;
+    session->config.profile = candidate;
+    session->config.acquisition_schema = acquisition_schema;
+    session->config.actuation_schema = actuation_schema;
+    session->config.step_size_s = candidate.step_size_s;
+    session->config.stop_time_s = candidate.stop_time_s;
+    session->config.profile_loaded = true;
+    snprintf(session->config.profile_path, sizeof(session->config.profile_path), "%s", path);
+    return EXECUTION_SESSION_OK;
+}
+
 execution_session_status_t ExecutionSessionSetTiming(execution_session_t *session, double step_size_s, double stop_time_s) {
     if (!session || !session->initialized) return EXECUTION_SESSION_INVALID_ARGUMENT;
     if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
@@ -87,6 +108,26 @@ const char *ExecutionSessionModelName(const execution_session_t *session) {
 
 size_t ExecutionSessionInputCount(const execution_session_t *session) {
     return session && session->initialized ? session->config.input_count : 0U;
+}
+
+const char *ExecutionSessionProfilePath(const execution_session_t *session) {
+    return session && session->initialized ? session->config.profile_path : "";
+}
+
+unsigned int ExecutionSessionProfileId(const execution_session_t *session) {
+    return session && session->initialized && session->config.profile_loaded ? session->config.profile.profile_id : 0U;
+}
+
+size_t ExecutionSessionProfileMappingCount(const execution_session_t *session) {
+    return session && session->initialized && session->config.profile_loaded ? session->config.profile.mapping_count : 0U;
+}
+
+double ExecutionSessionStepSize(const execution_session_t *session) {
+    return session && session->initialized ? session->config.step_size_s : 0.0;
+}
+
+double ExecutionSessionStopTime(const execution_session_t *session) {
+    return session && session->initialized ? session->config.stop_time_s : 0.0;
 }
 
 execution_session_status_t ExecutionSessionPrepare(execution_session_t *session) {
@@ -179,6 +220,7 @@ const char *ExecutionSessionStatusString(execution_session_status_t status) {
         case EXECUTION_SESSION_LOGGING: return "could not start the binary output log";
         case EXECUTION_SESSION_START: return "could not start or complete the simulation";
         case EXECUTION_SESSION_RUNNING: return "the simulation session is active";
+        case EXECUTION_SESSION_PROFILE: return "the YAML profile is incompatible with the loaded FMU or ESP32 profile";
         default: return "unknown execution session status";
     }
 }

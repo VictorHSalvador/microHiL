@@ -41,7 +41,8 @@ typedef enum {
     EXECUTION_SESSION_PREPARE,
     EXECUTION_SESSION_LOGGING,
     EXECUTION_SESSION_START,
-    EXECUTION_SESSION_RUNNING
+    EXECUTION_SESSION_RUNNING,
+    EXECUTION_SESSION_PROFILE
 } execution_session_status_t;
 
 execution_session_t *ExecutionSessionCreate(void);
@@ -49,6 +50,7 @@ void ExecutionSessionInit(execution_session_t *session);
 void ExecutionSessionDestroy(execution_session_t *session);
 void ExecutionSessionDelete(execution_session_t *session);
 execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session, const char *path);
+execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *session, const char *path);
 execution_session_status_t ExecutionSessionSetTiming(execution_session_t *session, double step_size_s, double stop_time_s);
 size_t ExecutionSessionListOutputs(execution_session_t *session, OutputVariable *outputs, size_t capacity);
 #ifndef __cplusplus
@@ -64,6 +66,11 @@ const run_result_t *ExecutionSessionResult(const execution_session_t *session);
 const char *ExecutionSessionFmuPath(const execution_session_t *session);
 const char *ExecutionSessionModelName(const execution_session_t *session);
 size_t ExecutionSessionInputCount(const execution_session_t *session);
+const char *ExecutionSessionProfilePath(const execution_session_t *session);
+unsigned int ExecutionSessionProfileId(const execution_session_t *session);
+size_t ExecutionSessionProfileMappingCount(const execution_session_t *session);
+double ExecutionSessionStepSize(const execution_session_t *session);
+double ExecutionSessionStopTime(const execution_session_t *session);
 const char *ExecutionSessionStatusString(execution_session_status_t status);
 
 #ifdef __cplusplus
