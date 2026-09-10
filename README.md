@@ -61,7 +61,8 @@ A GUI é opcional no build e usa Qt 6. No Ubuntu 22.04, instale os arquivos de d
 sudo apt install qt6-base-dev qt6-declarative-dev \
   qml6-module-qtquick qml6-module-qtquick-controls \
   qml6-module-qtquick-layouts qml6-module-qtquick-dialogs \
-  qml6-module-qtqml-workerscript qml6-module-qtquick-templates
+  qml6-module-qtqml-workerscript qml6-module-qtquick-templates \
+  qml6-module-qtquick-window
 ```
 
 - `qt6-base-dev` e `qt6-declarative-dev` fornecem CMake, headers, compilador de recursos e bibliotecas para compilar C++/QML.
@@ -71,6 +72,7 @@ sudo apt install qt6-base-dev qt6-declarative-dev \
 - `qml6-module-qtquick-dialogs` fornece a seleção de FMU e YAML.
 - `qml6-module-qtqml-workerscript` é uma dependência de execução do QML.
 - `qml6-module-qtquick-templates` fornece a base usada pelos estilos do Qt Quick Controls 2, incluindo Fusion.
+- `qml6-module-qtquick-window` fornece a janela usada indiretamente por `ApplicationWindow`.
 
 Compile em diretório separado:
 

@@ -5,9 +5,13 @@
 
 ## Dependências observadas
 
-`qt6-base-dev` e `qt6-declarative-dev` permitem configurar e compilar o alvo C++/QML. A execução requer os módulos QML que correspondem aos imports da interface: `qml6-module-qtquick`, `qml6-module-qtquick-controls`, `qml6-module-qtquick-layouts`, `qml6-module-qtquick-dialogs` e `qml6-module-qtqml-workerscript`.
+`qt6-base-dev` e `qt6-declarative-dev` permitem configurar e compilar o alvo C++/QML. A execução requer os módulos QML que correspondem aos imports da interface: `qml6-module-qtquick`, `qml6-module-qtquick-controls`, `qml6-module-qtquick-layouts`, `qml6-module-qtquick-dialogs`, `qml6-module-qtqml-workerscript` e `qml6-module-qtquick-window`.
 
 O estilo Fusion selecionado por Qt Quick Controls 2 também requer `qml6-module-qtquick-templates`. Sem ele, `ApplicationWindow` não carrega o plugin `qtquicktemplates2plugin`.
+
+## Resultado observado
+
+Após instalar todos os módulos acima, `microhil_gui` foi compilada e iniciou em `QT_QPA_PLATFORM=offscreen`, permanecendo ativa até o encerramento intencional do teste após três segundos.
 
 ## Limites
 
