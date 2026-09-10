@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
-project(fmu_rt_runner C)
+project(fmu_rt_runner C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(CTest)
 find_package(Threads REQUIRED)
@@ -13,6 +15,7 @@ pkg_check_modules(LIBYAML REQUIRED IMPORTED_TARGET yaml-0.1)
 option(MICROHIL_BUILD_RUNNER "Build the FMILibrary-based runner" ON)
 option(MICROHIL_FETCH_FMILIB "Fetch the pinned FMILibrary release for the runner" OFF)
 option(MICROHIL_WITH_ROS2_CONTROL "Build the ROS 2 control node used by the runner" OFF)
+option(MICROHIL_BUILD_GUI "Build the Qt Quick/QML interface" OFF)
 
 add_library(microhil_project_warnings INTERFACE)
 target_compile_options(microhil_project_warnings INTERFACE
@@ -69,6 +72,13 @@ if(MICROHIL_WITH_ROS2_CONTROL)
         microhil_interfaces::microhil_interfaces__rosidl_typesupport_c
         Threads::Threads
     )
+endif()
+
+if(MICROHIL_BUILD_GUI)
+    find_package(Qt6 6.2 REQUIRED COMPONENTS Quick QuickControls2)
+    qt_add_executable(microhil_gui gui/main.cpp)
+    qt_add_resources(microhil_gui "microhil_gui_resources" PREFIX "/" FILES gui/Main.qml)
+    target_link_libraries(microhil_gui PRIVATE Qt6::Quick Qt6::QuickControls2)
 endif()
 
 if(MICROHIL_BUILD_RUNNER)
