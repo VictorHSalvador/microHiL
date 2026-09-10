@@ -148,6 +148,27 @@ Em STREAMING, 60 s sem avanço de READ_ACK dispara DISABLE local. A thread de co
 
 Progresso via confirmação pode deixar de chegar porque o caminho de retorno falhou; é detecção conservadora de consumo comprovado, não acesso ao buffer interno CH340. Não suspender watchdog esperando TX bloqueado nem acumular backlog durante 60 s. READ_ACK não solicita reenvio e não foi encontrado na referência.
 
+## IF-ROS — Tópicos micro-ROS e mensagens por perfil
+
+O MID 04 transporta somente XRCE-DDS entre o cliente micro-ROS da DAQC e o Agent integrado ao coordenador host. Ele não substitui DATA MID 02 para aquisição e atuação real-time. Os tópicos abaixo são a interface ROS 2/micro-ROS; sua publicação, serialização e tratamento ocorrem fora do caminho crítico da FMU.
+
+| Tópico | Direção | Tipo | Finalidade |
+|---|---|---|---|
+| `/daqc_setup` | Host → DAQC | `microhil_interfaces/DaqcSetup` | Solicita DISABLE, ENABLE ou STREAMING e seleciona perfil compilado na DAQC |
+| `/daqc_state` | DAQC → Host | `microhil_interfaces/DaqcState` | Confirma estado efetivo e perfil aplicado |
+| `/daqc_errors` | Host e DAQC → consumidores | `microhil_interfaces/DaqcErrors` | Publica flags de falha; `source_is_daqc` identifica a origem |
+| `/daqc_data` | DAQC → Host | Mensagem específica do perfil, como `microhil_interfaces/Esp32Data` | Telemetria não crítica do snapshot completo de I/O do perfil |
+
+`DaqcSetup.msg` contém exatamente `uint8 command` e `uint32 profile_id`. `command` usa DISABLE=1, ENABLE=2 e STREAMING=3, coerente com CONFIG do ICD. `profile_id` identifica um perfil compilado, com schema congelado e nomes de I/O definidos antes de STREAMING; não transporta um mapa de pinos ou descritores variáveis no ciclo.
+
+`DaqcState.msg` contém `uint8 state`, `uint32 profile_id` e `uint8 profile_applied`. `state` usa os mesmos códigos de COMMAND; `profile_applied` vale 1 somente quando o perfil indicado foi validado e aplicado. Isso é a confirmação ROS complementar, não substitui a confirmação CONFIG de cinco bytes no enlace.
+
+`DaqcErrors.msg` contém somente flags `uint8`: `source_is_daqc`, `ros_error`, `communication_error`, `fmu_error`, `profile_error`, `timeout_error` e `invalid_data_error`. Cada flag vale 0 ou 1. A DAQC publica `fmu_error=0`, pois não executa FMI; o host pode publicar essa flag quando a execução da FMU falhar. A GUI associa a origem e as flags ao diagnóstico estruturado local, sem depender de texto ou prints no firmware.
+
+Cada perfil possui uma mensagem de telemetria própria, não uma lista dinâmica. Ela contém todos os I/O habilitados do perfil, usando nomes de I/O como campos; digitais usam `uint8` limitado a 0/1 e analógicos usam `float32`. O perfil ESP32 ainda é um catálogo configurável, sem nomes concretos de canais simultaneamente aprovados. Portanto `Esp32Data.msg` não será inventada antes de a configuração do perfil enumerar os I/O e seus nomes. A telemetria é best effort e não carrega a decisão de atuação nem altera a cadência de DATA.
+
+O MTU XRCE continua pendente de decisão. Cliente, transporte customizado no Agent, buffers e testes devem usar o mesmo valor. A fragmentação XRCE é permitida acima desse limite, mas não cria prioridade sobre CONFIG, READ_ACK ou DATA.
+
 ## IF-LOG — Registro binário e configuração: contrato HOST, não código RaspDAQ
 
 A referência inspecionada apresenta valores/snapshots no terminal; não foi encontrado nela o formato de log/configuração binário MICROHIL. Portanto as decisões abaixo são **D**, derivadas dos requisitos confirmados, não recuperação de um formato existente.

@@ -6,7 +6,7 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 
 | ID | Confirmado | Detalhamento restante |
 |---|---|---|
-| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04 | Medir MTU/custo e fixar versão/commits do micro-ROS |
+| DEC-001 | USB-C/CH340 e micro-ROS no ESP32; coordenador C único usa `/dev/ttyUSB*` e transporte customizado do Agent; XRCE MID 04; tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data` | Escolher MTU XRCE, implementar transporte integrado e medir custo |
 | DEC-002 | Qt 6/C++ com Qt Quick/QML desacoplado, terminal debug, prioridade GUI inferior ao núcleo, aparência Mint; log binário tipado e CSV posterior | Validar UX e formatos por fixtures |
 | DEC-003 | Perfil ESP32, recursos selecionáveis com exclusão por GPIO e reserva UART; ADC/DAC internos e PWM configurável | Caracterização elétrica continua requisito de bancada |
 | DEC-004 | FMU 2.0 CS sem planta fixa, passo/duração configuráveis; meta 100 Hz medida por modelo/alvo; grade fixa, sem compensação; USB ≤5 ms por transferência | Medir orçamento fim a fim por modelo/perfil |
@@ -88,3 +88,9 @@ Base CONFIG/DATA, mapa posicional, sequência, ownership e workers RX/TX foram a
 Em 09.09.2026 foi feito clone limpo dos ramos `humble` e build HOST de `micro_ros_setup`, `micro_ros_msgs` e `micro_ros_agent` no Ubuntu 22.04.5 com ROS 2 Humble. Os commits observados foram `af209288676e5f02ac7c6d419b8ad157d3bed14e` (setup), `c9062eb3860d16c1bff1423923de3b0956fd4734` (mensagens), `c93ee764e0d2ef4907aeb29233c68cb5f4b56976` (Agent) e `57d086216d01ec43121845d385894a25987f8a2c` (Micro XRCE-DDS Agent baixado pelo build). O componente ESP-IDF no mesmo ramo foi obtido em `4ddd8c26e721662319ed8af981cb7cdc9ae05382`, mas ainda não foi compilado por não haver ESP-IDF instalado no host.
 
 O README desse commit do componente declara testes para ESP-IDF 5.2, 5.3, 5.4, 5.5 e 6.0; não declara ESP-IDF 4.4.8. Em 09.09.2026, o usuário escolheu ESP-IDF v5.2.6, a menor série declarada, após confirmação de que o alvo `esp32` clássico é suportado. A evidência limitada está em [micro-ros-host-baseline-2026-09-09.md](evidence/micro-ros-host-baseline-2026-09-09.md); o build integrado do firmware e o ensaio na placa ainda estão pendentes.
+
+## Interface ROS confirmada — 0.10.0
+
+O usuário definiu os tópicos `/daqc_setup`, `/daqc_state`, `/daqc_errors` e `/daqc_data`. A interface detalhada está no [IF-ROS](contracts/interfaces.md#if-ros--tópicos-micro-ros-e-mensagens-por-perfil). Setup e state usam comando/estado `uint8` e identificador de perfil `uint32`; errors usa flags binárias. `/daqc_data` é telemetria não crítica por perfil e não substitui DATA MID 02.
+
+Foi definida a mensagem `DaqcErrors` com flags binárias para ROS, comunicação, FMU, perfil, timeout e dado inválido, além de uma flag binária de origem. A telemetria ESP32 aguarda a enumeração aprovada dos I/O e nomes dos campos: não usar GPIOs ou capacidades possíveis como se fossem o perfil simultâneo. MTU XRCE continua pendente de escolha do usuário.

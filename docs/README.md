@@ -38,7 +38,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.9.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.10.0**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -71,3 +71,5 @@ Revisão 0.8: o coordenador C passa a possuir exclusivamente a CH340 pela API se
 Patch 0.8.1: o setup, as mensagens e o Agent micro-ROS dos ramos Humble tiveram build HOST limpo. O componente ESP-IDF Humble clonado declara ensaios em ESP-IDF 5.2…6.0, enquanto DEC-006 fixa 4.4.8. A [evidência](evidence/micro-ros-host-baseline-2026-09-09.md) preserva o resultado e a pendência; nenhum firmware será iniciado sem uma decisão sobre essa compatibilidade.
 
 Revisão 0.9: o usuário substituiu ESP-IDF 4.4.8 por **ESP-IDF v5.2.6**, a tag oficial da menor série declarada como testada pelo componente micro-ROS Humble atual. A verificação local do SDK lista o alvo `esp32`, compatível com o ESP32-D0WDQ5 clássico. O build integrado e a validação na placa continuam necessários.
+
+Revisão 0.10: tópicos e mensagens micro-ROS foram definidos: setup, state, errors e data por perfil. O MTU XRCE e a enumeração física do perfil ESP32 permanecem pendentes e não foram convertidos em código.

@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.9.0**, de 09.09.2026.
+Versão vigente: **SDD-MICROHIL 0.10.0**, de 09.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -44,6 +44,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.8.0 | 09.09.2026 | MINOR | Troca autorizada de libusb direto por coordenador C TTY POSIX exclusivo sobre CH340, com XRCE MID 04 entregue ao Agent por transporte customizado; Qt Quick/QML selecionado | spec, decisions, contexto, alvo, arquitetura, ICD, ADRs, plano e verificação | Decisão do usuário; sem execução de CH340, Agent, firmware ou GUI | caeb299 |
 | 0.8.1 | 09.09.2026 | PATCH | Evidência de build HOST do setup/Agent micro-ROS Humble e registro da incompatibilidade observada entre o componente Humble atual e ESP-IDF 4.4.8 | decisions, TARGET, plan, evidence e sdd-versions | micro-ros-host-baseline-2026-09-09; firmware/ESP-IDF/placa não executados | alterações locais; registrar commit quando criado |
 | 0.9.0 | 09.09.2026 | MINOR | Decisão do usuário de substituir ESP-IDF 4.4.8 por ESP-IDF v5.2.6, série mínima declarada pelo componente micro-ROS Humble atual, para o ESP32 clássico | decisions, TARGET, plan, README e sdd-versions | SDK v5.2.6 instalado no host; `idf.py --list-targets` lista esp32; build integrado e placa pendentes | alterações locais; registrar commit quando criado |
+| 0.10.0 | 09.09.2026 | MINOR | Definição dos tópicos micro-ROS, mensagens de setup/state/errors e regra de telemetria por perfil | ICD, architecture, decisions, plan e sdd-versions | Decisão do usuário; MTU XRCE, firmware e perfil físico ainda pendentes | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

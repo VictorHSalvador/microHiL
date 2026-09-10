@@ -72,7 +72,7 @@ A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface na
 
 RaspDAQ foi localizado em Projects/OT1-HiLInfrastructure e inspecionado: raspdaq_main cria uma única SharedDaqState, passada ao runtime FunctionFS e ao nó rclpy. Snapshots imutáveis são substituídos sob RLock; o objeto compartilhado/nó permanece. Reaproveitar ownership, troca de snapshots e coordenação de encerramento, sem copiar endpoints Linux FunctionFS para ESP32. A camada micro-ROS/XRCE continua necessária. [Inspeção estática](evidence/q-review-2026-09-06.md).
 
-ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A transação micro-ROS de perfil ocorre fora de STREAMING, é idempotente e precisa confirmar o hash antes de atuar. Não deixar o coordenador e um agente serial padrão lerem concorrentemente a mesma porta; o Agent recebe XRCE pelo transporte customizado. Qt Quick/QML chama somente interfaces de controle e nunca a FMU.
+ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A seleção micro-ROS de perfil ocorre fora de STREAMING por `DaqcSetup.profile_id`; o perfil compilado valida e congela seu schema antes de atuar, e `DaqcState` confirma a aplicação. Não deixar o coordenador e um agente serial padrão lerem concorrentemente a mesma porta; o Agent recebe XRCE pelo transporte customizado. Qt Quick/QML chama somente interfaces de controle e nunca a FMU.
 
 Design vigente: dono único do enlace, demultiplexação CONFIG/DATA/READ_ACK/XRCE no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. DATA usa mailbox de última atualização, sem fila crescente nem retransmissão. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço.
 
@@ -120,7 +120,7 @@ No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O
 
 ## ARCH-FW — Firmware proposto
 
-Firmware ainda ausente; não será implementado antes de fechar os Markdown. ADC/DAC internos confirmados, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos.
+Firmware ainda ausente. ADC/DAC internos confirmados, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. O firmware micro-ROS usa `/daqc_setup`, `/daqc_state`, `/daqc_errors` e telemetria por perfil conforme IF-ROS.
 
 Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
 
@@ -133,7 +133,7 @@ F-27 usa 60 s sem avanço de confirmação cumulativa de leitura pelo host, meca
 
 A tarefa de supervisão deve usar relógio monotônico e espera por evento/prazo, sem busy loop. Parser atualiza progresso quando READ_ACK avança no STREAMING atual; supervisor não segura mutex durante I/O e solicita DISABLE por transição coordenada, sem competir com escritor dos atuadores. TX usa mailboxes/filas limitadas, sem espera que paralise RX/CONFIG. Frequência da supervisão e tolerância entre atingir 60 s e concluir DISABLE devem ser dimensionadas. Comparar carga/timing com e sem supervisão e sob saturação, incluindo interferência entre núcleos.
 
-ESP-IDF oferece afinidade de tarefas entre os dois núcleos; a documentação consultada não fixa o SDK do projeto. Fonte: [FreeRTOS ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/system/freertos.html). A inferência de design é separar responsabilidades; cumprimento temporal depende de medições.
+ESP-IDF oferece afinidade de tarefas entre os dois núcleos; a baseline do projeto é v5.2.6. Fonte: [FreeRTOS ESP-IDF v5.2](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/freertos.html). A inferência de design é separar responsabilidades; cumprimento temporal depende de medições.
 
 A thread USB é distinta da thread de simulação. O snapshot usado é o da última atualização anterior à inserção FMI; timeout sem pacote não incrementa invalidade numérica. Proposta de contador: ausência preserva contagem; amostra válida zera, inválida incrementa uma vez por passo.
 
