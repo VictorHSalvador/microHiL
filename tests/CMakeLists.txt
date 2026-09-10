@@ -63,6 +63,11 @@ if(TARGET microhil_fmu_wrapper)
     target_link_libraries(test_fmu_model PRIVATE microhil_rt_simulation microhil_fmu_wrapper microhil_host_components m)
 endif()
 
+if(TARGET microhil_ros_control)
+    add_executable(test_daqc_ros_control test_daqc_ros_control.c)
+    target_link_libraries(test_daqc_ros_control PRIVATE microhil_ros_control)
+endif()
+
 add_test(NAME sample_queue_spsc_order COMMAND test_sample_queue order)
 add_test(NAME sample_queue_spsc_wrap COMMAND test_sample_queue wrap)
 add_test(NAME sample_queue_spsc_saturation COMMAND test_sample_queue saturation)
@@ -113,4 +118,8 @@ add_test(NAME profile_config_yaml COMMAND test_profile_config "${CMAKE_SOURCE_DI
 
 if(TARGET test_fmu_model)
     add_test(NAME fmu_model_inputs COMMAND test_fmu_model "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu" "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
+endif()
+
+if(TARGET test_daqc_ros_control)
+    add_test(NAME daqc_ros_control_state COMMAND test_daqc_ros_control)
 endif()

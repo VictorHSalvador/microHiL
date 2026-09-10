@@ -12,6 +12,7 @@ pkg_check_modules(LIBYAML REQUIRED IMPORTED_TARGET yaml-0.1)
 
 option(MICROHIL_BUILD_RUNNER "Build the FMILibrary-based runner" ON)
 option(MICROHIL_FETCH_FMILIB "Fetch the pinned FMILibrary release for the runner" OFF)
+option(MICROHIL_WITH_ROS2_CONTROL "Build the ROS 2 control node used by the runner" OFF)
 
 add_library(microhil_project_warnings INTERFACE)
 target_compile_options(microhil_project_warnings INTERFACE
@@ -54,6 +55,22 @@ target_link_libraries(microhil_host_components PUBLIC
     PkgConfig::LIBYAML
 )
 
+if(MICROHIL_WITH_ROS2_CONTROL)
+    find_package(rcl REQUIRED)
+    find_package(microhil_interfaces REQUIRED)
+
+    add_library(microhil_ros_control STATIC src/daqc_ros_control.c)
+    target_include_directories(microhil_ros_control PUBLIC include)
+    target_link_libraries(microhil_ros_control PUBLIC
+        microhil_project_warnings
+        microhil_host_components
+        rcl::rcl
+        microhil_interfaces::microhil_interfaces__rosidl_generator_c
+        microhil_interfaces::microhil_interfaces__rosidl_typesupport_c
+        Threads::Threads
+    )
+endif()
+
 if(MICROHIL_BUILD_RUNNER)
     include(cmake/fmilib.cmake)
     microhil_resolve_fmilib(MICROHIL_FMILIB_TARGET)
@@ -89,6 +106,10 @@ if(MICROHIL_BUILD_RUNNER)
         dl
         m
     )
+    if(MICROHIL_WITH_ROS2_CONTROL)
+        target_compile_definitions(fmu_rt_runner PRIVATE MICROHIL_WITH_ROS2_CONTROL=1)
+        target_link_libraries(fmu_rt_runner PRIVATE microhil_ros_control)
+    endif()
 endif()
 
 if(BUILD_TESTING)
