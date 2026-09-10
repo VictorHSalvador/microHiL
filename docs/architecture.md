@@ -26,7 +26,7 @@ Estados host e estados DAQC são máquinas distintas. Host preserva Idle/Running
 |---|---|---|
 | Carregar FMU | Botão/diálogo próprio; validar FMI 2.0 CS e analisar nomes/tipos | Matriz de capacidades do incremento; diagnóstico autorizado em Q-08 |
 | Carregar configuração | Outro botão; comparar FMU/DAQ/mapa e parâmetros, listar divergências | Identidade/versão no arquivo, Q-07/Q-09 |
-| Play | Inicializar FMI com mapa válido; referência inicial válida de input FMU até aquisição válida; DATA somente após Play; ausência de start literal não impede inicialização | Falha de lifecycle produz Error; amostras inválidas seguem F-24 |
+| Play | Inicializar FMI e inputs antes de STREAMING; em modo DAQC, validar SCHED_FIFO, iniciar coordenador/TTY/ponte UDP/nó ROS, confirmar ENABLE/configuração em `DaqcState`, solicitar STREAMING e só então criar a thread FMI; DATA somente após Play | Falha de lifecycle produz Error antes de `doStep`; amostras inválidas seguem F-24 |
 | Running + deadline perdido | Continuar, contar e guardar pior atraso | Agenda posterior, Q-06 |
 | Stop/fim normal/erro | Zerar saídas físicas e encerrar DATA; preservar registros disponíveis | Falha de entrega deve ser diagnosticada; novo Play reinicializa outputs pela FMU |
 | Aquisição DAQC inválida | Host ignora o bruto inválido e retém último válido no input FMU | Antes do histórico, usar valor inicial válido do input FMU; não zerar atuadores |
@@ -58,25 +58,27 @@ Confirmado: grade fixa de liberações no relógio real; preservar h e a sequên
 | Overrun | Aguardar próximo instante da grade fixa, sem saltar etapas FMI; perdas e pior atraso exibidos após execução |
 | Timeout USB | Máximo 5 ms por transferência, confirmado em Q-06. API configurada não prova limite real sob scheduler |
 | Renderização | Até 10 Hz, desacoplada; frames gráficos podem ser coalescidos sem descartar amostras do log |
-| SCHED_FIFO | Obrigatório; verificar retorno e política efetiva. Proposta: falha impede Play HiL, com diagnóstico e sem fallback silencioso |
+| SCHED_FIFO | Obrigatório no Play HiL; preflight em thread dedicada verifica a política antes de STREAMING e a thread FMI a configura novamente. Se a segunda configuração falhar, o run termina em erro, sem fallback silencioso |
 | Idade de entrada/cadência de aquisição | Último dado válido reutilizável até fim; valor constante é válido. Cadência de aquisição ainda a dimensionar; 60 s sem leitura host seguem F-27 |
 | Jitter aceitável/duração/carga de ensaio | Detalhar na verificação; limites não vieram do Demo |
 
-Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. Para serial 8N1, se selecionada, 261 bytes em 115200 baud exigem aproximadamente 22,66 ms apenas no fio. É exemplo aritmético, não baud rate adotado ou medição. Maximizar taxa significa medir o maior ajuste estável do caminho completo, não usar taxa nominal USB como prova.
+Duas esperas sequenciais de 5 ms já consomem 10 ms antes de FMU/filas/overhead. O enlace serial é UART 8N1 configurável de 9.600 a 152.000 bit/s, com RTS/CTS desabilitado; a baseline selecionada é 152.000 bit/s. Em 152.000 bit/s, 261 bytes exigem aproximadamente 17,17 ms apenas no fio e um frame XRCE máximo de 133 bytes, com MTU 128, exige cerca de 8,75 ms. Isso impede usar o DATA máximo em 100 Hz e é um limite aritmético, não medição; o perfil deve validar tamanho de payload e orçamento completo antes de STREAMING. XRCE é best effort e não deve iniciar quando seu envio violar o orçamento do tráfego crítico. Não alterar `h` nem compensar etapas para ocultar essa limitação.
 
 Coletar médias/máximos de ciclo, FMU e leitura/escrita, contagem de timeouts e pior atraso para apresentação final. Esses agregados ficam separados do stream binário de saídas. Escopo exato de persistência de metadados está em IF-LOG. Não fazer I/O textual/disco/GUI/ROS síncrono no ciclo, nem alocar snapshots Python na thread crítica C por analogia com RaspDAQ.
 
 ## ARCH-IO — Comunicação e perfis
 
-Bulk/libusb e micro-ROS no ESP32 permanecem confirmados. A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. Libusb pode ser parte de acesso direto à ponte, mas precisa de controle/configuração do dispositivo, exclusividade frente ao driver e integração XRCE explicitamente desenhada. Nenhuma dessas partes está implementada.
+A USB-C da placa liga host → CH340 → UART do ESP32; não é uma interface nativa USB de ESP32-S3. O coordenador C usa exclusivamente `/dev/ttyUSB*`, configurado pelo driver CH341 Linux. O worker `daq_serial_service` implementa RX/TX limitado em thread própria no HOST; a [evidência](evidence/host-serial-service-2026-09-10.md) cobre pseudo-terminal. O coordenador já demultiplexa XRCE recebido e mantém um mailbox XRCE de saída limitado a 128 bytes; a ponte UDP em loopback foi verificada com socket local, mas a execução junto ao Agent ainda permanece pendente.
 
 RaspDAQ foi localizado em Projects/OT1-HiLInfrastructure e inspecionado: raspdaq_main cria uma única SharedDaqState, passada ao runtime FunctionFS e ao nó rclpy. Snapshots imutáveis são substituídos sob RLock; o objeto compartilhado/nó permanece. Reaproveitar ownership, troca de snapshots e coordenação de encerramento, sem copiar endpoints Linux FunctionFS para ESP32. A camada micro-ROS/XRCE continua necessária. [Inspeção estática](evidence/q-review-2026-09-06.md).
 
-ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A transação micro-ROS de perfil ocorre fora de STREAMING, é idempotente e precisa confirmar o hash antes de atuar. Não deixar libusb e agente TTY lerem concorrentemente a mesma porta. NF-06 continua C/libusb; um wrapper Python não revoga a camada C por inferência.
+ADR-003 usa a referência para definir dono único e snapshots. O ICD reserva MID 04 para o transporte XRCE e MID 03 para READ_ACK, lacunas não cobertas pelo RaspDAQ. A seleção micro-ROS de perfil ocorre fora de STREAMING por `DaqcSetup.profile_id`; o perfil compilado valida e congela seu schema antes de atuar, e `DaqcState` confirma a aplicação. Não deixar o coordenador e um agente serial padrão lerem concorrentemente a mesma porta. O MID 04 atravessa uma ponte UDP de loopback até o Agent, que usa UDP e nunca abre a CH340. Qt Quick/QML chama somente interfaces de controle e nunca a FMU.
 
 Design vigente: dono único do enlace, demultiplexação CONFIG/DATA/READ_ACK/XRCE no adaptador, snapshots completos com geração publicados sob lock limitado, núcleo só copia estruturas internas; ninguém mantém mutex durante I/O/ROS. DATA usa mailbox de última atualização, sem fila crescente nem retransmissão. Double-buffering exigido por NF-08 continua base a reconciliar com objeto imutável do serviço.
 
-Perfil ESP32 é catálogo de recursos com exclusões de função, não soma de todas as capacidades simultâneas. No mapa, DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO/PWM. O mapa analógico usa volts; DAC converte explicitamente para 0…255. PWM tem frequência e duty próprios, ainda a detalhar. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
+O controlador HOST de estados aguarda confirmação somente fora da thread de simulação. CONFIG UART usa `daqc_config_timeout_ms`, inicialmente 10 ms; a confirmação ROS de `DaqcSetup` usa `daqc_ros_timeout_ms`, inicialmente 100 ms. Play HiL executa o preflight SCHED_FIFO, solicita CONFIG ENABLE, publica `DaqcSetup` e exige `DaqcState` ENABLE com perfil/configuração aplicados antes de solicitar STREAMING e criar a thread FMI. Stop, término e Error solicitam DISABLE após congelar a produção; a confirmação ausente é reportada, sem alterar o relógio do modelo.
+
+Perfil ESP32 tem mapa funcional confirmado: AI em GPIO32/33/34/35/36/39, DI em GPIO4/13/14/27, AO em GPIO25/26, DO em GPIO16/17/21/22/23 e PWM em GPIO18/19. UART0 (GPIO1/3) e pinos de boot (GPIO2/5/12/15) ficam fora do perfil. DI/AI da DAQC alimentam inputs da FMU; outputs FMU destinados ao hardware alimentam DO/AO/PWM. O mapa analógico usa volts; DAC converte explicitamente para 0…255. PWM usa duty normalizado no DATA e frequência/resolução validadas por `DaqcSetup` fora de STREAMING. Unidades e faixas precisam de conversão explícita: real da FMU não significa volts por definição. ICD em [interfaces.md](contracts/interfaces.md).
 
 ## ARCH-GUI — Interface e persistência
 
@@ -97,19 +99,20 @@ Direção visual confirmada: Linux Mint. Proposta de paleta inicial (design, nã
 
 Renderização a 10 Hz não implica guardar só 10 valores/s: gráfico aberto pode receber as amostras por passo e renderizar um lote; memória limitada à janela. Fechar histórico não impede preservar parâmetros de configuração. Quantidade máxima de pontos/memória deve ser dimensionada separadamente do espaçamento Y.
 
-Log binário de saídas finais por passo; conversão CSV após encerramento, utilizando FMU para interpretar tipos. Não converter durante Running. Configuração também permanece binária. IF-LOG trata identidade/ordem, layout e política de falha; métricas por passo saem do log por instrução do usuário.
+Log binário de saídas finais por passo; conversão CSV após encerramento, utilizando FMU para interpretar tipos. Não converter durante Running. A configuração persistida é YAML versionado; o log permanece binário. IF-LOG trata identidade/ordem, layout e política de falha; métricas por passo saem do log por instrução do usuário.
 
 ## ARCH-LOG — Dados e concorrência
 
 | Dado | Proprietário proposto | Acesso |
 |---|---|---|
 | Configuração validada e mapa | Controlador da execução | Imutável durante run; cópia/configuração versionada |
-| Instância e tempo FMU | Thread de simulação | Chamadas exclusivas durante run; lifecycle serializado |
+| Instância e tempo FMU | Controlador prepara; thread de simulação executa | Inicialização e referências de input são resolvidas antes do STREAMING; `doStep` e leituras/escritas FMI do ciclo pertencem exclusivamente à thread |
+| Controle ROS 2 | Thread `rcl` do runner | Publica setup e recebe estado/erros; não chama FMI, não possui TTY e não bloqueia a thread de simulação |
 | Input snapshot | Adaptador USB host | Candidato bruto, qualidade e último válido por canal, geração/seq coerentes; simulação consome sem esperar I/O |
 | Contadores de aquisição inválida | Thread de simulação no host | Atualiza uma vez por passo por canal; publica erro para consumidor GUI |
 | Progresso de leitura | Thread de comunicação host envia READ_ACK; firmware supervisiona | Último SEQ lido no STREAMING atual, independente de valor numérico/constância |
 | Comandos virtuais | Controlador aceita; simulação aplica | Publicação limitada e confirmação de aplicação na fronteira de ciclo |
-| Output snapshot | Simulação | Cópias para adaptador de saída/telemetria; sem ponteiros mutáveis para widgets |
+| Output snapshot | Simulação | Cópias para adaptador de saída; sem ponteiros mutáveis para widgets |
 | Filas log/plot | Simulação produz, um consumidor por fila | SPSC enquanto topologia for exatamente essa; não adicionar consumidor à mesma fila sem revisão |
 | Estado público | Controlador da execução | Eventos ordenados e snapshots; erro dos workers propagado |
 | Atuação física AO/DO/PWM | Tarefa DAQC com escritor final único | Dados somente STREAMING; encerramento aplica zero e cessa DATA; novo run aplica outputs iniciais da FMU |
@@ -120,11 +123,15 @@ No HOST auditado, cada fila ocupa 2.228.248 bytes e há duas na pilha de main. O
 
 ## ARCH-FW — Firmware proposto
 
-Firmware ainda ausente; não será implementado antes de fechar os Markdown. ADC/DAC internos confirmados, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos.
+O firmware possui uma base compilada para ADC/DAC internos, perfil ESP32 e capacidades do TARGET. Estados obrigatórios DISABLE, ENABLE (IDLE), STREAMING; parser atende CONFIG em todos eles e não fica preso em transmissão contínua. DISABLE deve interromper streaming sem matar a capacidade de receber futuros comandos. CONFIG é a única autoridade de transição. `/daqc_setup` só confirma o estado já efetivo e configura perfil/ADC/PWM fora de STREAMING; divergência de `command` é diagnosticada por `/daqc_errors`. A aplicação micro-ROS de `/daqc_setup`, `/daqc_state` e `/daqc_errors` usa MID 04 e permanece fora do caminho de aquisição/atuação.
+
+No host, o runner hospeda um nó `rcl` em thread própria para esse mesmo conjunto de tópicos. A thread recebe e guarda o último estado/erro com sincronização limitada; a thread de simulação não participa de ROS. O controlador de ciclo pode aguardar confirmação fora do caminho crítico antes de STREAMING, mas não aguarda publicação ROS durante `doStep` nem para encerrar uma simulação já em curso.
 
 Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-ROS. Usar os dois núcleos do ESP32; proposta: aquisição/atuação periódica em um núcleo e comunicação/micro-ROS/supervisão no outro. Índices de CPU, afinidades de interrupções, prioridades, clocks, RTOS/versão e orçamento ainda serão fixados após identificar tarefas do SDK. Não prometer isolamento total: memória/periféricos e sincronização continuam compartilhados. Não copiar os números do Demo.
 
-UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE periódico não podem bloquear o caminho de CONFIG.
+A implementação inicial fixa aquisição/atuação no núcleo 1 com prioridade 9, comunicação no núcleo 0 com prioridade 8 e `daqc_ros` no núcleo 0 com prioridade 4 e pilha de 6144 bytes. Esses são parâmetros de implementação para manter ROS abaixo do tráfego crítico, não evidência de orçamento, ausência de inversão de prioridade ou cumprimento de deadline; a qualificação deve medi-los no alvo.
+
+UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE não podem bloquear o caminho de CONFIG.
 
 
 ### Supervisão de leitura e concorrência no firmware
@@ -133,7 +140,7 @@ F-27 usa 60 s sem avanço de confirmação cumulativa de leitura pelo host, meca
 
 A tarefa de supervisão deve usar relógio monotônico e espera por evento/prazo, sem busy loop. Parser atualiza progresso quando READ_ACK avança no STREAMING atual; supervisor não segura mutex durante I/O e solicita DISABLE por transição coordenada, sem competir com escritor dos atuadores. TX usa mailboxes/filas limitadas, sem espera que paralise RX/CONFIG. Frequência da supervisão e tolerância entre atingir 60 s e concluir DISABLE devem ser dimensionadas. Comparar carga/timing com e sem supervisão e sob saturação, incluindo interferência entre núcleos.
 
-ESP-IDF oferece afinidade de tarefas entre os dois núcleos; a documentação consultada não fixa o SDK do projeto. Fonte: [FreeRTOS ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/system/freertos.html). A inferência de design é separar responsabilidades; cumprimento temporal depende de medições.
+ESP-IDF oferece afinidade de tarefas entre os dois núcleos; a baseline do projeto é v5.2.6. Fonte: [FreeRTOS ESP-IDF v5.2](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/freertos.html). A inferência de design é separar responsabilidades; cumprimento temporal depende de medições.
 
 A thread USB é distinta da thread de simulação. O snapshot usado é o da última atualização anterior à inserção FMI; timeout sem pacote não incrementa invalidade numérica. Proposta de contador: ausência preserva contagem; amostra válida zera, inválida incrementa uma vez por passo.
 

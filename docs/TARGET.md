@@ -1,6 +1,6 @@
 # Alvo físico e ambiente
 
-Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponibilização dos I/Os disponíveis confirmados pelo usuário; mapa simultâneo/faixas de aquisição ainda em detalhamento. Fonte local: [ESP32-CONTROLADOR.md](references/ESP32-CONTROLADOR.md). As alegações de fotografia/esptool são informações recebidas; foto, comando completo, versão e saída bruta não foram inspecionados nesta sessão. Nenhuma nova consulta ao dispositivo foi executada.
+Status: perfil inicial denominado **ESP32**, com mapa funcional confirmado pelo usuário para ADC/DAC internos, digital e PWM. Fonte local: [ESP32-CONTROLADOR.md](references/ESP32-CONTROLADOR.md). As alegações de fotografia/esptool são informações recebidas; foto, comando completo, versão e saída bruta não foram inspecionados nesta sessão. Nenhuma nova consulta ao dispositivo foi executada.
 
 ## Inventário de origem
 
@@ -10,14 +10,20 @@ Status: perfil inicial denominado **ESP32**, com ADC/DAC internos, PWM e disponi
 | Identificador provisório | DAQC-PROT-ESP32-DEVKIT-30P-USB-C | Identifica protótipo, não perfil aprovado de produto |
 | MCU | ESP32-D0WDQ5, revisão 3, informado por esptool | Preservar saída bruta antes de consolidar nomenclatura comercial/ECO |
 | CPU/cristal | Dual-core, capacidade até 240 MHz; cristal informado 40 MHz | Clock configurado de firmware ainda não definido |
-| USB–UART | CH340/CH341, VID:PID 1a86:7523 | Confirmar variante, driver, baud rate, reset e exclusividade do dispositivo |
+| USB–UART | CH340/CH341, VID:PID 1a86:7523; UART 8N1 configurável de 9.600 a 152.000 bit/s; baseline selecionada: 152.000 bit/s; RTS/CTS desabilitado | Confirmar variante, driver, reset e exclusividade do dispositivo; medir capacidade por perfil/passo |
 | Porta | /dev/ttyUSB0 na identificação fornecida | Não é identificador persistente nem prova de presença atual |
 | Flash | 4 MB informados | Partições, modo e frequência pendentes |
 | ADC | Referência VRef em eFuse informada | Não comprova calibração de sistema ou exatidão da DAQC |
 | Módulo | Blindagem/antena PCB no relato | Modelo comercial e conexões adicionais pendentes |
 | Host produto | Raspberry Pi 4 com 2 GB, confirmado pelo usuário | Arquitetura do SO, kernel e recursos reservados pendentes; etapa inicial em máquina Linux Ubuntu 22.04/ROS 2 Humble |
 | Host auditado | Ubuntu 22.04.5, x86-64, kernel 6.8.0-138-generic | Não representa o alvo Raspberry Pi |
-| Software alvo | ROS 2 Humble, FMILibrary, Qt 6 conforme requisitos | Fixar versões/revisões, toolchain, ESP-IDF, micro-ROS e RTOS efetivos |
+| Software alvo | ROS 2 Humble, FMILibrary, Qt 6; ESP-IDF v5.2.6 e ramos Humble de micro-ROS | ESP32 clássico é alvo listado pelo ESP-IDF 5.2 e pelo componente Humble; build integrado e placa continuam pendentes |
+
+## Evidência do host de build
+
+Em 07.09.2026, a TASK-001 foi executada em Ubuntu 22.04 com GCC 11.4.0 e CMake disponível, no diretório `/home/linuxvh/Projects/microHiL`; cada build usou um diretório temporário limpo em `/tmp`. A FMILibrary oficial usada para o runner foi a 3.0.4, na revisão fixa `4a4b21ec10a632b2768a604c2330c54204919644`. O registro completo, inclusive os comandos e limitações, está em [host-build-foundation-2026-09-07.md](evidence/host-build-foundation-2026-09-07.md).
+
+Esse host de build não representa nem qualifica o Raspberry Pi 4. A instalação externa exercitada em `/home/linuxvh/Projects/asturian-software/dev/external/include` e `/home/linuxvh/Projects/asturian-software/release/external/lib/libfmilib.a` comprovou somente a rota explícita de configuração sem download: sua versão não foi comprovada e não é baseline do produto.
 
 ## Recursos e reservas para planejamento
 
@@ -40,11 +46,25 @@ Sinais externos de processo, precisão ADC, tensão útil DAC e estado das saíd
 
 ## Topologia de comunicação
 
-Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. Bulk/libusb e micro-ROS estão mantidos por DEC-001. O coordenador único do host possui o enlace e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. O uso de Python fora do núcleo continua possibilidade, sem substituir a camada C/libusb exigida.
+Para a placa descrita, o caminho é host USB → ponte CH340 → UART do ESP32. Não assumir USB CDC nativo de ESP32-S3. O coordenador C abre exclusivamente o dispositivo Linux `/dev/ttyUSB*` e demultiplexa CONFIG, DATA, READ_ACK e XRCE conforme o ICD. MID 04 chega ao Micro-ROS Agent por ponte UDP em loopback; nenhum agente serial concorrente abre a porta.
 
-A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial, o que demonstra uma alternativa a avaliar, sem fixar versões ou compatibilidade desta placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/establish-serial-connection.html), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble). Consultadas em 06.09.2026; a página ESP-IDF stable então indicava v6.1, não escolhida como SDK do produto.
+A Espressif documenta explicitamente a divisão USB–ponte–UART. O componente micro-ROS no ramo Humble documenta transporte UART customizado e agente serial. O setup e Agent Humble tiveram build HOST limpo em 09.09.2026. O usuário selecionou ESP-IDF v5.2.6, da menor série declarada como testada pelo componente Humble atual; ESP32 clássico é alvo listado tanto pelo SDK quanto pelo componente. Isso comprova compatibilidade declarada de versão/alvo, não o build integrado nem o funcionamento na placa. Fontes: [ESP-IDF conexão serial](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/get-started/linux-macos-setup.html), [ESP-IDF ESP32 v5.2](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/), [micro_ros_setup Humble](https://github.com/micro-ROS/micro_ros_setup/tree/humble), [componente micro-ROS Humble](https://github.com/micro-ROS/micro_ros_espidf_component/tree/humble).
 
-## Dados necessários para liberar o perfil
+## Perfil ESP32 confirmado
+
+O perfil usa os seguintes nomes genéricos de I/O. Eles identificam o canal no mapa e no DATA; não identificam sensores ou atuadores. Pinos não listados abaixo não pertencem ao perfil inicial. O identificador numérico confirmado é `profile_id = 1`.
+
+| Função | GPIOs confirmados | Tipo no DATA | Representação |
+|---|---|---|---|
+| AI | 36, 39, 34, 35, 32, 33 | `float32` | volts calibrados pela DAQC |
+| AO | 25, 26 | `float32` | volts solicitados; firmware converte para DAC de 8 bits |
+| DI | 27, 14, 13, 4 | `uint8` | 0 ou 1 |
+| DO | 16, 17, 21, 22, 23 | `uint8` | 0 ou 1 |
+| PWM | 18, 19 | `float32` | duty normalizado 0…1; frequência/resolução vêm da configuração validada |
+| Reservado UART | 1 (TX), 3 (RX) | — | UART0 da ponte CH340 |
+| Reservado boot | 2, 5, 12, 15 | — | fora do perfil para preservar boot/reset |
+
+## Dados necessários para concluir o perfil
 
 O perfil ESP32 expõe recursos configuráveis pelo usuário, respeitando exclusões por GPIO, reserva UART e compartilhamento de periféricos. ADC/PWM têm opções abaixo; SPI/I2C não receberam aplicações específicas.
 
@@ -60,7 +80,11 @@ O perfil ESP32 expõe recursos configuráveis pelo usuário, respeitando exclus�
 
 Não existe uma faixa única “padrão 0…3,3 V” com a mesma precisão para todo ADC ESP32. Como referência técnica, a documentação ESP-IDF 4.4.4 recomenda 150…2450 mV para maior precisão com atenuação 11 dB; isso não fixa a atenuação deste firmware. O perfil deverá informar atenuação, calibração e unidade real transportada. Fontes primárias: [ADC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/adc.html), [DAC](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/dac.html). Versão documental consultada, não SDK selecionado.
 
-Para cada função habilitada: identidade, GPIO/conector, tipo/unidade, faixa e conversão, incompatibilidades, estado físico por modo e restrições, ciclo e procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
+O mapa de GPIO, direção, representação e `profile_id = 1` do perfil ESP32 estão confirmados acima. Permanecem a caracterização elétrica, a calibração, a configuração válida de ADC/PWM, o circuito externo e o procedimento de ensaio. Códigos crus ADC/DAC não equivalem automaticamente a valores da planta em volts/metros/radianos. Não transformar valores físicos arbitrários da FMU em códigos por cast implícito.
+
+A configuração ADC/PWM vem em `DaqcSetup` somente em DISABLE ou ENABLE. Os seis códigos de atenuação seguem a ordem GPIO32/33/34/35/36/39; os parâmetros PWM seguem GPIO18/19. A DAQC rejeita antes de STREAMING resolução ADC fora de 9…12 bits, código de atenuação fora de 0…3, frequência PWM fora do envelope do perfil ou par frequência/resolução não realizável. Os erros binários de ADC/PWM e a confirmação `configuration_applied` informam o resultado sem imprimir no enlace UART.
+
+O YAML do perfil persiste essa configuração de forma completa: `adc.resolution_bits`, `adc.attenuation.GPIO32_AI`…`GPIO39_AI`, `pwm.GPIO18_PWM.frequency_hz`, `pwm.GPIO18_PWM.resolution_bits` e os equivalentes de GPIO19. A GUI deve sempre escrever os seis ADCs e os dois PWMs; I/O sem mapa FMU não recebe valor implícito. Esses valores são configuração solicitada e não caracterização elétrica comprovada.
 
 F-23 retém inputs no host, sem atuar em AO/DO/PWM por amostra inválida isolada. Dados de atuação só em STREAMING. No encerramento da execução, zerar saídas e cessar DATA; restart reinicializa a FMU e aplica outputs iniciais válidos. Zero físico significa DO baixo, DAC código zero nominal e PWM duty zero com nível inativo baixo. Tensão real e transitórios de reset exigem ensaio; níveis anteriores à execução do firmware não são garantidos pelo software.
 
@@ -73,7 +97,13 @@ O mapa analógico usa volts; DAC converte para código de 8 bits e nunca confund
 
 Uso dos dois núcleos confirmado. Proposta: reservar afinidade da aquisição/atuação em um núcleo e comunicação/supervisão no outro; definir números de CPU e prioridades após inspecionar tarefas/IRQs do SDK escolhido. Memória e periféricos compartilhados ainda podem produzir interferência. Ensaiar carga máxima de comunicação e supervisão concorrentes com o caminho periódico.
 
-A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. READ_ACK MID 03 confirma cumulativamente o último SEQ DAQC→host consumido pela aplicação. Não confundir esvaziamento de FIFO UART com leitura pela aplicação. RTS/CTS/conexões não foram confirmados e não substituem essa confirmação. A cadência do ACK e a tolerância de supervisão serão dimensionadas e medidas; não há CRC ou retransmissão de DATA.
+A ponte CH340 é o dispositivo USB; ESP32 vê UART e não diretamente o read Linux. READ_ACK MID 03 confirma cumulativamente o último SEQ DAQC→host consumido pela aplicação. Não confundir esvaziamento de FIFO UART com leitura pela aplicação. RTS/CTS fica desabilitado e não substitui essa confirmação. A cadência do ACK e a tolerância de supervisão serão dimensionadas e medidas; não há CRC ou retransmissão de DATA.
+
+## Baseline de firmware e UART
+
+DEC-006 fixa ESP-IDF **v5.2.6** (`9ef24e3e2a2c96e720d83c574a3f8699177573da`), tag oficial da série 5.2 escolhida pelo usuário. O comando `idf.py --list-targets` deste SDK listou `esp32` no host em 09.09.2026. `micro_ros_setup`, `micro_ros_msgs` e Agent Humble foram compilados no host; o componente ESP-IDF Humble permanece em `4ddd8c26e721662319ed8af981cb7cdc9ae05382` até o build integrado. Não trocar para ramo rolling ou outra série ESP-IDF sem nova decisão. O MTU XRCE selecionado é 128 bytes; um quadro MID 04 completo de 133 bytes ocupa aproximadamente 8,75 ms em UART 8N1 a 152.000 bit/s. Esse é um limite aritmético do enlace, não uma medição de latência ou deadline.
+
+A configuração do enlace é UART 8N1, sem RTS/CTS, configurável de 9.600 a 152.000 bit/s e aplicada simetricamente à ponte e ao ESP32. A baseline selecionada é 152.000 bit/s. Como 152.000 bit/s não é um valor `termios` POSIX convencional, o coordenador host usa `termios2` com `BOTHER`; a [evidência HOST](evidence/host-uart-152000-2026-09-09.md) confirma a taxa solicitada em pseudo-terminal. A compatibilidade CH340–ESP32, a taxa efetiva e o erro de taxa exigem ensaio em placa. A faixa não garante throughput: antes de STREAMING, validar o orçamento do frame e do passo. Para o quadro DATA máximo de 261 bytes, 152.000 bit/s representa aproximadamente 17,17 ms de transmissão serial 8N1; logo, uma execução de 100 Hz só é possível com payloads suficientemente menores e com orçamento completo medido.
 
 ## Opções configuráveis do perfil ESP32
 

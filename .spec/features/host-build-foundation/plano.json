@@ -1,0 +1,54 @@
+{
+  "runId": "microHiL-host-build-foundation-mtry2itc",
+  "feature": "host-build-foundation",
+  "agent": "codex",
+  "modo": "sequencial",
+  "paralelizar": null,
+  "modeloForcado": "gpt-5.6-terra",
+  "esforcoForcado": "high",
+  "geradoEm": "2026-09-08 00:41",
+  "branchTrabalho": "spec/host-build-foundation",
+  "baseDir": ".spec/features/host-build-foundation",
+  "specDir": ".spec",
+  "repoName": "microHiL",
+  "logsDir": "../onp-worktrees/microHiL-host-build-foundation-logs",
+  "ondas": [],
+  "faixas": [],
+  "sequenciais": [
+    {
+      "id": "T-004",
+      "titulo": "Documentar, evidenciar e rastrear a TASK-001",
+      "modelo": "gpt-5.6-terra",
+      "esforco": "high",
+      "arquivos": [
+        "README.md",
+        "docs/README.md",
+        "docs/TARGET.md",
+        "docs/plan.md",
+        "docs/tasks/TASK-001.md",
+        "docs/traceability.md",
+        "docs/quality-gates.md",
+        "docs/sdd-versions.md",
+        "docs/evidence/host-build-foundation-2026-09-07.md",
+        ".spec/features/host-build-foundation/spec.md",
+        ".spec/features/host-build-foundation/tasks.md",
+        "test/sdd-versioning.spec.test.js",
+        "onpspec.config.json"
+      ],
+      "refs": [
+        "US-005",
+        "AC-010",
+        "AC-011",
+        "AC-012",
+        "US-006",
+        "AC-013",
+        "AC-014"
+      ]
+    }
+  ],
+  "concluidas": [
+    "T-002",
+    "T-003"
+  ],
+  "avisos": []
+}

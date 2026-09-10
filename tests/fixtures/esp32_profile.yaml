@@ -1,0 +1,38 @@
+version: 1
+profile:
+  id: 1
+execution:
+  step_size_s: 0.01
+  stop_time_s: 5.0
+adc:
+  resolution_bits: 12
+  attenuation:
+    GPIO32_AI: 3
+    GPIO33_AI: 3
+    GPIO34_AI: 3
+    GPIO35_AI: 3
+    GPIO36_AI: 3
+    GPIO39_AI: 3
+pwm:
+  GPIO18_PWM:
+    frequency_hz: 20000
+    resolution_bits: 10
+  GPIO19_PWM:
+    frequency_hz: 20000
+    resolution_bits: 10
+mappings:
+  - channel: GPIO32_AI
+    variable: u_real
+    type: real
+    scale: 1.0
+    offset: 0.0
+  - channel: GPIO16_DO
+    variable: y_boolean
+    type: boolean
+    scale: 1.0
+    offset: 0.0
+  - channel: GPIO25_AO
+    variable: y_real
+    type: real
+    scale: 1.0
+    offset: 0.0

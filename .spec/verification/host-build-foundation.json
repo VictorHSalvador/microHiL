@@ -1,0 +1,65 @@
+{
+  "feature": "host-build-foundation",
+  "timestamp": "2026-09-09T00:52:23.093Z",
+  "gitRev": "d6c220f",
+  "command": "node test/run_spec_tests.js",
+  "reporter": "tap",
+  "exitCode": 0,
+  "testsParsed": 29,
+  "results": {
+    "AC-007": {
+      "status": "pass",
+      "testName": "AC-007: O build independente configura em diretório limpo @spec:AC-007",
+      "method": "tap"
+    },
+    "AC-008": {
+      "status": "pass",
+      "testName": "AC-008: Os componentes independentes compilam com os avisos do projeto @spec:AC-008",
+      "method": "tap"
+    },
+    "AC-009": {
+      "status": "pass",
+      "testName": "AC-009: Os testes HOST são descobertos e executados @spec:AC-009",
+      "method": "tap"
+    },
+    "AC-010": {
+      "status": "pass",
+      "testName": "AC-010: A ausência da dependência é informada somente quando necessária @spec:AC-010",
+      "method": "tap"
+    },
+    "AC-011": {
+      "status": "pass",
+      "testName": "AC-011: A versão oficial selecionada é imutável para o build @spec:AC-011",
+      "method": "tap"
+    },
+    "AC-012": {
+      "status": "pass",
+      "testName": "AC-012: Uma instalação explícita continua suportada @spec:AC-012",
+      "method": "tap"
+    },
+    "AC-013": {
+      "status": "pass",
+      "testName": "AC-013: A documentação permite repetir os builds @spec:AC-013",
+      "method": "tap"
+    },
+    "AC-014": {
+      "status": "pass",
+      "testName": "AC-014: O SDD reflete o estado observado @spec:AC-014",
+      "method": "tap"
+    }
+  },
+  "principles": {
+    "P-002": {
+      "status": "pass",
+      "testName": "P-002: Existe uma única especificação normativa do produto @principle:P-002"
+    },
+    "P-003": {
+      "status": "pass",
+      "testName": "P-003: Estado documental não é estado de implementação @principle:P-003"
+    },
+    "P-004": {
+      "status": "pass",
+      "testName": "P-004: Toda revisão do SDD é rastreável @principle:P-004"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Especificação de trabalho do MICROHIL
 
-Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.7, 07.09.2026; baseline conjunta [SDD-MICROHIL 0.7.1](sdd-versions.md). **Estado: decisões de produto e ICD consolidados; implementação e validação pendentes.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
+Referência de origem: MICROHIL-REQ-001-A, versão 01 de 24.08.2026. Revisão de trabalho: 0.8, baseline conjunta [SDD-MICROHIL 0.8.0](sdd-versions.md), 09.09.2026. **Estado: decisões de produto e ICD consolidados; TASK-001 e TASK-002 verificadas no HOST, validação de produto pendente.** Este é o documento editável para a retomada solicitada; não é uma revisão A retroativamente alterada nem declaração de validação.
 
 ## Origem e regra de leitura
 
@@ -8,7 +8,7 @@ Os 53 IDs de origem foram preservados. Respostas DEC-001…012 atualizam os text
 
 **Texto vigente:** exigência recebida ou alteração confirmada; detalhes físicos desconhecidos não foram inventados. **Critério de aceitação proposto:** refinamento para teste, não evidência executada. **Pendência:** parâmetro de implementação, medição ou dependência externa; não reabre decisões confirmadas. A implementação começa somente após a verificação cruzada final dos Markdown.
 
-Confirmados: Qt 6 desacoplado/terminal debug, Bulk/libusb + micro-ROS sob dono único, perfil ESP32/ADC-DAC/PWM, Pi 4/2 GB após Linux inicial, logging binário de saídas/CSV posterior, retenção de último válido, meta 100 Hz/timeout USB até 5 ms, continuar após overrun, gráficos até 10 Hz e DATA sem CRC/retransmissão. [decisions.md](decisions.md) separa decisões dos parâmetros a medir.
+Confirmados: Qt Quick/QML desacoplado/terminal debug, micro-ROS sob coordenador C único em `/dev/ttyUSB*`, perfil ESP32/ADC-DAC/PWM, Pi 4/2 GB após Linux inicial, logging binário de saídas/CSV posterior, retenção de último válido, meta 100 Hz/timeout USB até 5 ms, continuar após overrun, gráficos até 10 Hz e DATA sem CRC/retransmissão. [decisions.md](decisions.md) separa decisões dos parâmetros a medir.
 
 Comentários de todo código próprio devem estar em inglês, ser breves e úteis, conforme [constituição](constitution.md). Não quebrar parâmetros por estética; quebrar apenas linhas extremamente longas. Essas regras são instruções confirmadas do usuário, aplicáveis a todos os incrementos, sem criar funcionalidades ou mecanismos de hardware adicionais.
 
@@ -41,7 +41,7 @@ A plataforma deve permitir associar inputs/outputs da FMU aos recursos do perfil
 
 **Critério de aceitação proposto (V-F-02; HOST + bancada/HIL):** Mapear canais compatíveis e rejeitar funções conflitantes, direção/tipo/unidade incompatíveis; transmitir o descritor em DISABLE/ENABLE, confirmar o mesmo hash no firmware e bloquear STREAMING se houver divergência.
 
-**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006. **Pendência:** enumeração do perfil e caracterização elétrica em bancada.
+**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006. **Pendência:** caracterização elétrica e validação em bancada.
 
 ### REQ-F-03 — Seleção e Controle da DAQC
 
@@ -55,7 +55,7 @@ A plataforma deve permitir selecionar perfil DAQC compatível, inicialmente deno
 
 ### REQ-F-04 — Persistência do Perfil de Configuração
 
-A interface deve salvar/carregar configuração em arquivo binário, incluindo I/O, mapa FMU–DAQC e parâmetros de execução. Carregamento usa botão distinto do de FMU e valida o arquivo contra a FMU carregada e a DAQC selecionada, informando quais variáveis, tipos, recursos ou parâmetros divergem antes de aplicar a configuração.
+A interface deve salvar/carregar configuração em arquivo YAML versionado, incluindo I/O, mapa FMU–DAQC e parâmetros de execução. Carregamento usa botão distinto do de FMU e valida o arquivo contra a FMU carregada e a DAQC selecionada, informando quais variáveis, tipos, recursos ou parâmetros divergem antes de aplicar a configuração.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
@@ -129,7 +129,7 @@ Com logging habilitado, registrar o valor final de cada saída selecionada corre
 
 **Critério de aceitação proposto (V-F-11; HOST + HIL):** Confrontar passos concluídos e registros finais por saída; detectar perda e amostra final ausente. Testar outputs registrados sem substituição por inputs retidos e falha de sink sem parar a simulação; Q-07 fecha representação tipada e metadados.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** vetores tipados e teste de falha do sink.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** integração com FMU real, GUI e confirmação do ciclo/atuação de produto; vetores HOST tipados e falhas de sink foram executados em 08.09.2026.
 
 ### REQ-F-12 — Coleta de métricas para apresentação final
 
@@ -195,7 +195,7 @@ A plataforma deve suportar CONFIG no protocolo próprio, com SYNC de dois bytes 
 
 **Critério de aceitação proposto (V-F-18; HOST + bancada):** Vetores CONFIG com SYNC/MID/COMMAND definidos; usar bytes SYNC 59 72, COMMAND/STATUS uint8 e quadros 4/5 bytes. Confirmar idempotência, estado efetivo e prioridade sobre DATA; STATUS usa códigos COMMAND, não MID.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** prazo agregado/tentativas de CONFIG serão medidos; base Q-02 consolidada.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Configuração confirmada:** prazo agregado de CONFIG é configurável, com valor inicial de 10 ms e transferências individuais de no máximo 5 ms; Play só inicia depois da confirmação STREAMING. **Pendência:** medir esse valor no enlace físico.
 
 ### REQ-F-19 — Comunicação de Streaming com a DAQC
 
@@ -205,7 +205,7 @@ A plataforma deve suportar DATA com SYNC=0x7259, MID=0x02 e até 256 bytes de pa
 
 **Critério de aceitação proposto (V-F-19; HOST + HIL):** Testar perfis/layout, frames parciais/agregados e limite do payload. Payload contendo SYNC não pode ser truncado por busca ingênua; quadro fixo 5+N e STATUS fora do DATA. Injetar perda, gap, repetido, antigo e timeout: nenhum bloqueia o próximo pacote nem gera retransmissão.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** perfil físico final e medição da ponte; framing consolidado no ICD.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** firmware e medição da ponte; framing e layout ESP32 consolidados no ICD.
 
 ### REQ-F-20 — Controle de Estado da DAQC
 
@@ -219,7 +219,7 @@ A plataforma deve enviar comandos DISABLE=0x01, ENABLE=0x02 e STREAMING=0x03 e i
 
 ### REQ-F-21 — Validação da Configuração antes da Execução
 
-Antes de executar, validar FMU, passo/duração, perfil DAQC, mapeamento I/O e configuração binária quando utilizada. Incompatibilidades devem informar em qual variável, tipo, recurso ou parâmetro ocorre a divergência e impedir aplicação parcial/Play inválido.
+Antes de executar, validar FMU, passo/duração, perfil DAQC, mapeamento I/O e configuração YAML. Incompatibilidades devem informar em qual variável, tipo, recurso ou parâmetro ocorre a divergência e impedir aplicação parcial/Play inválido.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
@@ -233,7 +233,7 @@ Ao finalizar uma simulação por término normal, Stop ou erro recuperável, a p
 
 **Critério de aceitação proposto (V-F-22; HOST):** Em fim/Stop/erro recuperável, preservar até última amostra concluída quando sink disponível; testar interleaving final e erros de flush/close; impossibilidade de gravação deve ser erro explícito, sem alegar preservação impossível.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** implementação e testes de falha/encerramento.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002. **Pendência:** encerramento integrado com lifecycle FMU e atuação física; drenagem e falhas de flush/close foram exercitadas no HOST em 08.09.2026.
 
 
 ### REQ-F-23 — Retenção no host das entradas provenientes da DAQC
@@ -274,7 +274,7 @@ A plataforma deve disponibilizar conversão do binário de saídas para CSV some
 
 **Critério de aceitação proposto (V-F-26; HOST + GUI):** Converter depois de Finished/Stopped conforme contrato, bloquear conversão durante Running e rejeitar FMU incompatível. Comparar valores tipados do binário/CSV usando a ordem explicitamente registrada e conferida contra os metadados XML.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** vetores de round-trip e incompatibilidade.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** ação e apresentação GUI; round-trip, incompatibilidade e cauda truncada foram exercitados no HOST em 08.09.2026.
 
 ### REQ-F-27 — DISABLE após 60 segundos de streaming sem leitura pelo host
 
@@ -324,21 +324,21 @@ A leitura USB deve ser executada em thread dedicada de alta prioridade, para dad
 
 ### REQ-NF-05 — Transferência USB
 
-A comunicação USB 2.0 entre a main board e a DAQC deve utilizar transferências do tipo Bulk.
+A comunicação USB entre a main board e a DAQC deve usar a ponte CH340 pelo driver serial Linux, sob propriedade exclusiva do coordenador C.
 
-**Critério de aceitação proposto (V-NF-05; Bancada):** Captura/descritores e caminho efetivo demonstram Bulk se mantido; conector USB e porta TTY isolados não provam conformidade da implementação.
+**Critério de aceitação proposto (V-NF-05; HOST + bancada):** O coordenador abre exclusivamente o dispositivo CH340 identificado, configura o enlace e transmite/recebe os quadros ICD; dispositivo TTY isolado não prova interoperabilidade.
 
 **Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** descritores/endpoints reais e ensaio da ponte.
 
 ### REQ-NF-06 — Biblioteca USB
 
-A comunicação USB da main board deve utilizar libusb, mantendo a exigência atual de implementação da camada em C. Leitura/orquestração em Python foi levantada como possibilidade; seu papel e eventual revisão desta exigência dependem de Q-01.
+A comunicação host–CH340 deve usar a API serial POSIX em C, através de `/dev/ttyUSB*`, mantendo um único coordenador proprietário do enlace. O Agent micro-ROS recebe XRCE somente pela ponte UDP em loopback conectada ao MID 04.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-NF-06; HOST + bancada):** Identificar código/caminho libusb e dono do dispositivo. Se Python for adotado, registrar como interage com camada C e snapshots; não marcar um leitor serial comum como conformidade de libusb.
+**Critério de aceitação proposto (V-NF-06; HOST + bancada):** Identificar o coordenador C, o dispositivo aberto, os parâmetros seriais e a exclusividade; demonstrar que não há segundo leitor TTY ou Agent serial concorrente.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** configuração CH340 via libusb e teste de exclusividade.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-007. **Pendência:** configuração CH340 via termios e teste de exclusividade.
 
 ### REQ-NF-07 — Escrita USB no Ciclo de Simulação
 
@@ -384,7 +384,7 @@ As funções responsáveis pelo núcleo de simulação, gerenciamento da FMU e e
 
 ### REQ-NF-12 — Interface Gráfica
 
-GUI deve utilizar Qt 6/C++, desacoplada do núcleo C, que pode operar pelo terminal em modo debug. A aparência deve lembrar Linux Mint; APIs Qt são preservadas e estilo próprio segue constituição.
+GUI deve utilizar Qt Quick/QML em Qt 6/C++, desacoplada do núcleo C, que pode operar pelo terminal em modo debug. A aparência deve lembrar Linux Mint; APIs Qt são preservadas e estilo próprio segue constituição.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
@@ -424,7 +424,7 @@ Características DAQC devem ser modulares por perfil; o primeiro chama-se ESP32 
 
 **Critério de aceitação proposto (V-NF-16; HOST + bancada):** Catálogo identifica capacidades/exclusões; não permitir dois usos incompatíveis de um pino. Dois perfis sintéticos testam extensibilidade e perfil real é verificado separadamente.
 
-**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006, TASK-008. **Pendência:** perfil físico e caracterização dos canais.
+**Design:** ARCH-IO / IF-CORE. **Execução:** TASK-006, TASK-008. **Pendência:** caracterização dos canais e validação em bancada.
 
 ### REQ-NF-17 — Aplicação da DAQC em micro-ROS
 
@@ -448,7 +448,7 @@ As mensagens de comunicação com a DAQC devem representar a quantidade e os tip
 
 **Critério de aceitação proposto (V-NF-19; HOST + HIL):** Mensagem representa cada canal habilitado e tipo do perfil sem omissão/troca de direção; receptor rejeita perfil ou versão incompatível.
 
-**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-006, TASK-007, TASK-008. **Pendência:** enumeração final do perfil e vetores por direção.
+**Design:** ARCH-IO / IF-DAQ. **Execução:** TASK-006, TASK-007, TASK-008. **Pendência:** vetores por direção e firmware.
 
 ### REQ-NF-20 — Codificação Numérica
 

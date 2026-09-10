@@ -10,7 +10,7 @@ As decisões MICROHIL prevalecem sobre os valores da referência: SYNC 0x7259, M
 
 ## Decisão
 
-O MICROHIL reutilizará o padrão arquitetural do RaspDAQ: coordenador único do enlace, instância persistente de estado compartilhado, snapshots imutáveis ou substituídos atomicamente sob seção crítica curta, workers RX/TX separados, controle processado durante streaming, schema posicional fixo por execução e número de sequência por direção.
+O MICROHIL reutilizará o padrão arquitetural do RaspDAQ: coordenador único do enlace, instância persistente de estado compartilhado, snapshots imutáveis ou substituídos atomicamente sob seção crítica curta, controle processado durante streaming, schema posicional fixo por execução e número de sequência por direção. No HOST, um worker serial único possui a TTY e alterna RX e TX com operações limitadas; ele é separado da thread de simulação e impede leitores ou escritores concorrentes no enlace.
 
 DATA é tráfego de tempo real sem confirmação individual, retransmissão, fila crescente ou recuperação. Pacote ausente, perdido, repetido, antigo, incompleto ou fora do prazo é descartado; o receptor segue para o próximo. Um salto de SEQ contabiliza a lacuna e aceita o pacote novo. No host, a thread da simulação usa o último snapshot publicado antes de inserir os inputs na FMU e mantém o último valor válido por canal conforme F-23/F-24.
 
@@ -20,7 +20,7 @@ O identificador de sessão no fio proposto na revisão 0.6 foi removido. Cada en
 
 A confirmação cumulativa de leitura exigida por F-27 permanece uma extensão mínima. Ela informa apenas o último SEQ de DATA DAQC→host efetivamente consumido pela aplicação host. Não confirma validade numérica, não confirma atuação e não solicita retransmissão. Para não reduzir o payload útil de DATA, o ICD reserva MID 03 para READ_ACK no sentido host→DAQC. READ_ACK usa o mesmo contador uint16 e é coalescido: confirmações intermediárias podem ser substituídas pela mais recente.
 
-O micro-ROS no ESP32 permanece requisito. Como esses componentes não existem no RaspDAQ, o ICD reserva MID 04 para XRCE nos dois sentidos. Um único coordenador possui libusb/UART e demultiplexa CONFIG, DATA, READ_ACK e XRCE. O transporte XRCE usa entrega best effort no caminho periódico; nenhum callback micro-ROS acessa diretamente a FMU ou concorre como segundo escritor dos atuadores.
+O micro-ROS no ESP32 permanece requisito. Como esses componentes não existem no RaspDAQ, o ICD reserva MID 04 para XRCE nos dois sentidos. Um único coordenador C possui `/dev/ttyUSB*`/UART e demultiplexa CONFIG, DATA, READ_ACK e XRCE. O payload XRCE chega ao Agent por ponte UDP em loopback, sem segundo leitor serial. O transporte XRCE usa entrega best effort no caminho periódico; nenhum callback micro-ROS acessa diretamente a FMU ou concorre como segundo escritor dos atuadores.
 
 ## Resposta a cada parte do ICD
 

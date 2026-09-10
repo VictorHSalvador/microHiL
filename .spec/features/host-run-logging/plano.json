@@ -1,0 +1,150 @@
+{
+  "runId": "microHiL-host-run-logging-mts0dax2",
+  "feature": "host-run-logging",
+  "agent": "codex",
+  "modo": "sequencial",
+  "paralelizar": null,
+  "modeloForcado": "gpt-5.6-terra",
+  "esforcoForcado": "high",
+  "geradoEm": "2026-09-08 01:46",
+  "branchTrabalho": "spec/host-run-logging",
+  "baseDir": ".spec/features/host-run-logging",
+  "specDir": ".spec",
+  "repoName": "microHiL",
+  "logsDir": "../onp-worktrees/microHiL-host-run-logging-logs",
+  "ondas": [],
+  "faixas": [],
+  "sequenciais": [
+    {
+      "id": "T-005",
+      "titulo": "Implementar e testar o codec binário tipado",
+      "modelo": "gpt-5.6-terra",
+      "esforco": "high",
+      "arquivos": [
+        "include/log_format.h",
+        "src/log_format.c",
+        "tests/test_log_format.c",
+        "tests/CMakeLists.txt",
+        "CMakeLists.txt"
+      ],
+      "refs": [
+        "US-007",
+        "AC-015",
+        "AC-016",
+        "AC-017"
+      ]
+    },
+    {
+      "id": "T-006",
+      "titulo": "Implementar o logger assíncrono e os testes concorrentes",
+      "modelo": "gpt-5.6-terra",
+      "esforco": "high",
+      "arquivos": [
+        "include/binary_logger.h",
+        "src/binary_logger.c",
+        "tests/test_binary_logger.c",
+        "tests/test_sample_queue.c",
+        "tests/CMakeLists.txt",
+        "CMakeLists.txt"
+      ],
+      "refs": [
+        "US-008",
+        "AC-018",
+        "AC-019",
+        "AC-020",
+        "AC-021",
+        "US-010",
+        "AC-026"
+      ]
+    },
+    {
+      "id": "T-007",
+      "titulo": "Implementar e testar a conversão pós-execução para CSV",
+      "modelo": "gpt-5.6-terra",
+      "esforco": "high",
+      "arquivos": [
+        "include/log_converter.h",
+        "src/log_converter.c",
+        "tests/test_log_converter.c",
+        "tests/CMakeLists.txt",
+        "CMakeLists.txt"
+      ],
+      "refs": [
+        "US-009",
+        "AC-022",
+        "AC-023",
+        "AC-024"
+      ]
+    },
+    {
+      "id": "T-008",
+      "titulo": "Integrar logging binário ao runner e ao resultado final",
+      "modelo": "gpt-5.6-terra",
+      "esforco": "high",
+      "arquivos": [
+        "include/app_config.h",
+        "include/common.h",
+        "include/rt_simulation.h",
+        "src/app_config.c",
+        "src/main.c",
+        "src/rt_simulation.c",
+        "src/csv_logger.c",
+        "include/csv_logger.h",
+        "CMakeLists.txt",
+        "tests/test_run_logging.c",
+        "tests/CMakeLists.txt",
+        "test/run_spec_tests.js"
+      ],
+      "refs": [
+        "US-008",
+        "AC-018",
+        "AC-019",
+        "AC-020",
+        "US-010",
+        "AC-025",
+        "AC-026"
+      ]
+    },
+    {
+      "id": "T-009",
+      "titulo": "Atualizar SDD, rastreabilidade e evidência da TASK-002",
+      "modelo": "gpt-5.6-terra",
+      "esforco": "high",
+      "arquivos": [
+        "README.md",
+        "docs/README.md",
+        "docs/contracts/interfaces.md",
+        "docs/plan.md",
+        "docs/tasks/TASK-002.md",
+        "docs/traceability.md",
+        "docs/quality-gates.md",
+        "docs/sdd-versions.md",
+        "docs/evidence/host-run-logging-2026-09-07.md",
+        ".spec/features/host-run-logging/spec.md",
+        ".spec/features/host-run-logging/tasks.md",
+        "test/sdd-versioning.spec.test.js",
+        "onpspec.config.json"
+      ],
+      "refs": [
+        "US-007",
+        "AC-015",
+        "AC-016",
+        "AC-017",
+        "US-008",
+        "AC-018",
+        "AC-019",
+        "AC-020",
+        "AC-021",
+        "US-009",
+        "AC-022",
+        "AC-023",
+        "AC-024",
+        "US-010",
+        "AC-025",
+        "AC-026"
+      ]
+    }
+  ],
+  "concluidas": [],
+  "avisos": []
+}

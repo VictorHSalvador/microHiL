@@ -1,67 +1,67 @@
 # Matriz de rastreabilidade
 
-Revisão 0.7, baseline conjunta [SDD-MICROHIL 0.7.1](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). Decisões confirmadas não alteram o estado de implementação: fontes continuam no estado auditado em `c788a4283cf81f17e9a2956ae258487c7931590a`.
+Revisão 0.8, baseline conjunta [SDD-MICROHIL 0.8.0](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). TASK-001 e TASK-002 avançaram somente os requisitos HOST indicados abaixo; não há inferência de validação funcional de FMU, Raspberry Pi, DAQC, USB, ROS, GUI, bancada, HIL ou deadlines.
 
-I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Todos os V-* permanecem planejados. Evidências históricas não aprovam as exigências revisadas nem foram executadas novamente.
+I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 
 | Requisito | Design/contrato | Tarefa | Código observado | Estado | Teste planejado / ambiente | Evidência disponível |
 |---|---|---|---|---|---|---|
-| REQ-F-01 | ARCH-CORE / IF-CORE | TASK-003 | src/fmu_model.c; src/main.c; src/app_config.c | I | V-F-01 / HOST | [EV-AUD-03](evidence/audit-2026-09-06/README.md): metadados; sem run |
-| REQ-F-02 | ARCH-IO / IF-CORE | TASK-006 | Não implementado | A | V-F-02 / HOST + bancada/HIL | Sem execução do caso de aceitação |
-| REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | Não implementado | A | V-F-03 / HOST + HIL | Sem execução do caso de aceitação |
-| REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | Não implementado | A | V-F-04 / HOST + GUI | Sem execução do caso de aceitação |
+| REQ-F-01 | ARCH-CORE / IF-CORE | TASK-003 | src/fmu_model.c; src/rt_simulation.c; src/main.c; src/app_config.c | P | V-F-01 / HOST | [host-rt-preparation-2026-09-10](evidence/host-rt-preparation-2026-09-10.md): inicialização e execução curta por fixture; sem FMU de produto |
+| REQ-F-02 | ARCH-IO / IF-CORE | TASK-006 | src/profile_config.c; src/fmu_model.c | P | V-F-02 / HOST + bancada/HIL | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): YAML/FMU e schema de aquisição HOST; sem DAQC ou bancada |
+| REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-F-03 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): schema/codificador HOST; sem enlace ou HIL |
+| REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | src/main.c; src/profile_config.c | P | V-F-04 / HOST + GUI | [host-cli-yaml-profile-2026-09-10](evidence/host-cli-yaml-profile-2026-09-10.md): fluxo terminal de configuração; GUI e persistência completa pendentes |
 | REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-05 / HOST + GUI | Sem execução do caso de aceitação |
 | REQ-F-06 | ARCH-STATE / IF-CORE | TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-06 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-07 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-07 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-F-07 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c; src/run_logging.c | P | V-F-07 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): fechamento/drenagem HOST; sem Stop/FMU/zero físico/HIL |
 | REQ-F-08 | ARCH-STATE | TASK-003, TASK-009 | Não implementado | A | V-F-08 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-09 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/rt_simulation.c (sem FSM) | P | V-F-09 / HOST + HIL | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
+| REQ-F-09 | ARCH-STATE / IF-LOG | TASK-002, TASK-003, TASK-009 | src/main.c; src/run_logging.c; src/binary_logger.c | P | V-F-09 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): erro de log estruturado; GUI, falha FMI/link e prints legados pendentes |
 | REQ-F-10 | ARCH-GUI / IF-LOG | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-F-10 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-11 | ARCH-LOG / IF-LOG | TASK-002 | src/csv_logger.c; src/sample_queue.c | P | V-F-11 / HOST + HIL | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
-| REQ-F-12 | ARCH-TIME / IF-LOG | TASK-002, TASK-004 | src/rt_simulation.c; agregados incompletos | P | V-F-12 / HOST + alvo | Inspeção apenas; sem caso de aceitação executado |
+| REQ-F-11 | ARCH-LOG / IF-LOG | TASK-002 | src/log_format.c; src/binary_logger.c; src/run_logging.c | P | V-F-11 / HOST + HIL | [TASK-002](evidence/host-run-logging-2026-09-08.md): codec, qualidade, perdas e falhas HOST; sem FMU/HIL |
+| REQ-F-12 | ARCH-TIME / IF-LOG | TASK-002, TASK-004 | src/run_result.c; src/rt_simulation.c | P | V-F-12 / HOST + alvo | [TASK-002](evidence/host-run-logging-2026-09-08.md): resultado de logging separado; métricas completas/timing são TASK-004 |
 | REQ-F-13 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-F-13 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-F-14 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-F-14 / GUI | Sem execução do caso de aceitação |
 | REQ-F-15 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-F-15 / GUI | Sem execução do caso de aceitação |
 | REQ-F-16 | ARCH-GUI | TASK-009 | Não implementado | A | V-F-16 / GUI + alvo | Sem execução do caso de aceitação |
-| REQ-F-17 | ARCH-CORE / IF-CORE | TASK-006, TASK-009 | Não implementado | A | V-F-17 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-F-18 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-F-18 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-F-19 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-F-19 / HOST + HIL | Sem execução do caso de aceitação |
-| REQ-F-20 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-F-20 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-F-17 | ARCH-CORE / IF-CORE | TASK-006, TASK-009 | src/main.c; src/profile_config.c | P | V-F-17 / HOST + GUI | [host-yaml-daqc-configuration-2026-09-10](evidence/host-yaml-daqc-configuration-2026-09-10.md): configuração ADC/PWM completa no YAML e validação HOST; GUI, Agent e aplicação DAQC pendentes |
+| REQ-F-18 | ARCH-IO / IF-DAQ | TASK-007 | src/main.c; src/daq_state_control.c; src/daq_coordinator.c | P | V-F-18 / HOST + bancada | [host-runner-daqc-lifecycle-2026-09-10](evidence/host-runner-daqc-lifecycle-2026-09-10.md): runner compila o lifecycle CONFIG/ROS/STREAMING/DISABLE; sem TTY físico ou bancada |
+| REQ-F-19 | ARCH-IO / IF-DAQ | TASK-007 | src/main.c; src/rt_simulation.c; src/daq_output_bridge.c; src/daq_coordinator.c | P | V-F-19 / HOST + HIL | [host-runner-daqc-lifecycle-2026-09-10](evidence/host-runner-daqc-lifecycle-2026-09-10.md): bridge de saída é ligada antes da thread FMI no runner; sem TTY, DAQC ou HIL |
+| REQ-F-20 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | src/main.c; src/daq_state_control.c; src/daq_xrce_udp_bridge.c; src/daqc_ros_control.c; firmware/daqc_esp32/main/daqc_ros.c; firmware/daqc_esp32/main/daqc_control.c | P | V-F-20 / HOST + HIL | [host-runner-daqc-lifecycle-2026-09-10](evidence/host-runner-daqc-lifecycle-2026-09-10.md): lifecycle HOST compilado e CTest ROS executado; [host-xrce-udp-bridge-2026-09-10](evidence/host-xrce-udp-bridge-2026-09-10.md): ponte MID 04↔UDP em loopback; Agent, sessão XRCE, CH340, DAQC e HIL pendentes |
 | REQ-F-21 | ARCH-CORE / IF-CORE | TASK-003, TASK-006 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-F-21 / HOST | Sem execução do caso de aceitação |
-| REQ-F-22 | ARCH-LOG / IF-LOG | TASK-002 | src/csv_logger.c; src/sample_queue.c | P | V-F-22 / HOST | [EV-AUD-02](evidence/audit-2026-09-06/README.md): logger reprovado; fila só sequencial |
-| REQ-F-23 | ARCH-CORE / ARCH-IO / IF-SAMPLE | TASK-003, TASK-006, TASK-007 | Não implementado para inputs DAQC | A | V-F-23 / HOST + integração | Sem execução da revisão 0.4 |
-| REQ-F-24 | ARCH-CORE / ARCH-STATE / IF-SAMPLE | TASK-003, TASK-006, TASK-007, TASK-009 | Não implementado para inputs DAQC | A | V-F-24 / HOST + integração | Sem execução da revisão 0.4 |
-| REQ-F-25 | ARCH-STATE / ARCH-LOG | TASK-002, TASK-003, TASK-009 | src/main.c e wrapper: terminal sem gate debug | P | V-F-25 / HOST + GUI | Sem execução |
-| REQ-F-26 | ARCH-LOG / IF-LOG | TASK-002, TASK-009 | Não implementado | A | V-F-26 / HOST + GUI | Sem execução |
-| REQ-F-27 | ARCH-FW / IF-READ-PROGRESS | TASK-006, TASK-007, TASK-008, TASK-010 | Não implementado | A | V-F-27 / HOST + bancada/HIL | Sem execução; READ_ACK definido, cadência/tolerância dependem de medição |
-| REQ-NF-01 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | P | V-NF-01 / HOST + alvo | [EV-AUD-01](evidence/audit-2026-09-06/README.md): configuração integral bloqueada |
+| REQ-F-22 | ARCH-LOG / IF-LOG | TASK-002 | src/binary_logger.c; src/run_logging.c | P | V-F-22 / HOST | [TASK-002](evidence/host-run-logging-2026-09-08.md): drenagem/interleaving e flush/close HOST; sem lifecycle FMI |
+| REQ-F-23 | ARCH-CORE / ARCH-IO / IF-SAMPLE | TASK-003, TASK-006, TASK-007 | src/rt_simulation.c; src/input_state.c | P | V-F-23 / HOST + integração | [host-rt-preparation-2026-09-10](evidence/host-rt-preparation-2026-09-10.md): estado de inputs pronto antes da thread; aquisição DAQC e integração permanecem pendentes |
+| REQ-F-24 | ARCH-CORE / ARCH-STATE / IF-SAMPLE | TASK-003, TASK-006, TASK-007, TASK-009 | src/rt_simulation.c; src/input_state.c | P | V-F-24 / HOST + integração | [host-rt-preparation-2026-09-10](evidence/host-rt-preparation-2026-09-10.md): referências iniciais FMU resolvidas no preflight; invalidade DAQC e limite por canal aguardam integração |
+| REQ-F-25 | ARCH-STATE / ARCH-LOG | TASK-002, TASK-003, TASK-009 | src/binary_logger.c; src/run_logging.c; src/main.c; src/fmu_model.c | P | V-F-25 / HOST + GUI | [TASK-002](evidence/host-run-logging-2026-09-08.md): novo logger sem I/O textual e diagnóstico estruturado; prints legados no caminho crítico pendentes |
+| REQ-F-26 | ARCH-LOG / IF-LOG | TASK-002, TASK-009 | src/log_converter.c; src/main.c | P | V-F-26 / HOST + GUI | [TASK-002](evidence/host-run-logging-2026-09-08.md): CSV posterior, identidade e parcialidade HOST; GUI/FMU real pendentes |
+| REQ-F-27 | ARCH-FW / IF-READ-PROGRESS | TASK-006, TASK-007, TASK-008, TASK-010 | firmware/daqc_esp32/main/main.c; firmware/daqc_esp32/main/daqc_transport.c | P | V-F-27 / HOST + bancada/HIL | [esp32-transport-watchdog-build-2026-09-10](evidence/esp32-transport-watchdog-build-2026-09-10.md): build cruzado do watchdog por avanço de ACK e TX serializado; sem placa, enlace, medição de 60 s ou HIL |
+| REQ-NF-01 | ARCH-CORE | TASK-001 | Build HOST independente e runner compilados em Ubuntu 22.04 | P | V-NF-01 / HOST + alvo | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): host demonstrado; Raspberry Pi não validado |
 | REQ-NF-02 | ARCH-IO | TASK-007 | Não implementado | A | V-NF-02 / HOST + HIL | Sem execução do caso de aceitação |
-| REQ-NF-03 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-03 / HOST + alvo | Sem execução do caso de aceitação |
+| REQ-NF-03 | ARCH-TIME | TASK-004, TASK-007 | src/rt_simulation.c; include/rt_simulation.h; src/main.c | P | V-NF-03 / HOST + alvo | [host-runner-daqc-lifecycle-2026-09-10](evidence/host-runner-daqc-lifecycle-2026-09-10.md): preflight impede Play HiL sem SCHED_FIFO; não mede política efetiva no alvo |
 | REQ-NF-04 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-04 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-05 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-05 / Bancada | Sem execução do caso de aceitação |
 | REQ-NF-06 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-06 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-07 | ARCH-TIME / IF-DAQ | TASK-004, TASK-007 | Não implementado | A | V-NF-07 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-NF-07 | ARCH-TIME / IF-DAQ | TASK-004, TASK-007 | src/daq_output_bridge.c; src/daq_coordinator.c | P | V-NF-07 / HOST + HIL | [host-output-bridge-2026-09-10](evidence/host-output-bridge-2026-09-10.md): ordem mailbox após STREAMING em HOST; runner e HIL pendentes |
 | REQ-NF-08 | ARCH-IO / IF-SAMPLE | TASK-004, TASK-007 | Não implementado | A | V-NF-08 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-09 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-NF-09 / GUI + alvo | Sem execução do caso de aceitação |
 | REQ-NF-10 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | P | V-NF-10 / HOST + alvo | Sem execução do caso de aceitação |
-| REQ-NF-11 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | I | V-NF-11 / HOST | Inspeção das fontes C; build integral pendente |
+| REQ-NF-11 | ARCH-CORE | TASK-001 | Componentes HOST e `fmu_rt_runner` em C compilados | P | V-NF-11 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): compilação, sem execução de FMU |
 | REQ-NF-12 | ARCH-GUI | TASK-009 | src/plotter.c; src/main.c (sem Qt) | D | V-NF-12 / HOST + GUI | Sem execução do caso de aceitação |
-| REQ-NF-13 | ARCH-CORE | TASK-001 | CMakeLists.txt; src/; include/ | I | V-NF-13 / HOST | [EV-AUD-01](evidence/audit-2026-09-06/README.md): configuração integral bloqueada |
+| REQ-NF-13 | ARCH-CORE | TASK-001 | Runner compilado com FMILibrary 3.0.4/revisão fixa e instalação explícita | P | V-NF-13 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): sem fixture ou execução de FMU; artefato externo sem versão comprovada |
 | REQ-NF-14 | ARCH-CORE / IF-CORE | TASK-003, TASK-006 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-NF-14 / HOST | Sem execução do caso de aceitação |
 | REQ-NF-15 | ARCH-CORE / ARCH-IO / ARCH-GUI | TASK-003, TASK-007, TASK-009 | src/fmu_model.c; src/main.c; src/app_config.c | P | V-NF-15 / HOST | Sem execução do caso de aceitação |
-| REQ-NF-16 | ARCH-IO / IF-CORE | TASK-006, TASK-008 | Não implementado | A | V-NF-16 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-17 | ARCH-FW / IF-DAQ | TASK-008 | Não implementado | A | V-NF-17 / Bancada + HIL | Sem execução do caso de aceitação |
-| REQ-NF-18 | ARCH-IO | TASK-001, TASK-007 | Não implementado | A | V-NF-18 / HOST | Sem execução do caso de aceitação |
-| REQ-NF-19 | ARCH-IO / IF-DAQ | TASK-006, TASK-007, TASK-008 | Não implementado | A | V-NF-19 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-NF-16 | ARCH-IO / IF-CORE | TASK-006, TASK-008 | src/profile_config.c; include/daq_schema.h | P | V-NF-16 / HOST + bancada | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): perfil ESP32 e schema de aquisição HOST; sem extensibilidade completa ou bancada |
+| REQ-NF-17 | ARCH-FW / IF-DAQ | TASK-008 | firmware/daqc_esp32/main/daqc_control.c; firmware/daqc_esp32/main/daqc_ros.c | P | V-NF-17 / Bancada + HIL | [esp32-microros-control-build-2026-09-10](evidence/esp32-microros-control-build-2026-09-10.md): perfis e controle compilados; sem configuração medida ou HIL |
+| REQ-NF-18 | ARCH-IO | TASK-001, TASK-007 | Separação modular do build HOST/runner, sem componentes ROS ainda | I | V-NF-18 / HOST | [host-build-foundation-2026-09-07](evidence/host-build-foundation-2026-09-07.md): preparação modular, não organização ROS validada |
+| REQ-NF-19 | ARCH-IO / IF-DAQ | TASK-006, TASK-007, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-NF-19 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): tipos digitais/analógicos do perfil no HOST; sem firmware ou HIL |
 | REQ-NF-20 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-20 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-21 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-21 / HOST + HIL | Sem execução do caso de aceitação |
+| REQ-NF-21 | ARCH-IO / IF-DAQ | TASK-007 | src/profile_config.c; src/daq_schema.c; src/daq_actuation.c | P | V-NF-21 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): offsets dos dois schemas HOST; interoperabilidade pendente |
 | REQ-NF-22 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-22 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-23 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-23 / HOST + bancada | Sem execução do caso de aceitação |
 | REQ-NF-24 | ARCH-IO / IF-DAQ | TASK-007, TASK-008 | Não implementado | A | V-NF-24 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-25 | ARCH-IO / IF-DAQ | TASK-007 | Não implementado | A | V-NF-25 / HOST + bancada | Sem execução do caso de aceitação |
-| REQ-NF-26 | ADR-001 / constitution | TASK-005 | src/ e include/ ainda não migrados | D | V-NF-26 / Revisão + HOST | Sem execução do caso de aceitação |
+| REQ-NF-26 | ADR-001 / constitution | TASK-005 | módulos novos do logging em src/ e include/; base legada não migrada | P | V-NF-26 / Revisão + HOST | [TASK-002](evidence/host-run-logging-2026-09-08.md): build/testes dos módulos novos; revisão global permanece TASK-005 |
 | REQ-NF-27 | ADR-001 / constitution | TASK-005 | Sem Python de produto | NA | V-NF-27 / Revisão + HOST | Sem execução do caso de aceitação |
 | REQ-NF-28 | ARCH-TIME | TASK-004 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-28 / HOST + alvo | Sem execução do caso de aceitação |
 | REQ-NF-29 | ARCH-IO / IF-DAQ | TASK-004, TASK-007 | Não implementado | A | V-NF-29 / HOST + HIL | Sem execução do caso de aceitação |
-| REQ-NF-30 | ARCH-LOG / ARCH-GUI | TASK-002, TASK-004, TASK-009 | src/csv_logger.c; src/sample_queue.c | P | V-NF-30 / HOST + alvo | Sem execução do caso de aceitação |
+| REQ-NF-30 | ARCH-LOG / ARCH-GUI | TASK-002, TASK-004, TASK-009 | src/binary_logger.c; src/run_logging.c; src/plotter.c | P | V-NF-30 / HOST + alvo | [TASK-002](evidence/host-run-logging-2026-09-08.md): sink fora do produtor e plot separado; sem medição de cadência/GUI/alvo |
 | REQ-NF-31 | ARCH-TIME / IF-SAMPLE | TASK-004, TASK-006, TASK-007 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-31 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-32 | ARCH-TIME | TASK-004, TASK-010 | Não implementado | A | V-NF-32 / HOST + HIL | Sem execução |

@@ -1,0 +1,85 @@
+{
+  "feature": "host-run-logging",
+  "timestamp": "2026-09-09T00:52:28.496Z",
+  "gitRev": "d6c220f",
+  "command": "node test/run_spec_tests.js",
+  "reporter": "tap",
+  "exitCode": 0,
+  "testsParsed": 29,
+  "results": {
+    "AC-015": {
+      "status": "pass",
+      "testName": "AC-015: O teste C anotado é executado no CTest HOST @spec:AC-015",
+      "method": "tap"
+    },
+    "AC-016": {
+      "status": "pass",
+      "testName": "AC-016: O teste C anotado é executado no CTest HOST @spec:AC-016",
+      "method": "tap"
+    },
+    "AC-017": {
+      "status": "pass",
+      "testName": "AC-017: O teste C anotado é executado no CTest HOST @spec:AC-017",
+      "method": "tap"
+    },
+    "AC-018": {
+      "status": "pass",
+      "testName": "AC-018: O teste C anotado é executado no CTest HOST @spec:AC-018",
+      "method": "tap"
+    },
+    "AC-019": {
+      "status": "pass",
+      "testName": "AC-019: O teste C anotado é executado no CTest HOST @spec:AC-019",
+      "method": "tap"
+    },
+    "AC-020": {
+      "status": "pass",
+      "testName": "AC-020: O teste C anotado é executado no CTest HOST @spec:AC-020",
+      "method": "tap"
+    },
+    "AC-021": {
+      "status": "pass",
+      "testName": "AC-021: O teste C anotado é executado no CTest HOST @spec:AC-021",
+      "method": "tap"
+    },
+    "AC-022": {
+      "status": "pass",
+      "testName": "AC-022: O teste C anotado é executado no CTest HOST @spec:AC-022",
+      "method": "tap"
+    },
+    "AC-023": {
+      "status": "pass",
+      "testName": "AC-023: O teste C anotado é executado no CTest HOST @spec:AC-023",
+      "method": "tap"
+    },
+    "AC-024": {
+      "status": "pass",
+      "testName": "AC-024: O teste C anotado é executado no CTest HOST @spec:AC-024",
+      "method": "tap"
+    },
+    "AC-025": {
+      "status": "pass",
+      "testName": "AC-025: O teste C anotado é executado no CTest HOST @spec:AC-025",
+      "method": "tap"
+    },
+    "AC-026": {
+      "status": "pass",
+      "testName": "AC-026: O teste C anotado é executado no CTest HOST @spec:AC-026",
+      "method": "tap"
+    }
+  },
+  "principles": {
+    "P-002": {
+      "status": "pass",
+      "testName": "P-002: Existe uma única especificação normativa do produto @principle:P-002"
+    },
+    "P-003": {
+      "status": "pass",
+      "testName": "P-003: Estado documental não é estado de implementação @principle:P-003"
+    },
+    "P-004": {
+      "status": "pass",
+      "testName": "P-004: Toda revisão do SDD é rastreável @principle:P-004"
+    }
+  }
+}

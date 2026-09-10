@@ -18,7 +18,9 @@ typedef enum {
 
 typedef struct {
     char name[OUTPUT_NAME_LEN];
+    uint32_t xml_index;
     uint32_t value_reference;
+    uint16_t fmu_index;
     NumericType type;
 } OutputVariable;
 
