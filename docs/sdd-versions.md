@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.21.1**, de 10.09.2026.
+Versão vigente: **SDD-MICROHIL 0.21.2**, de 10.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -68,6 +68,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.20.0 | 10.09.2026 | MINOR | Formato YAML obrigatório para ADC/PWM completo do perfil ESP32, confirmado pelo usuário | ICD, TARGET, decisões, plano, código HOST, fixtures, testes, evidência e sdd-versions | Build HOST e 45 CTests; sem GUI, Agent, CH340, ESP32 ou aplicação física | 7b24226 |
 | 0.21.0 | 10.09.2026 | MINOR | Agent Humble passa a ser alcançado por ponte UDP local do MID 04, preservando a TTY exclusiva do coordenador | decisões, arquitetura, ICD, plano, implementação HOST, testes, evidência e sdd-versions | Inspeção da fonte Agent, CTest 46/46 e harness 29/29; sem Agent, CH340, ESP32 ou HIL | 7390f65 |
 | 0.21.1 | 10.09.2026 | PATCH | Evidência do build e início local do Agent Humble em UDP, incluindo dependência micro_ros_msgs | plano, rastreabilidade, evidence e sdd-versions | Agent UDP iniciado no host temporário; sem sessão XRCE, CH340, ESP32 ou HIL | alterações locais; registrar commit quando criado |
+| 0.21.2 | 10.09.2026 | PATCH | Preparação da FMU e dos inputs ocorre antes da thread de simulação, sem executar passo; correção de referências documentais antigas de configuração binária para YAML | runner HOST, teste FMU, arquitetura, requisitos, decisões, plano, rastreabilidade, evidência e sdd-versions | CTest 46/46 com fixture FMU; sem DAQC, ROS, CH340, ESP32, bancada ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

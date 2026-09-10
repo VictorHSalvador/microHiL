@@ -99,14 +99,14 @@ Direção visual confirmada: Linux Mint. Proposta de paleta inicial (design, nã
 
 Renderização a 10 Hz não implica guardar só 10 valores/s: gráfico aberto pode receber as amostras por passo e renderizar um lote; memória limitada à janela. Fechar histórico não impede preservar parâmetros de configuração. Quantidade máxima de pontos/memória deve ser dimensionada separadamente do espaçamento Y.
 
-Log binário de saídas finais por passo; conversão CSV após encerramento, utilizando FMU para interpretar tipos. Não converter durante Running. Configuração também permanece binária. IF-LOG trata identidade/ordem, layout e política de falha; métricas por passo saem do log por instrução do usuário.
+Log binário de saídas finais por passo; conversão CSV após encerramento, utilizando FMU para interpretar tipos. Não converter durante Running. A configuração persistida é YAML versionado; o log permanece binário. IF-LOG trata identidade/ordem, layout e política de falha; métricas por passo saem do log por instrução do usuário.
 
 ## ARCH-LOG — Dados e concorrência
 
 | Dado | Proprietário proposto | Acesso |
 |---|---|---|
 | Configuração validada e mapa | Controlador da execução | Imutável durante run; cópia/configuração versionada |
-| Instância e tempo FMU | Thread de simulação | Chamadas exclusivas durante run; lifecycle serializado |
+| Instância e tempo FMU | Controlador prepara; thread de simulação executa | Inicialização e referências de input são resolvidas antes do STREAMING; `doStep` e leituras/escritas FMI do ciclo pertencem exclusivamente à thread |
 | Input snapshot | Adaptador USB host | Candidato bruto, qualidade e último válido por canal, geração/seq coerentes; simulação consome sem esperar I/O |
 | Contadores de aquisição inválida | Thread de simulação no host | Atualiza uma vez por passo por canal; publica erro para consumidor GUI |
 | Progresso de leitura | Thread de comunicação host envia READ_ACK; firmware supervisiona | Último SEQ lido no STREAMING atual, independente de valor numérico/constância |

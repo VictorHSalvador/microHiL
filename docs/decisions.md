@@ -16,7 +16,7 @@ Revisão 0.7. Respostas DEC-001…012 e Q-01…09 incorporadas. **Implementaçã
 | DEC-008 | Saída da FMU por passo no binário; Real inválido usa NaN, discreto inválido usa zero com bit de qualidade; falha de gravação gera aviso e não interrompe | Formato IF-LOG deve ser testado antes de estabilizar versão 1 |
 | DEC-009 | Sem pausa; gráfico até 10 Hz, ticks Y configuráveis, janela temporal comum deslizante; fechar destrói histórico, reabrir começa dali; configuração e abertura separadas, abertura antes de Play permitida | Sem conflito pendente com proteção: ela termina em Error |
 | DEC-010 | Preservar APIs Qt; convenção própria C++ e estilo definidos na constituição | Nenhuma decisão de toolkit reaberta |
-| DEC-011 | Importação de FMU separada da configuração binária; diagnosticar incompatibilidades específicas com FMU/DAQ/mapa | Pode identificar e informar capacidades não suportadas no incremento inicial (Q-08 resolvida) |
+| DEC-011 | Importação de FMU separada da configuração YAML; diagnosticar incompatibilidades específicas com FMU/DAQ/mapa | Pode identificar e informar capacidades não suportadas no incremento inicial (Q-08 resolvida) |
 | DEC-012 | SYNC 0x7259; MID CONFIG=01, DATA=02, READ_ACK=03, XRCE=04; COMMAND 01/02/03; payload DATA até 256; STATUS só no CONFIG ESP32→host; sem CRC/retransmissão | Cadência do ACK e prazo agregado CONFIG serão medidos; MTU XRCE é 128 bytes |
 
 ## Decisões de toolchain e UART — 0.7.4

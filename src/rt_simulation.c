@@ -10,15 +10,15 @@
 #include <string.h>
 #include <time.h>
 
-static double timespec_to_seconds(const struct timespec *ts) {
+static double TimespecToSeconds(const struct timespec *ts) {
     return (double)ts->tv_sec + (double)ts->tv_nsec / 1e9;
 }
 
-static double elapsed_seconds(const struct timespec *start, const struct timespec *end) {
-    return timespec_to_seconds(end) - timespec_to_seconds(start);
+static double ElapsedSeconds(const struct timespec *start, const struct timespec *end) {
+    return TimespecToSeconds(end) - TimespecToSeconds(start);
 }
 
-static uint64_t elapsed_nanoseconds(const struct timespec *start, const struct timespec *end) {
+static uint64_t ElapsedNanoseconds(const struct timespec *start, const struct timespec *end) {
     time_t seconds = end->tv_sec - start->tv_sec;
     long nanoseconds = end->tv_nsec - start->tv_nsec;
     if (nanoseconds < 0L) {
@@ -29,7 +29,7 @@ static uint64_t elapsed_nanoseconds(const struct timespec *start, const struct t
     return (uint64_t)seconds * UINT64_C(1000000000) + (uint64_t)nanoseconds;
 }
 
-static struct timespec add_nanoseconds(const struct timespec *origin, uint64_t nanoseconds) {
+static struct timespec AddNanoseconds(const struct timespec *origin, uint64_t nanoseconds) {
     struct timespec result = *origin;
     result.tv_sec += (time_t)(nanoseconds / UINT64_C(1000000000));
     result.tv_nsec += (long)(nanoseconds % UINT64_C(1000000000));
@@ -40,7 +40,7 @@ static struct timespec add_nanoseconds(const struct timespec *origin, uint64_t n
     return result;
 }
 
-static int configure_realtime_thread(RtSimulationContext *context) {
+static int ConfigureRealtimeThread(RtSimulationContext *context) {
     if (context->config->cpu_core >= 0) {
         if (context->config->cpu_core >= CPU_SETSIZE) {
             fprintf(stderr, "Warning: CPU core %d is outside CPU_SETSIZE=%d; affinity disabled.\n",
@@ -128,34 +128,27 @@ static void SetInputProtectionFailure(RtSimulationContext *context, const input_
     snprintf(context->run_result.message, sizeof(context->run_result.message), "invalid input limit: %.70s", channel->descriptor.input_name);
 }
 
-static void *simulation_thread(void *arg) {
+static void ReleasePreparedSimulation(RtSimulationContext *context) {
+    if (context->input_state_ready) {
+        InputStateDestroy(&context->input_state);
+        context->input_state_ready = false;
+    }
+    if (context->prepared) {
+        fmu_model_terminate(context->model);
+        context->prepared = false;
+    }
+}
+
+static void *SimulationThread(void *arg) {
     RtSimulationContext *context = arg;
     memset(&context->stats, 0, sizeof(context->stats));
     context->result = -1;
     context->run_result = (simulation_run_result_t){.state = SIMULATION_RUN_ERROR, .code = -1};
 
-    if (configure_realtime_thread(context) != 0) {
+    if (ConfigureRealtimeThread(context) != 0) {
         SetRunFailure(context, "realtime", "could not configure the simulation thread");
         goto finish;
     }
-
-    if (fmu_model_initialize_cosimulation(context->model, 0.0, context->config->stop_time_s) != 0) {
-        SetRunFailure(context, "initialize", "could not initialize the FMU");
-        goto finish;
-    }
-
-    input_channel_descriptor_t inputs[INPUT_STATE_MAX_CHANNELS];
-    if (context->config->input_count > INPUT_STATE_MAX_CHANNELS) {
-        SetRunFailure(context, "inputs", "configured input count exceeds the supported limit");
-        goto finish;
-    }
-    memcpy(inputs, context->config->inputs, context->config->input_count * sizeof(inputs[0]));
-    if (fmu_model_resolve_input_initial_values(context->model, inputs, context->config->input_count) != 0 ||
-        InputStateInit(&context->input_state, inputs, context->config->input_count, context->config->stop_on_invalid_input_limit) != INPUT_STATE_STATUS_OK) {
-        SetRunFailure(context, "inputs", "could not establish valid FMU input references");
-        goto finish;
-    }
-    context->input_state_ready = true;
 
     struct timespec wall_start;
     clock_gettime(CLOCK_MONOTONIC, &wall_start);
@@ -173,11 +166,11 @@ static void *simulation_thread(void *arg) {
         if (!first_step) {
             struct timespec now;
             clock_gettime(CLOCK_MONOTONIC, &now);
-            if (!ReleaseScheduleAdvanceToEarliestRelease(&release_schedule, elapsed_nanoseconds(&wall_start, &now))) {
+            if (!ReleaseScheduleAdvanceToEarliestRelease(&release_schedule, ElapsedNanoseconds(&wall_start, &now))) {
                 SetRunFailure(context, "schedule", "could not advance the fixed release schedule");
                 goto finish;
             }
-            const struct timespec release_time = add_nanoseconds(&wall_start, ReleaseScheduleReleaseNs(&release_schedule));
+            const struct timespec release_time = AddNanoseconds(&wall_start, ReleaseScheduleReleaseNs(&release_schedule));
             int sleep_rc;
             do {
                 sleep_rc = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &release_time, NULL);
@@ -202,7 +195,7 @@ static void *simulation_thread(void *arg) {
             goto finish;
         }
         if (input_status != INPUT_STATE_STATUS_OK ||
-            fmu_model_set_inputs(context->model, inputs, input_step.values, input_step.value_count) != 0) {
+            fmu_model_set_inputs(context->model, context->input_descriptors, input_step.values, input_step.value_count) != 0) {
             SetRunFailure(context, "inputs", "could not apply FMU inputs");
             goto finish;
         }
@@ -222,10 +215,10 @@ static void *simulation_thread(void *arg) {
         for (size_t index = 0U; index < context->config->output_count; ++index) plot_sample.values[index] = PlotValue(&log_sample.values[index], context->config->outputs[index].type);
 
         clock_gettime(CLOCK_MONOTONIC, &compute_end);
-        double computation_s = elapsed_seconds(&compute_start, &compute_end);
+        double computation_s = ElapsedSeconds(&compute_start, &compute_end);
         if (computation_s > context->stats.max_computation_s) context->stats.max_computation_s = computation_s;
 
-        if (!ReleaseScheduleCompleteStep(&release_schedule, elapsed_nanoseconds(&wall_start, &compute_end))) {
+        if (!ReleaseScheduleCompleteStep(&release_schedule, ElapsedNanoseconds(&wall_start, &compute_end))) {
             SetRunFailure(context, "schedule", "could not complete the fixed release schedule");
             goto finish;
         }
@@ -235,7 +228,7 @@ static void *simulation_thread(void *arg) {
 
         struct timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
-        plot_sample.wall_time_s = elapsed_seconds(&wall_start, &now);
+        plot_sample.wall_time_s = ElapsedSeconds(&wall_start, &now);
 
         if (context->logging) (void)RunLoggingPublish(context->logging, &log_sample);
         if (context->config->plot_enabled && context->plot_queue) (void)sample_queue_push(context->plot_queue, &plot_sample);
@@ -253,32 +246,52 @@ static void *simulation_thread(void *arg) {
     snprintf(context->run_result.message, sizeof(context->run_result.message), "%s", stopped ? "simulation stopped by request" : "simulation completed");
 
 finish:
-    if (context->input_state_ready) {
-        InputStateDestroy(&context->input_state);
-        context->input_state_ready = false;
-    }
-    fmu_model_terminate(context->model);
+    ReleasePreparedSimulation(context);
     context->run_result.stats = context->stats;
     if (context->logging) RunLoggingProducerDone(context->logging);
     if (context->plot_producer_done) atomic_store_explicit(context->plot_producer_done, true, memory_order_release);
     return NULL;
 }
 
-int rt_simulation_start(RtSimulationContext *context, FmuModel *model, const AppConfig *config,
-                        run_logging_t *logging, SampleQueue *plot_queue,
-                        _Atomic bool *stop_requested, _Atomic bool *plot_producer_done) {
+int RtSimulationPrepare(RtSimulationContext *context, FmuModel *model, const AppConfig *config) {
+    if (!context || !model || !config || !model->fmu || config->input_count > INPUT_STATE_MAX_CHANNELS) return -1;
     memset(context, 0, sizeof(*context));
     context->model = model;
     context->config = config;
+    context->result = -1;
+    memcpy(context->input_descriptors, config->inputs, config->input_count * sizeof(context->input_descriptors[0]));
+    if (fmu_model_initialize_cosimulation(model, 0.0, config->stop_time_s) != 0 ||
+        fmu_model_resolve_input_initial_values(model, context->input_descriptors, config->input_count) != 0 ||
+        InputStateInit(&context->input_state, context->input_descriptors, config->input_count, config->stop_on_invalid_input_limit) != INPUT_STATE_STATUS_OK) {
+        fmu_model_terminate(model);
+        return -1;
+    }
+    context->input_state_ready = true;
+    context->prepared = true;
+    return 0;
+}
+
+void RtSimulationAbort(RtSimulationContext *context) {
+    if (!context || context->thread_started) return;
+    ReleasePreparedSimulation(context);
+}
+
+int RtSimulationStart(RtSimulationContext *context, run_logging_t *logging, SampleQueue *plot_queue,
+                      _Atomic bool *stop_requested, _Atomic bool *plot_producer_done) {
+    if (!context || !context->prepared || context->thread_started || !stop_requested) return -1;
     context->logging = logging;
     context->plot_queue = plot_queue;
     context->stop_requested = stop_requested;
     context->plot_producer_done = plot_producer_done;
     context->result = -1;
-    return pthread_create(&context->thread, NULL, simulation_thread, context);
+    if (pthread_create(&context->thread, NULL, SimulationThread, context) != 0) return -1;
+    context->thread_started = true;
+    return 0;
 }
 
-int rt_simulation_join(RtSimulationContext *context) {
+int RtSimulationJoin(RtSimulationContext *context) {
+    if (!context || !context->thread_started) return -1;
     if (pthread_join(context->thread, NULL) != 0) return -1;
+    context->thread_started = false;
     return context->result;
 }

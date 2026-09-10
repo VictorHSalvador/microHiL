@@ -345,6 +345,10 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
     run_logging_status_t descriptor_status;
     bool plot_started = false;
     *last_log_closed = false;
+    if (RtSimulationPrepare(&sim_context, model, config) != 0) {
+        printf("Could not initialize the FMU and establish valid input references.\n");
+        return -1;
+    }
     RunLoggingInit(&logging, config->binary_log_enabled);
 
     if (config->binary_log_enabled) {
@@ -365,7 +369,7 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
     }
 
     printf("\nStarting simulation. Press Ctrl+C to request a clean stop.\n");
-    int rc = rt_simulation_start(&sim_context, model, config, logging.result.started ? &logging : NULL,
+    int rc = RtSimulationStart(&sim_context, logging.result.started ? &logging : NULL,
                                  plot_started ? &plot_queue : NULL, &g_stop_requested, &plot_producer_done);
     if (rc != 0) {
         fprintf(stderr, "Could not create simulation thread.\n");
@@ -373,11 +377,12 @@ static int run_simulation(FmuModel *model, AppConfig *config, char last_log_path
         RunLoggingFinish(&logging);
         atomic_store_explicit(&plot_producer_done, true, memory_order_release);
         if (plot_started) plotter_join(&plot_context);
+        RtSimulationAbort(&sim_context);
         PrintLoggingResult(RunLoggingResult(&logging));
         return -1;
     }
 
-    rc = rt_simulation_join(&sim_context);
+    rc = RtSimulationJoin(&sim_context);
     RunLoggingFinish(&logging);
     if (plot_started) (void)plotter_join(&plot_context);
     RunResultAggregate(&run_result, &sim_context.run_result, RunLoggingResult(&logging));

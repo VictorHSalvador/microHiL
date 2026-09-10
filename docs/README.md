@@ -39,7 +39,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.21.1**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.21.2**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrutural reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
@@ -94,3 +94,5 @@ Revisão 0.16: `/daqc_setup` também configura ADC/PWM fora de STREAMING. O esta
 Revisão 0.20: o YAML passou a exigir a configuração completa dos seis ADCs e dois PWMs do perfil ESP32. A GUI deverá gerar esses valores de forma explícita; a validação HOST não substitui a confirmação da DAQC.
 
 Revisão 0.21: o MID 04 chega ao Agent Humble por ponte UDP local, sem permitir que o Agent abra a CH340. CONFIG, DATA e READ_ACK permanecem no coordenador UART.
+
+Patch 0.21.2: o runner inicializa a FMU e resolve as referências iniciais dos inputs antes de iniciar a thread de simulação. Assim, a futura conexão DAQC pode publicar aquisições em um estado pronto, enquanto a primeira chamada `doStep` continua ocorrendo somente após a confirmação de STREAMING. A [evidência HOST](evidence/host-rt-preparation-2026-09-10.md) usa uma fixture FMU e não valida enlace ou tempo real.

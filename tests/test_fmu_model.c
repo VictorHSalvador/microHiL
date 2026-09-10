@@ -6,6 +6,7 @@
 
 #include "fmu_model.h"
 #include "profile_config.h"
+#include "rt_simulation.h"
 
 static void Require(bool condition, const char *message) {
     if (!condition) {
@@ -79,6 +80,30 @@ int main(int argc, char **argv) {
     Require(fabs(output_values[real_output].real_value - 5.0) < 1e-12, "real input was not applied before the FMU step");
     Require(output_values[boolean_output].boolean_value == 0U, "boolean input was not applied before the FMU step");
 
+    fmu_model_unload(&model);
+
+    AppConfig config;
+    app_config_set_defaults(&config);
+    config.step_size_s = 0.01;
+    config.stop_time_s = 0.02;
+    config.input_count = input_count;
+    config.output_count = output_count;
+    memcpy(config.inputs, inputs, input_count * sizeof(inputs[0]));
+    memcpy(config.outputs, outputs, output_count * sizeof(outputs[0]));
+
+    RtSimulationContext simulation;
+    _Atomic bool stop_requested = false;
+    _Atomic bool producer_done = false;
+    fmu_model_init(&model);
+    Require(fmu_model_load(&model, argv[1]) == 0, "could not reload the FMU for the preparation test");
+    Require(RtSimulationPrepare(&simulation, &model, &config) == 0, "could not prepare the FMU before starting the simulation thread");
+    Require(simulation.input_state_ready && simulation.prepared && simulation.stats.completed_steps == 0U,
+            "preparation did not leave initialized inputs without executing a simulation step");
+    Require(RtSimulationStart(&simulation, NULL, NULL, &stop_requested, &producer_done) == 0,
+            "could not start a prepared simulation");
+    Require(RtSimulationJoin(&simulation) == 0 && simulation.run_result.stats.completed_steps == 2U,
+            "prepared simulation did not execute the requested fixed steps");
+    Require(atomic_load_explicit(&producer_done, memory_order_acquire), "prepared simulation did not complete its producer state");
     fmu_model_unload(&model);
     return EXIT_SUCCESS;
 }

@@ -219,7 +219,7 @@ A plataforma deve enviar comandos DISABLE=0x01, ENABLE=0x02 e STREAMING=0x03 e i
 
 ### REQ-F-21 — Validação da Configuração antes da Execução
 
-Antes de executar, validar FMU, passo/duração, perfil DAQC, mapeamento I/O e configuração binária quando utilizada. Incompatibilidades devem informar em qual variável, tipo, recurso ou parâmetro ocorre a divergência e impedir aplicação parcial/Play inválido.
+Antes de executar, validar FMU, passo/duração, perfil DAQC, mapeamento I/O e configuração YAML. Incompatibilidades devem informar em qual variável, tipo, recurso ou parâmetro ocorre a divergência e impedir aplicação parcial/Play inválido.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 

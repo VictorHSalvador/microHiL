@@ -66,15 +66,25 @@ if(MICROHIL_BUILD_RUNNER)
         m
     )
 
+    add_library(microhil_rt_simulation STATIC src/rt_simulation.c)
+    target_include_directories(microhil_rt_simulation PUBLIC include)
+    target_link_libraries(microhil_rt_simulation PUBLIC
+        microhil_project_warnings
+        microhil_host_components
+        microhil_fmu_wrapper
+        Threads::Threads
+        m
+    )
+
     add_executable(fmu_rt_runner
         src/main.c
-        src/rt_simulation.c
     )
     target_include_directories(fmu_rt_runner PRIVATE include)
     target_link_libraries(fmu_rt_runner PRIVATE
         microhil_project_warnings
         microhil_host_components
         microhil_fmu_wrapper
+        microhil_rt_simulation
         Threads::Threads
         dl
         m

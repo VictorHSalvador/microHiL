@@ -60,7 +60,7 @@ target_link_libraries(test_profile_config PRIVATE microhil_host_components m)
 
 if(TARGET microhil_fmu_wrapper)
     add_executable(test_fmu_model test_fmu_model.c)
-    target_link_libraries(test_fmu_model PRIVATE microhil_fmu_wrapper microhil_host_components m)
+    target_link_libraries(test_fmu_model PRIVATE microhil_rt_simulation microhil_fmu_wrapper microhil_host_components m)
 endif()
 
 add_test(NAME sample_queue_spsc_order COMMAND test_sample_queue order)
