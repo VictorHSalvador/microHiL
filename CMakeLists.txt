@@ -7,6 +7,8 @@ set(CMAKE_C_EXTENSIONS ON)
 
 include(CTest)
 find_package(Threads REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBYAML REQUIRED IMPORTED_TARGET yaml-0.1)
 
 option(MICROHIL_BUILD_RUNNER "Build the FMILibrary-based runner" ON)
 option(MICROHIL_FETCH_FMILIB "Fetch the pinned FMILibrary release for the runner" OFF)
@@ -39,11 +41,13 @@ add_library(microhil_host_components STATIC
     src/sample_queue.c
     src/sha256.c
     src/plotter.c
+    src/profile_config.c
 )
 target_include_directories(microhil_host_components PUBLIC include)
 target_link_libraries(microhil_host_components PUBLIC
     microhil_project_warnings
     Threads::Threads
+    PkgConfig::LIBYAML
 )
 
 if(MICROHIL_BUILD_RUNNER)

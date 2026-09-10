@@ -43,6 +43,9 @@ target_link_libraries(test_app_config PRIVATE microhil_host_components m)
 add_executable(test_release_schedule test_release_schedule.c)
 target_link_libraries(test_release_schedule PRIVATE microhil_host_components m)
 
+add_executable(test_profile_config test_profile_config.c)
+target_link_libraries(test_profile_config PRIVATE microhil_host_components m)
+
 if(TARGET microhil_fmu_wrapper)
     add_executable(test_fmu_model test_fmu_model.c)
     target_link_libraries(test_fmu_model PRIVATE microhil_fmu_wrapper m)
@@ -88,6 +91,7 @@ add_test(NAME app_config_timing COMMAND test_app_config)
 add_test(NAME release_schedule_overrun COMMAND test_release_schedule overrun)
 add_test(NAME release_schedule_boundary COMMAND test_release_schedule boundary)
 add_test(NAME release_schedule_wakeup COMMAND test_release_schedule wakeup)
+add_test(NAME profile_config_yaml COMMAND test_profile_config "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
 
 if(TARGET test_fmu_model)
     add_test(NAME fmu_model_inputs COMMAND test_fmu_model "${CMAKE_SOURCE_DIR}/tests/fixtures/teste001.fmu")
