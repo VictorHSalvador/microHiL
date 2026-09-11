@@ -20,6 +20,7 @@ ApplicationWindow {
     property var inputItems: []
     property var mappingRows: []
     property string observedFmuPath: guiController.fmuPath
+    property string observedProfilePath: guiController.profilePath
 
     function refreshOutputs() {
         outputItems = guiController.Outputs()
@@ -222,6 +223,33 @@ ApplicationWindow {
                 visible: guiController.fmuPath.length > 0
                 ColumnLayout {
                     anchors.fill: parent
+                    Label { text: "Entradas virtuais"; font.bold: true; font.pixelSize: 18 }
+                    Label { text: "O valor é operacional e não é salvo no YAML. A sessão o aplica antes do primeiro passo ou na fronteira do próximo passo, sem chamada FMI pela GUI."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Repeater {
+                        model: window.inputItems
+                        delegate: RowLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            visible: !modelData.physicalMapped
+                            Label { text: modelData.name + " (" + modelData.type + ")"; Layout.preferredWidth: 320; elide: Text.ElideRight }
+                            TextField {
+                                id: virtualValueField
+                                Layout.preferredWidth: 180
+                                placeholderText: modelData.type === "Boolean" ? "0 ou 1" : "Valor"
+                                validator: DoubleValidator {}
+                            }
+                            Button { text: "Aplicar"; onClicked: guiController.SetVirtualInput(modelData.index, virtualValueField.text) }
+                        }
+                    }
+                    Label { text: guiController.profilePath.length > 0 ? "Entradas ligadas à DAQC não são exibidas como virtuais." : "Carregue ou salve um perfil para identificar entradas físicas."; color: "#546e5d" }
+                }
+            }
+
+            Frame {
+                Layout.fillWidth: true
+                visible: guiController.fmuPath.length > 0
+                ColumnLayout {
+                    anchors.fill: parent
                     Label { text: "Configuração DAQC para YAML"; font.bold: true; font.pixelSize: 18 }
                     Label { text: "Todos os campos ADC/PWM são obrigatórios, inclusive para canais sem mapeamento. A DAQC ainda confirma a combinação PWM antes de Streaming."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     GridLayout {
@@ -289,4 +317,6 @@ ApplicationWindow {
         refreshOutputs()
         refreshMappings()
     }
+
+    onObservedProfilePathChanged: refreshMappings()
 }

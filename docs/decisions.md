@@ -138,3 +138,7 @@ O usuário aprovou ampliar `DaqcSetup` sem criar tópicos adicionais. A mensagem
 ## Tipos FMI no perfil físico ESP32 — 0.24.0
 
 Em 11.09.2026, o usuário confirmou que `Integer` e `Enumeration` não possuem conversão física aprovada para o perfil ESP32. Eles ficam disponíveis somente para entradas virtuais e para logging/gráficos de saída. O mapeamento físico aceita exclusivamente `Real` nos canais AI/AO/PWM e `Boolean` nos canais DI/DO. A GUI não oferece canais DAQC para os dois tipos discretos e o carregador YAML rejeita esse vínculo antes de aplicar o perfil.
+
+## Persistência de entradas virtuais — 0.25.0
+
+Em 11.09.2026, o usuário confirmou que YAML é exclusivamente configuração e não transporta dados operacionais. Valores de entradas virtuais não são gravados nem restaurados por um perfil. A GUI envia o valor à sessão operacional; antes do Play ele é mantido para a inicialização e, durante Running, é entregue ao `InputState` para consumo na fronteira do próximo passo FMI. A GUI não chama a instância FMI diretamente. Uma entrada já mapeada ao perfil DAQC não aceita fonte virtual concorrente.

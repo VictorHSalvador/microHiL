@@ -25,7 +25,7 @@ TASK-002 fechou as partes HOST independentes de FMILibrary/hardware. A capacidad
 
 ## Sequência de conclusão para a versão de teste
 
-O acompanhamento de implementação usa oito grupos derivados das dependências acima. Ele não substitui as TASKs nem altera requisitos: 1) controlador de execução compartilhado; 2) importação e validação YAML na GUI; 3) seleção de saídas, mapeamento, entradas virtuais e geração YAML; 4) gráficos por saída; 5) Play/Stop, resultado, logging e CSV na GUI; 6) integração host–Agent–CH340; 7) firmware e bancada ESP32; 8) qualificação temporal/HIL e evidências finais. Os grupos 1 e 2 estão concluídos no HOST. O grupo 3 está em andamento: a seleção de saídas da FMU foi implementada e testada no HOST; o editor físico Real/Boolean e a geração YAML estão materializados; entradas virtuais e verificação visual permanecem pendentes.
+O acompanhamento de implementação usa oito grupos derivados das dependências acima. Ele não substitui as TASKs nem altera requisitos: 1) controlador de execução compartilhado; 2) importação e validação YAML na GUI; 3) seleção de saídas, mapeamento, entradas virtuais e geração YAML; 4) gráficos por saída; 5) Play/Stop, resultado, logging e CSV na GUI; 6) integração host–Agent–CH340; 7) firmware e bancada ESP32; 8) qualificação temporal/HIL e evidências finais. Os grupos 1 e 2 estão concluídos no HOST. O grupo 3 está em andamento: a seleção de saídas da FMU foi implementada e testada no HOST; o editor físico Real/Boolean, a geração YAML e os controles virtuais operacionais estão materializados; verificação visual permanece pendente.
 
 ## Estratégia de reaproveitamento
 

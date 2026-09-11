@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 static void ClearRunState(execution_session_t *session) {
     session->simulation = (RtSimulationContext){0};
@@ -52,6 +53,8 @@ execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session,
     session->config.output_count = 0U;
     session->config.profile_loaded = false;
     session->config.profile_path[0] = '\0';
+    memset(session->virtual_input_values, 0, sizeof(session->virtual_input_values));
+    memset(session->virtual_input_set, 0, sizeof(session->virtual_input_set));
     session->config.input_count = fmu_model_list_numeric_inputs(&session->model, session->config.inputs, INPUT_STATE_MAX_CHANNELS);
     if (session->config.input_count > INPUT_STATE_MAX_CHANNELS) {
         fmu_model_unload(&session->model);
@@ -193,6 +196,47 @@ int ExecutionSessionInputType(const execution_session_t *session, size_t index) 
     return session && session->initialized && index < session->config.input_count ? (int)session->config.inputs[index].type : -1;
 }
 
+bool ExecutionSessionInputHasPhysicalMapping(const execution_session_t *session, size_t index) {
+    if (!session || !session->initialized || index >= session->config.input_count || !session->config.profile_loaded) return false;
+    for (size_t mapping_index = 0U; mapping_index < session->config.profile.mapping_count; ++mapping_index) {
+        const profile_mapping_t *mapping = &session->config.profile.mappings[mapping_index];
+        if (mapping->is_input && mapping->fmu_index == index) return true;
+    }
+    return false;
+}
+
+static bool ConvertVirtualInput(NumericType type, double value, input_value_t *converted) {
+    if (!converted || !isfinite(value)) return false;
+    switch (type) {
+        case NUMERIC_REAL:
+            converted->real_value = value;
+            return true;
+        case NUMERIC_INTEGER:
+        case NUMERIC_ENUMERATION:
+            if (value < (double)INT32_MIN || value > (double)INT32_MAX || trunc(value) != value) return false;
+            converted->discrete_value = (int64_t)value;
+            return true;
+        case NUMERIC_BOOLEAN:
+            if (value != 0.0 && value != 1.0) return false;
+            converted->boolean_value = (uint8_t)value;
+            return true;
+        default:
+            return false;
+    }
+}
+
+execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *session, size_t index, double value) {
+    if (!session || !session->initialized || index >= session->config.input_count) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    if (ExecutionSessionInputHasPhysicalMapping(session, index)) return EXECUTION_SESSION_INPUT_PHYSICAL;
+    input_value_t converted;
+    if (!ConvertVirtualInput(session->config.inputs[index].type, value, &converted)) return EXECUTION_SESSION_INPUT_VALUE;
+    session->virtual_input_values[index] = converted;
+    session->virtual_input_set[index] = true;
+    if (session->prepared && session->simulation.input_state_ready &&
+        InputStatePublish(&session->simulation.input_state, index, converted, true) != INPUT_STATE_STATUS_OK) return EXECUTION_SESSION_INPUT_VALUE;
+    return EXECUTION_SESSION_OK;
+}
+
 const char *ExecutionSessionProfilePath(const execution_session_t *session) {
     return session && session->initialized ? session->config.profile_path : "";
 }
@@ -219,6 +263,13 @@ execution_session_status_t ExecutionSessionPrepare(execution_session_t *session)
     if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
     if (app_config_normalize_outputs(&session->config) != 0 || RtSimulationPrepare(&session->simulation, &session->model, &session->config) != 0) {
         return EXECUTION_SESSION_PREPARE;
+    }
+    for (size_t index = 0U; index < session->config.input_count; ++index) {
+        if (session->virtual_input_set[index] &&
+            InputStatePublish(&session->simulation.input_state, index, session->virtual_input_values[index], true) != INPUT_STATE_STATUS_OK) {
+            RtSimulationAbort(&session->simulation);
+            return EXECUTION_SESSION_PREPARE;
+        }
     }
     session->prepared = true;
     return EXECUTION_SESSION_OK;
@@ -304,6 +355,8 @@ const char *ExecutionSessionStatusString(execution_session_status_t status) {
         case EXECUTION_SESSION_START: return "could not start or complete the simulation";
         case EXECUTION_SESSION_RUNNING: return "the simulation session is active";
         case EXECUTION_SESSION_PROFILE: return "the YAML profile is incompatible with the loaded FMU or ESP32 profile";
+        case EXECUTION_SESSION_INPUT_PHYSICAL: return "the FMU input is mapped to the physical DAQC";
+        case EXECUTION_SESSION_INPUT_VALUE: return "the virtual input value is invalid";
         default: return "unknown execution session status";
     }
 }

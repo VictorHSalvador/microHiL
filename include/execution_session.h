@@ -26,6 +26,8 @@ typedef struct execution_session {
     bool logging_started;
     bool run_started;
     bool result_available;
+    input_value_t virtual_input_values[INPUT_STATE_MAX_CHANNELS];
+    bool virtual_input_set[INPUT_STATE_MAX_CHANNELS];
 } execution_session_t;
 #else
 typedef struct execution_session execution_session_t;
@@ -42,7 +44,9 @@ typedef enum {
     EXECUTION_SESSION_LOGGING,
     EXECUTION_SESSION_START,
     EXECUTION_SESSION_RUNNING,
-    EXECUTION_SESSION_PROFILE
+    EXECUTION_SESSION_PROFILE,
+    EXECUTION_SESSION_INPUT_PHYSICAL,
+    EXECUTION_SESSION_INPUT_VALUE
 } execution_session_status_t;
 
 execution_session_t *ExecutionSessionCreate(void);
@@ -76,6 +80,8 @@ size_t ExecutionSessionInputCount(const execution_session_t *session);
 const char *ExecutionSessionInputName(const execution_session_t *session, size_t index);
 unsigned int ExecutionSessionInputValueReference(const execution_session_t *session, size_t index);
 int ExecutionSessionInputType(const execution_session_t *session, size_t index);
+bool ExecutionSessionInputHasPhysicalMapping(const execution_session_t *session, size_t index);
+execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *session, size_t index, double value);
 const char *ExecutionSessionProfilePath(const execution_session_t *session);
 unsigned int ExecutionSessionProfileId(const execution_session_t *session);
 size_t ExecutionSessionProfileMappingCount(const execution_session_t *session);

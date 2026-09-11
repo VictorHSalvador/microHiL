@@ -11,6 +11,13 @@ static void Require(bool condition, const char *message) {
     }
 }
 
+static size_t FindInput(const execution_session_t *session, const char *name) {
+    for (size_t index = 0U; index < ExecutionSessionInputCount(session); ++index) {
+        if (strcmp(ExecutionSessionInputName(session, index), name) == 0) return index;
+    }
+    return ExecutionSessionInputCount(session);
+}
+
 int main(int argc, char **argv) {
     Require(argc == 3, "expected the fixture FMU and profile paths");
     execution_session_t session;
@@ -19,8 +26,15 @@ int main(int argc, char **argv) {
     ExecutionSessionInit(&session);
     Require(ExecutionSessionLoadFmu(&session, argv[1]) == EXECUTION_SESSION_OK, "could not load the fixture FMU into the session");
     Require(fmu_model_name(&session.model)[0] != '\0', "session did not preserve the FMU model name");
+    const size_t real_input = FindInput(&session, "u_real");
+    const size_t integer_input = FindInput(&session, "u_integer");
+    Require(real_input < ExecutionSessionInputCount(&session) && integer_input < ExecutionSessionInputCount(&session), "session did not expose the fixture inputs");
+    Require(ExecutionSessionSetVirtualInput(&session, integer_input, 23.0) == EXECUTION_SESSION_OK, "could not set an integer virtual input");
+    Require(ExecutionSessionSetVirtualInput(&session, integer_input, 23.5) == EXECUTION_SESSION_INPUT_VALUE, "session accepted a fractional integer virtual input");
     Require(ExecutionSessionLoadProfile(&session, argv[2]) == EXECUTION_SESSION_OK, "could not load the compatible YAML profile into the session");
     Require(session.config.profile_loaded && session.config.profile.mapping_count == 3U, "session did not retain the resolved YAML profile");
+    Require(ExecutionSessionInputHasPhysicalMapping(&session, real_input), "session did not identify the physical input mapping");
+    Require(ExecutionSessionSetVirtualInput(&session, real_input, 2.0) == EXECUTION_SESSION_INPUT_PHYSICAL, "session allowed virtual input over a physical mapping");
     const size_t output_count = ExecutionSessionListOutputs(&session, outputs, MAX_OUTPUTS);
     Require(output_count == 3U, "session did not discover the numeric FMU outputs");
     Require(ExecutionSessionOutputCount(&session) == output_count, "session did not expose the output count for the UI");

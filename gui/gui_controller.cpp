@@ -149,6 +149,7 @@ QVariantList GuiController::Inputs() const {
         input.insert(QStringLiteral("type"), NumericTypeName(ExecutionSessionInputType(session_, index)));
         input.insert(QStringLiteral("typeCode"), ExecutionSessionInputType(session_, index));
         input.insert(QStringLiteral("valueReference"), static_cast<qulonglong>(ExecutionSessionInputValueReference(session_, index)));
+        input.insert(QStringLiteral("physicalMapped"), ExecutionSessionInputHasPhysicalMapping(session_, index));
         inputs.append(input);
     }
     return inputs;
@@ -176,5 +177,19 @@ bool GuiController::SetOutputSelected(int index, bool selected) {
     error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
     emit ErrorChanged();
     if (status == EXECUTION_SESSION_OK) emit FmuChanged();
+    return status == EXECUTION_SESSION_OK;
+}
+
+bool GuiController::SetVirtualInput(int index, const QString &value) {
+    bool converted = false;
+    const double numericValue = value.toDouble(&converted);
+    if (index < 0 || !converted) {
+        error_message_ = QStringLiteral("invalid virtual input value");
+        emit ErrorChanged();
+        return false;
+    }
+    const execution_session_status_t status = ExecutionSessionSetVirtualInput(session_, static_cast<size_t>(index), numericValue);
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
+    emit ErrorChanged();
     return status == EXECUTION_SESSION_OK;
 }
