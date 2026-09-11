@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.1**, de 11.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.2**, de 11.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -80,6 +80,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.24.0 | 11.09.2026 | MINOR | Integer/Enumeration ficam restritos a controles virtuais e log/gráficos; a DAQC ESP32 aceita somente Real em AI/AO/PWM e Boolean em DI/DO | spec, TARGET, decisions, arquitetura, ICD, plano, GUI, validação HOST e sdd-versions | Decisão do usuário; CTest 47/47 e compilação GUI; interação visual, perfil salvo pela GUI e HIL pendentes | 38bd613 |
 | 0.25.0 | 11.09.2026 | MINOR | YAML passa a guardar apenas configuração; valores de entradas virtuais ficam no estado operacional da sessão e são aplicados na fronteira FMI | decisions, arquitetura, ICD, plano, GUI, sessão HOST, testes, evidence e sdd-versions | Decisão do usuário; CTest 47/47 e GUI offscreen; interação visual e HIL pendentes | 53e9396 |
 | 0.25.1 | 11.09.2026 | PATCH | GUI passa a consumir a fila SPSC de amostras a 10 Hz e desenhar gráficos de saída com janela temporal comum e eixo Y configurável | sessão HOST, GUI Qt, testes, plano, matriz, evidence e sdd-versions | CTest 47/47 e GUI offscreen; inspeção visual, DAQC e HIL pendentes | alterações locais; registrar commit quando criado |
+| 0.25.2 | 11.09.2026 | PATCH | Play da GUI é identificado como debug HOST até que a sequência HiL ENABLE→STREAMING seja integrada | GUI, plano e sdd-versions | Correção de comunicação; sem nova validação física | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

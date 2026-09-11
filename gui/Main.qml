@@ -192,10 +192,10 @@ ApplicationWindow {
                         anchors.fill: parent
                         Label { text: "Controle"; font.bold: true; font.pixelSize: 18 }
                         RowLayout {
-                            Button { text: "Play"; enabled: window.simulationState !== "Running"; onClicked: { if (guiController.StartSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled, window.plotEnabled)) window.simulationState = "Running" } }
+                            Button { text: "Play debug"; enabled: window.simulationState !== "Running"; onClicked: { if (guiController.StartSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled, window.plotEnabled)) window.simulationState = "Running" } }
                             Button { text: "Stop"; enabled: window.simulationState === "Running"; onClicked: guiController.StopSimulation() }
                         }
-                        Label { text: "A ligação de Play/Stop ao controlador de execução C será disponibilizada pela API de orquestração."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        Label { text: "Play debug executa a FMU sem DAQC. O Play HiL, com ENABLE→STREAMING e atuação física, depende da integração do enlace."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     }
                 }
             }
