@@ -50,6 +50,7 @@ void ExecutionSessionInit(execution_session_t *session);
 void ExecutionSessionDestroy(execution_session_t *session);
 void ExecutionSessionDelete(execution_session_t *session);
 execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session, const char *path);
+execution_session_status_t ExecutionSessionValidateProfile(execution_session_t *session, const char *path);
 execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *session, const char *path);
 execution_session_status_t ExecutionSessionSetTiming(execution_session_t *session, double step_size_s, double stop_time_s);
 size_t ExecutionSessionListOutputs(execution_session_t *session, OutputVariable *outputs, size_t capacity);

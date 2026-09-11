@@ -62,17 +62,31 @@ execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session,
     return EXECUTION_SESSION_OK;
 }
 
+static execution_session_status_t LoadProfileCandidate(execution_session_t *session, const char *path, profile_config_t *candidate,
+                                                        daq_schema_t *acquisition_schema, daq_schema_t *actuation_schema) {
+    if (!session || !session->initialized || !path || !path[0]) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    if (!session->model.fmu) return EXECUTION_SESSION_NOT_READY;
+    if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
+    if (ProfileConfigLoadYaml(path, candidate) != PROFILE_CONFIG_OK || fmu_model_resolve_profile_mappings(&session->model, candidate) != 0 ||
+        ProfileConfigBuildAcquisitionSchema(candidate, acquisition_schema) != PROFILE_CONFIG_OK ||
+        ProfileConfigBuildActuationSchema(candidate, actuation_schema) != PROFILE_CONFIG_OK) return EXECUTION_SESSION_PROFILE;
+    return EXECUTION_SESSION_OK;
+}
+
+execution_session_status_t ExecutionSessionValidateProfile(execution_session_t *session, const char *path) {
+    profile_config_t candidate;
+    daq_schema_t acquisition_schema;
+    daq_schema_t actuation_schema;
+    return LoadProfileCandidate(session, path, &candidate, &acquisition_schema, &actuation_schema);
+}
+
 execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *session, const char *path) {
     profile_config_t candidate;
     daq_schema_t acquisition_schema;
     daq_schema_t actuation_schema;
 
-    if (!session || !session->initialized || !path || !path[0]) return EXECUTION_SESSION_INVALID_ARGUMENT;
-    if (!session->model.fmu) return EXECUTION_SESSION_NOT_READY;
-    if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
-    if (ProfileConfigLoadYaml(path, &candidate) != PROFILE_CONFIG_OK || fmu_model_resolve_profile_mappings(&session->model, &candidate) != 0 ||
-        ProfileConfigBuildAcquisitionSchema(&candidate, &acquisition_schema) != PROFILE_CONFIG_OK ||
-        ProfileConfigBuildActuationSchema(&candidate, &actuation_schema) != PROFILE_CONFIG_OK) return EXECUTION_SESSION_PROFILE;
+    const execution_session_status_t status = LoadProfileCandidate(session, path, &candidate, &acquisition_schema, &actuation_schema);
+    if (status != EXECUTION_SESSION_OK) return status;
     session->config.profile = candidate;
     session->config.acquisition_schema = acquisition_schema;
     session->config.actuation_schema = actuation_schema;

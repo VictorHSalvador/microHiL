@@ -134,3 +134,7 @@ O usuário confirmou o perfil simultâneo ESP32: AI GPIO36/39/34/35/32/33; AO GP
 ## Configuração ADC/PWM pelo setup — 0.16.0
 
 O usuário aprovou ampliar `DaqcSetup` sem criar tópicos adicionais. A mensagem transporta resolução ADC comum, atenuação por AI, frequência e resolução por PWM, além de `apply_configuration`. A DAQC aplica esses parâmetros somente em DISABLE ou ENABLE e confirma pelo novo campo binário `DaqcState.configuration_applied`. `DaqcErrors` passa a indicar separadamente erro de configuração ADC e PWM por flags binárias. Duty PWM continua no DATA crítico; não há telemetria ROS adicional.
+
+## Tipos FMI no perfil físico ESP32 — 0.24.0
+
+Em 11.09.2026, o usuário confirmou que `Integer` e `Enumeration` não possuem conversão física aprovada para o perfil ESP32. Eles ficam disponíveis somente para entradas virtuais e para logging/gráficos de saída. O mapeamento físico aceita exclusivamente `Real` nos canais AI/AO/PWM e `Boolean` nos canais DI/DO. A GUI não oferece canais DAQC para os dois tipos discretos e o carregador YAML rejeita esse vínculo antes de aplicar o perfil.

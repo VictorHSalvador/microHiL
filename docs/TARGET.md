@@ -91,7 +91,7 @@ F-23 retém inputs no host, sem atuar em AO/DO/PWM por amostra inválida isolada
 
 ## Representação e calibração
 
-O mapa analógico usa volts; DAC converte para código de 8 bits e nunca confunde 0…255 com volts. ADC usa calibração correspondente à atenuação/resolução. PWM usa frequência e duty, com escala de mapeamento explícita; validar os limites configurados antes de Play.
+O mapa analógico usa volts; DAC converte para código de 8 bits e nunca confunde 0…255 com volts. ADC usa calibração correspondente à atenuação/resolução. PWM usa frequência e duty, com escala de mapeamento explícita; validar os limites configurados antes de Play. O perfil físico não converte `Integer` ou `Enumeration`: esses tipos não podem ser mapeados a GPIO e permanecem virtuais ou destinados a log/gráfico.
 
 ## Dois núcleos e observabilidade da USB
 

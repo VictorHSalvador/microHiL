@@ -81,7 +81,7 @@ READ_ACK para SEQ 7: 59 72 03 07 00.
 
 ## IF-MAP — Schema posicional e perfil
 
-**R/D:** repetir o conceito FieldSpec/PayloadSchema: lista ordenada com identidade, tipo, unidade, largura e offset acumulado. Selecionar GPIOs disponíveis em ordem numérica crescente dentro de cada direção; uma função por GPIO. Um descritor de canal contém GPIO, função (AI/DI/AO/DO/PWM), tipo no fio, offset, largura, unidade, escala/offset da conversão e limites da configuração. ADC/PWM seguem TARGET. Unidade física de input FMU e valueReference ficam no mapa host; o MCU não interpreta a FMU.
+**R/D:** repetir o conceito FieldSpec/PayloadSchema: lista ordenada com identidade, tipo, unidade, largura e offset acumulado. Selecionar GPIOs disponíveis em ordem numérica crescente dentro de cada direção; uma função por GPIO. Um descritor de canal contém GPIO, função (AI/DI/AO/DO/PWM), tipo no fio, offset, largura, unidade, escala/offset da conversão e limites da configuração. ADC/PWM seguem TARGET. Unidade física de input FMU e valueReference ficam no mapa host; o MCU não interpreta a FMU. No perfil ESP32, AI/AO/PWM aceitam somente `Real` e DI/DO somente `Boolean`; `Integer` e `Enumeration` não têm representação física aprovada e são recusados pelo mapa DAQC.
 
 Congelar schema antes de STREAMING. Payload recebido tem exatamente N bytes da direção; N=0 permite desativar a direção sem enviar DATA vazio periódico. Mudança de perfil exige parar e validar novamente. Não transportar nomes em cada amostra; nome, índice, tipo e valueReference ficam associados na configuração. Host e firmware devem possuir a mesma versão de perfil/schema antes de habilitar STREAMING.
 

@@ -30,7 +30,11 @@ public:
     QString ErrorMessage() const;
     Q_INVOKABLE bool LoadFmu(const QString &path);
     Q_INVOKABLE bool LoadProfile(const QString &path);
+    Q_INVOKABLE bool SaveProfile(const QString &path, double stepSizeSeconds, double stopTimeSeconds, int adcResolutionBits,
+                                 const QVariantList &adcAttenuations, const QVariantList &pwmConfigurations, const QVariantList &mappings);
+    Q_INVOKABLE QVariantList Inputs() const;
     Q_INVOKABLE QVariantList Outputs() const;
+    Q_INVOKABLE QVariantList DaqcChannels(int numericType, bool inputDirection) const;
     Q_INVOKABLE bool SetOutputSelected(int index, bool selected);
 signals:
     void FmuChanged();
@@ -40,6 +44,7 @@ private:
     execution_session_t *session_ = nullptr;
     QString error_message_;
     static QString NumericTypeName(int type);
+    static QString QuoteYaml(const QString &value);
 };
 
 #endif

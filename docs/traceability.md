@@ -1,13 +1,13 @@
 # Matriz de rastreabilidade
 
-Revisão 0.23.4, baseline conjunta [SDD-MICROHIL 0.23.4](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; a seleção de saídas numéricas pela GUI também foi testada no HOST. Não há inferência de validação funcional visual de GUI, Raspberry Pi, DAQC, USB, ROS, bancada, HIL ou deadlines.
+Revisão 0.24.0, baseline conjunta [SDD-MICROHIL 0.24.0](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; a seleção de saídas numéricas pela GUI também foi testada no HOST. Não há inferência de validação funcional visual de GUI, Raspberry Pi, DAQC, USB, ROS, bancada, HIL ou deadlines.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 
 | Requisito | Design/contrato | Tarefa | Código observado | Estado | Teste planejado / ambiente | Evidência disponível |
 |---|---|---|---|---|---|---|
 | REQ-F-01 | ARCH-CORE / IF-CORE | TASK-003 | src/fmu_model.c; src/rt_simulation.c; src/main.c; src/app_config.c | P | V-F-01 / HOST | [host-rt-preparation-2026-09-10](evidence/host-rt-preparation-2026-09-10.md): inicialização e execução curta por fixture; sem FMU de produto |
-| REQ-F-02 | ARCH-IO / IF-CORE | TASK-006 | src/profile_config.c; src/fmu_model.c | P | V-F-02 / HOST + bancada/HIL | [host-yaml-acquisition-schema-2026-09-10](evidence/host-yaml-acquisition-schema-2026-09-10.md): YAML/FMU e schema de aquisição HOST; sem DAQC ou bancada |
+| REQ-F-02 | ARCH-IO / IF-CORE | TASK-006, TASK-009 | src/profile_config.c; src/fmu_model.c; gui/gui_controller.cpp | P | V-F-02 / HOST + GUI + bancada/HIL | [host-gui-profile-editor-2026-09-11](evidence/host-gui-profile-editor-2026-09-11.md): regras de tipo e compilação HOST; interação visual, DAQC e bancada pendentes |
 | REQ-F-03 | ARCH-IO / IF-DAQ | TASK-006, TASK-008 | src/profile_config.c; src/daq_actuation.c | P | V-F-03 / HOST + HIL | [host-yaml-actuation-schema-2026-09-10](evidence/host-yaml-actuation-schema-2026-09-10.md): schema/codificador HOST; sem enlace ou HIL |
 | REQ-F-04 | ARCH-GUI / IF-LOG | TASK-009 | src/main.c; src/profile_config.c | P | V-F-04 / HOST + GUI | [host-cli-yaml-profile-2026-09-10](evidence/host-cli-yaml-profile-2026-09-10.md): fluxo terminal de configuração; GUI e persistência completa pendentes |
 | REQ-F-05 | ARCH-CORE / IF-CORE | TASK-003, TASK-009 | src/fmu_model.c; src/execution_session.c; src/main.c; gui/gui_controller.cpp | P | V-F-05 / HOST + GUI | [host-gui-output-selection-2026-09-10](evidence/host-gui-output-selection-2026-09-10.md): seleção de outputs pela sessão e GUI offscreen; execução GUI e FMU de produto pendentes |

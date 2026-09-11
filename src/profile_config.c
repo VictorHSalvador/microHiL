@@ -81,6 +81,12 @@ static bool IsEsp32Channel(const char *channel) {
     return false;
 }
 
+static bool IsEsp32ChannelTypeCompatible(const char *channel, NumericType type) {
+    const bool analog_channel = strstr(channel, "_AI") != NULL || strstr(channel, "_AO") != NULL || strstr(channel, "_PWM") != NULL;
+    const bool digital_channel = strstr(channel, "_DI") != NULL || strstr(channel, "_DO") != NULL;
+    return (analog_channel && type == NUMERIC_REAL) || (digital_channel && type == NUMERIC_BOOLEAN);
+}
+
 static bool HasOnlyKeys(yaml_document_t *document, yaml_node_t *mapping, const char *const *keys, size_t key_count) {
     if (!document || !mapping || mapping->type != YAML_MAPPING_NODE) return false;
     size_t found[8] = {0};
@@ -250,7 +256,7 @@ profile_config_status_t ProfileConfigLoadYaml(const char *path, profile_config_t
         const char *variable = Scalar(MappingValue(&document, mapping, "variable"));
         if (!channel || !variable || !IsEsp32Channel(channel) || strlen(channel) >= sizeof(entry->channel) || strlen(variable) >= sizeof(entry->variable) ||
             !ParseType(Scalar(MappingValue(&document, mapping, "type")), &entry->type) || !ParseDouble(MappingValue(&document, mapping, "scale"), &entry->scale) ||
-            !ParseDouble(MappingValue(&document, mapping, "offset"), &entry->offset) || entry->scale == 0.0) {
+            !ParseDouble(MappingValue(&document, mapping, "offset"), &entry->offset) || entry->scale == 0.0 || !IsEsp32ChannelTypeCompatible(channel, entry->type)) {
             yaml_document_delete(&document);
             return PROFILE_CONFIG_SCHEMA;
         }

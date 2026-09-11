@@ -35,7 +35,7 @@ A plataforma deve permitir importar modelos FMU 2.0 Co-Simulation sem depender d
 
 ### REQ-F-02 — Configuração de Entradas e Saídas
 
-A plataforma deve permitir associar inputs/outputs da FMU aos recursos do perfil DAQC selecionado, iniciando pelo perfil ESP32. O mapa deve respeitar tipo, direção, unidade/faixa e exclusividade de funções dos pinos; capacidades multiplexadas não são canais simultâneos independentes. ADC e PWM devem ser configuráveis pelo usuário com opções e limites explícitos do TARGET; rejeitar pares frequência/resolução e recursos incompatíveis antes de Play.
+A plataforma deve permitir associar inputs/outputs da FMU aos recursos do perfil DAQC selecionado, iniciando pelo perfil ESP32. O mapa deve respeitar tipo, direção, unidade/faixa e exclusividade de funções dos pinos; capacidades multiplexadas não são canais simultâneos independentes. ADC e PWM devem ser configuráveis pelo usuário com opções e limites explícitos do TARGET; rejeitar pares frequência/resolução e recursos incompatíveis antes de Play. No perfil ESP32, somente `Real` pode ser associado a AI/AO/PWM e somente `Boolean` a DI/DO; `Integer` e `Enumeration` ficam restritos a controles virtuais e logging/gráficos até existir uma conversão física aprovada.
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
