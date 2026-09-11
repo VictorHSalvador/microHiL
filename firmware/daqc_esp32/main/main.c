@@ -16,6 +16,12 @@ static volatile int64_t g_read_ack_time_us;
 static volatile uint16_t g_sequence;
 static volatile bool g_read_ack_seen;
 
+#define DAQC_ROS_SUPERVISOR_TASK_PRIORITY 3U
+#define DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE 8192U
+#define DAQC_ROS_RETRY_INTERVAL_MS 1000U
+#define DAQC_COMMUNICATION_STARTUP_DELAY_MS 10U
+#define DAQC_COMMUNICATION_TASK_STACK_SIZE 4096U
+
 static bool SendConfigState(uint8_t command) {
     return DaqcTransportSendConfig(command, DaqcControlState(&g_control));
 }
@@ -73,11 +79,22 @@ static void IoTask(void *argument) {
     }
 }
 
+static void RosSupervisorTask(void *argument) {
+    (void)argument;
+    while (true) {
+        if (DaqcControlState(&g_control) != DAQC_COMMAND_STREAMING) (void)DaqcRosStart(&g_control);
+        vTaskDelay(pdMS_TO_TICKS(DAQC_ROS_RETRY_INTERVAL_MS));
+    }
+}
+
 void app_main(void) {
     DaqcParserInit(&g_parser);
     if (!DaqcControlInit(&g_control) || !DaqcTransportInit()) return;
     g_read_ack_time_us = esp_timer_get_time();
+    xTaskCreatePinnedToCore(CommunicationTask, "daqc_comm", DAQC_COMMUNICATION_TASK_STACK_SIZE, NULL, 8U, NULL, 0);
+    vTaskDelay(pdMS_TO_TICKS(DAQC_COMMUNICATION_STARTUP_DELAY_MS));
     (void)DaqcRosStart(&g_control);
-    xTaskCreatePinnedToCore(CommunicationTask, "daqc_comm", 6144U, NULL, 8U, NULL, 0);
+    xTaskCreatePinnedToCore(RosSupervisorTask, "daqc_ros_supervisor", DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE, NULL,
+                            DAQC_ROS_SUPERVISOR_TASK_PRIORITY, NULL, 0);
     xTaskCreatePinnedToCore(IoTask, "daqc_io", 4096U, NULL, 9U, NULL, 1);
 }

@@ -6,7 +6,7 @@
 #define DAQC_UART UART_NUM_0
 #define DAQC_BAUD_RATE 152000
 #define DAQC_UART_BUFFER_SIZE 512
-#define DAQC_XRCE_STREAM_SIZE 512
+#define DAQC_XRCE_STREAM_SIZE DAQC_XRCE_MTU
 
 static SemaphoreHandle_t g_tx_mutex;
 static StreamBufferHandle_t g_xrce_stream;

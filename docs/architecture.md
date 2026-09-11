@@ -158,3 +158,8 @@ Resultados temporais são apresentados após Finished/Stopped/Error, fora da thr
 Base de serialização no ICD: little-endian, SYNC 59 72, CONFIG request/response 4/5 bytes e STATUS só em CONFIG. DATA carrega SEQ uint16 e schema posicional fixo N≤256, preservando MID 02 nos dois sentidos. Não há CRC, retransmissão ou sessão no fio. READ_ACK usa MID 03; XRCE usa MID 04 com entrega best effort no caminho periódico.
 
 Reusar ordem de controle antes de DATA, rechecagem de estado no escritor, snapshots e sequência. Não copiar write_full bloqueante, locks durante I/O, prints incondicionais, defaults zero para campos ausentes ou reajuste de origem temporal do TX de referência. Controle reservado e mailbox de última atualização DATA preservam o fluxo real-time; perda detectada é contabilizada e o pacote novo segue.
+
+
+### Revisão 0.25.7
+
+O cliente micro-ROS usa chave inicial `0x4D48494C` e framing serial interno desabilitado: o único enquadramento UART é MID 04. A recuperação é limitada a uma tentativa por segundo em DISABLE ou ENABLE, nunca em STREAMING. A sessão física completa com o Agent continua pendente de evidência.

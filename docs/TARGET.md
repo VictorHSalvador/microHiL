@@ -130,3 +130,8 @@ As faixas são referências de medição, não limites absolutos elétricos nem 
 | Exemplos de restrição | 5 kHz admite até 13 bits no exemplo oficial; 40 MHz só admite 1 bit e duty oscilante fixo de 50% |
 
 Não configurar clocks/periféricos no ciclo periódico. GUI deve mostrar frequência efetiva quantizada e erro relativo antes de aplicar configuração, sem reduzir resolução silenciosamente. Fixar nível baixo no encerramento é estado de saída, não pedido de PWM de 0 Hz. Fonte: [LEDC Espressif](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/api-reference/peripherals/ledc.html). A faixa oferecida será intersectada com o driver/clock efetivamente selecionado e validada em bancada.
+
+
+### Revisão 0.25.7
+
+O cliente micro-ROS usa chave inicial `0x4D48494C` e framing serial interno desabilitado: o único enquadramento UART é MID 04. A recuperação é limitada a uma tentativa por segundo em DISABLE ou ENABLE, nunca em STREAMING. A sessão física completa com o Agent continua pendente de evidência.

@@ -142,3 +142,10 @@ Em 11.09.2026, o usuário confirmou que `Integer` e `Enumeration` não possuem c
 ## Persistência de entradas virtuais — 0.25.0
 
 Em 11.09.2026, o usuário confirmou que YAML é exclusivamente configuração e não transporta dados operacionais. Valores de entradas virtuais não são gravados nem restaurados por um perfil. A GUI envia o valor à sessão operacional; antes do Play ele é mantido para a inicialização e, durante Running, é entregue ao `InputState` para consumo na fronteira do próximo passo FMI. A GUI não chama a instância FMI diretamente. Uma entrada já mapeada ao perfil DAQC não aceita fonte virtual concorrente.
+
+
+## Cliente XRCE e recuperação — 0.25.7
+
+A chave inicial fixa do cliente micro-ROS é `0x4D48494C`; o integrador deve torná-la distinta por DAQC ativa quando houver mais de uma no mesmo Agent. O framing serial interno do Micro XRCE-DDS fica desabilitado, pois a UART já é enquadrada exclusivamente pelo MID 04 do ICD. A tentativa de iniciar ou recuperar o cliente ocorre uma vez por segundo somente em DISABLE ou ENABLE, nunca durante STREAMING. A política não adiciona tráfego de recuperação ao caminho crítico.
+
+A gravação física de 11.09 confirmou CONFIG pela CH340. Um ensaio anterior observou tráfego XRCE cru e resposta do Agent; após a correção de framing e reordenação de inicialização, a sessão XRCE completa ainda não foi observada. Essa pendência não autoriza inferir compatibilidade de tópicos ou tempo real.

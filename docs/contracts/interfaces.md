@@ -222,3 +222,8 @@ A ordem de locks/estado antes da confirmação em RaspDAQ fundamenta a transaç�
 ## IF-TIME — Execução sem compensação
 
 Aguardar próxima liberação da grade fixa após overrun, sem alterar h ou saltar etapas FMI. Medir por separado etapas atrasadas, liberações não usadas e pior atraso, conforme ARCH-TIME; apresentar somente após a execução. Thread de leitura USB publica snapshots independentes, sem alterar a grade ou chamar a FMU. O snapshot consumido é o último publicado antes da inserção dos inputs.
+
+
+### Revisão 0.25.7
+
+O cliente micro-ROS usa chave inicial `0x4D48494C` e framing serial interno desabilitado: o único enquadramento UART é MID 04. A recuperação é limitada a uma tentativa por segundo em DISABLE ou ENABLE, nunca em STREAMING. A sessão física completa com o Agent continua pendente de evidência.
