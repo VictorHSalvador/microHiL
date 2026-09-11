@@ -41,6 +41,8 @@ public:
     Q_INVOKABLE bool StopSimulation();
     Q_INVOKABLE QVariantList PollSamples();
     Q_INVOKABLE bool SimulationRunning() const;
+    Q_INVOKABLE QVariantMap Result() const;
+    Q_INVOKABLE bool ExportCsv(const QString &path);
 signals:
     void FmuChanged();
     void ProfileChanged();

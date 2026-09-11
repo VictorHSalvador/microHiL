@@ -1,6 +1,8 @@
 #ifndef EXECUTION_SESSION_H
 #define EXECUTION_SESSION_H
 
+#include <stdint.h>
+
 #include "fmu_model.h"
 
 #ifdef __cplusplus
@@ -47,7 +49,8 @@ typedef enum {
     EXECUTION_SESSION_RUNNING,
     EXECUTION_SESSION_PROFILE,
     EXECUTION_SESSION_INPUT_PHYSICAL,
-    EXECUTION_SESSION_INPUT_VALUE
+    EXECUTION_SESSION_INPUT_VALUE,
+    EXECUTION_SESSION_CSV
 } execution_session_status_t;
 
 execution_session_t *ExecutionSessionCreate(void);
@@ -88,6 +91,19 @@ execution_session_status_t ExecutionSessionStopGui(execution_session_t *session)
 execution_session_status_t ExecutionSessionJoinGui(execution_session_t *session);
 bool ExecutionSessionPollGuiSample(execution_session_t *session, SimulationSample *sample);
 bool ExecutionSessionGuiRunning(const execution_session_t *session);
+bool ExecutionSessionHasResult(const execution_session_t *session);
+int ExecutionSessionResultState(const execution_session_t *session);
+const char *ExecutionSessionResultStage(const execution_session_t *session);
+const char *ExecutionSessionResultMessage(const execution_session_t *session);
+uint64_t ExecutionSessionCompletedSteps(const execution_session_t *session);
+uint64_t ExecutionSessionDeadlineMisses(const execution_session_t *session);
+uint64_t ExecutionSessionUnusedReleases(const execution_session_t *session);
+double ExecutionSessionMaxComputation(const execution_session_t *session);
+double ExecutionSessionMaxLateness(const execution_session_t *session);
+bool ExecutionSessionSchedFifoActive(const execution_session_t *session);
+bool ExecutionSessionHasClosedBinaryLog(const execution_session_t *session);
+const char *ExecutionSessionBinaryLogPath(const execution_session_t *session);
+execution_session_status_t ExecutionSessionExportGuiCsv(execution_session_t *session, const char *csv_path, uint64_t *exported_records, bool *partial);
 size_t ExecutionSessionSelectedOutputCount(const execution_session_t *session);
 const char *ExecutionSessionSelectedOutputName(const execution_session_t *session, size_t index);
 const char *ExecutionSessionProfilePath(const execution_session_t *session);

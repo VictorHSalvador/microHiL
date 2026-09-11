@@ -21,8 +21,14 @@ ApplicationWindow {
     property var mappingRows: []
     property var graphConfigurations: ({})
     property var graphWindows: ({})
+    property var runResult: emptyRunResult()
     property string observedFmuPath: guiController.fmuPath
     property string observedProfilePath: guiController.profilePath
+
+    function emptyRunResult() {
+        return { available: false, state: "", stage: "", message: "", completedSteps: 0, deadlineMisses: 0, unusedReleases: 0,
+                 maxComputationMs: 0, maxLatenessMs: 0, hasClosedLog: false, binaryLogPath: "" }
+    }
 
     function refreshOutputs() {
         outputItems = guiController.Outputs()
@@ -124,6 +130,13 @@ ApplicationWindow {
         onAccepted: guiController.LoadProfile(selectedFile.toString().replace("file://", ""))
     }
 
+    FileDialog {
+        id: saveCsvDialog
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["CSV files (*.csv)"]
+        onAccepted: guiController.ExportCsv(selectedFile.toString().replace("file://", ""))
+    }
+
     header: ToolBar {
         RowLayout {
             anchors.fill: parent
@@ -192,11 +205,46 @@ ApplicationWindow {
                         anchors.fill: parent
                         Label { text: "Controle"; font.bold: true; font.pixelSize: 18 }
                         RowLayout {
-                            Button { text: "Play debug"; enabled: window.simulationState !== "Running"; onClicked: { if (guiController.StartSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled, window.plotEnabled)) window.simulationState = "Running" } }
+                            Button {
+                                text: "Play debug"
+                                enabled: window.simulationState !== "Running"
+                                onClicked: {
+                                    if (guiController.StartSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled, window.plotEnabled)) {
+                                        window.runResult = window.emptyRunResult()
+                                        window.simulationState = "Running"
+                                    }
+                                }
+                            }
                             Button { text: "Stop"; enabled: window.simulationState === "Running"; onClicked: guiController.StopSimulation() }
                         }
                         Label { text: "Play debug executa a FMU sem DAQC. O Play HiL, com ENABLE→STREAMING e atuação física, depende da integração do enlace."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        Button { text: "Exportar CSV"; enabled: window.runResult.hasClosedLog === true; onClicked: saveCsvDialog.open() }
                     }
+                }
+            }
+
+            Frame {
+                Layout.fillWidth: true
+                visible: window.runResult.available === true
+                ColumnLayout {
+                    anchors.fill: parent
+                    Label { text: "Resultado da execução"; font.bold: true; font.pixelSize: 18 }
+                    Label { text: "Estado: " + window.runResult.state + " — " + window.runResult.stage }
+                    Label { text: window.runResult.message; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    GridLayout {
+                        columns: 2
+                        Label { text: "Passos concluídos" }
+                        Label { text: window.runResult.completedSteps }
+                        Label { text: "Deadlines perdidos" }
+                        Label { text: window.runResult.deadlineMisses }
+                        Label { text: "Liberações não usadas" }
+                        Label { text: window.runResult.unusedReleases }
+                        Label { text: "Pior computação (ms)" }
+                        Label { text: Number(window.runResult.maxComputationMs).toFixed(3) }
+                        Label { text: "Pior atraso (ms)" }
+                        Label { text: Number(window.runResult.maxLatenessMs).toFixed(3) }
+                    }
+                    Label { visible: window.runResult.hasClosedLog === true; text: "Log binário fechado: " + window.runResult.binaryLogPath; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 }
             }
 
@@ -389,7 +437,10 @@ ApplicationWindow {
                     }
                 }
             }
-            if (window.simulationState === "Running" && !guiController.SimulationRunning()) window.simulationState = "Finished"
+            if (window.simulationState === "Running" && !guiController.SimulationRunning()) {
+                window.runResult = guiController.Result()
+                window.simulationState = window.runResult.state || "Finished"
+            }
         }
     }
 

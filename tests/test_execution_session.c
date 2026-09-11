@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "execution_session.h"
 
@@ -22,6 +23,12 @@ int main(int argc, char **argv) {
     Require(argc == 3, "expected the fixture FMU and profile paths");
     execution_session_t session;
     OutputVariable outputs[MAX_OUTPUTS];
+    char binary_log_path[128];
+    char csv_path[128];
+    snprintf(binary_log_path, sizeof(binary_log_path), "/tmp/microhil-execution-session-%ld.mhilog", (long)getpid());
+    snprintf(csv_path, sizeof(csv_path), "/tmp/microhil-execution-session-%ld.csv", (long)getpid());
+    unlink(binary_log_path);
+    unlink(csv_path);
 
     ExecutionSessionInit(&session);
     Require(ExecutionSessionLoadFmu(&session, argv[1]) == EXECUTION_SESSION_OK, "could not load the fixture FMU into the session");
@@ -46,7 +53,8 @@ int main(int argc, char **argv) {
     for (size_t output_index = 0U; output_index < output_count; ++output_index) {
         Require(ExecutionSessionSetOutputSelected(&session, output_index, true) == EXECUTION_SESSION_OK, "could not select all FMU outputs");
     }
-    Require(ExecutionSessionStartGui(&session, 0.01, 0.02, false, true) == EXECUTION_SESSION_OK, "could not start the GUI simulation");
+    snprintf(session.config.binary_log_path, sizeof(session.config.binary_log_path), "%s", binary_log_path);
+    Require(ExecutionSessionStartGui(&session, 0.01, 0.02, true, true) == EXECUTION_SESSION_OK, "could not start the GUI simulation");
     Require(ExecutionSessionJoinGui(&session) == EXECUTION_SESSION_OK, "could not complete the GUI simulation");
     SimulationSample plot_sample;
     Require(ExecutionSessionPollGuiSample(&session, &plot_sample) && plot_sample.value_count == output_count,
@@ -54,6 +62,15 @@ int main(int argc, char **argv) {
     const run_result_t *result = ExecutionSessionResult(&session);
     Require(result && result->simulation.state == SIMULATION_RUN_FINISHED && result->simulation.stats.completed_steps == 2U,
             "session result did not report the fixed simulation steps");
+    Require(ExecutionSessionHasResult(&session) && ExecutionSessionCompletedSteps(&session) == 2U,
+            "public GUI result did not preserve the execution metrics");
+    Require(ExecutionSessionHasClosedBinaryLog(&session), "session did not close the binary log for CSV conversion");
+    uint64_t exported_records = 0U;
+    bool partial = false;
+    Require(ExecutionSessionExportGuiCsv(&session, csv_path, &exported_records, &partial) == EXECUTION_SESSION_OK && !partial && exported_records == 2U,
+            "session did not convert the closed binary log to CSV");
     ExecutionSessionDestroy(&session);
+    unlink(binary_log_path);
+    unlink(csv_path);
     return EXIT_SUCCESS;
 }

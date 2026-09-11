@@ -1,4 +1,5 @@
 #include "execution_session.h"
+#include "log_converter.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -271,6 +272,72 @@ bool ExecutionSessionGuiRunning(const execution_session_t *session) {
     return ExecutionSessionIsRunning(session);
 }
 
+bool ExecutionSessionHasResult(const execution_session_t *session) {
+    return session && session->result_available;
+}
+
+int ExecutionSessionResultState(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? (int)session->result.simulation.state : -1;
+}
+
+const char *ExecutionSessionResultStage(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.stage : "";
+}
+
+const char *ExecutionSessionResultMessage(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.message : "";
+}
+
+uint64_t ExecutionSessionCompletedSteps(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.stats.completed_steps : 0U;
+}
+
+uint64_t ExecutionSessionDeadlineMisses(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.stats.deadline_misses : 0U;
+}
+
+uint64_t ExecutionSessionUnusedReleases(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.stats.unused_releases : 0U;
+}
+
+double ExecutionSessionMaxComputation(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.stats.max_computation_s : 0.0;
+}
+
+double ExecutionSessionMaxLateness(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) ? session->result.simulation.stats.max_lateness_s : 0.0;
+}
+
+bool ExecutionSessionSchedFifoActive(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) && session->result.simulation.stats.sched_fifo_active;
+}
+
+bool ExecutionSessionHasClosedBinaryLog(const execution_session_t *session) {
+    return ExecutionSessionHasResult(session) && session->result.logging.enabled && session->result.logging.status == RUN_LOGGING_STATUS_OK &&
+           !session->result.logging.logger.incomplete;
+}
+
+const char *ExecutionSessionBinaryLogPath(const execution_session_t *session) {
+    return ExecutionSessionHasClosedBinaryLog(session) ? session->config.binary_log_path : "";
+}
+
+execution_session_status_t ExecutionSessionExportGuiCsv(execution_session_t *session, const char *csv_path, uint64_t *exported_records, bool *partial) {
+    log_descriptor_t descriptor;
+    log_converter_result_t result;
+    log_converter_status_t status;
+
+    if (exported_records) *exported_records = 0U;
+    if (partial) *partial = false;
+    if (!session || !session->initialized || !csv_path || !csv_path[0]) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    if (!ExecutionSessionHasClosedBinaryLog(session)) return EXECUTION_SESSION_NOT_READY;
+    if (RunLoggingBuildDescriptor(session->config.fmu_path, session->config.outputs, session->config.output_count, session->config.step_size_s, &descriptor) !=
+        RUN_LOGGING_STATUS_OK) return EXECUTION_SESSION_CSV;
+    status = LogConverterConvert(LOG_CONVERTER_EXECUTION_CLOSED, session->config.binary_log_path, csv_path, &descriptor, &result);
+    if (exported_records) *exported_records = result.exported_records;
+    if (partial) *partial = status == LOG_CONVERTER_STATUS_PARTIAL;
+    return status == LOG_CONVERTER_STATUS_OK || status == LOG_CONVERTER_STATUS_PARTIAL ? EXECUTION_SESSION_OK : EXECUTION_SESSION_CSV;
+}
+
 size_t ExecutionSessionSelectedOutputCount(const execution_session_t *session) {
     return session && session->initialized ? session->config.output_count : 0U;
 }
@@ -399,6 +466,7 @@ const char *ExecutionSessionStatusString(execution_session_status_t status) {
         case EXECUTION_SESSION_PROFILE: return "the YAML profile is incompatible with the loaded FMU or ESP32 profile";
         case EXECUTION_SESSION_INPUT_PHYSICAL: return "the FMU input is mapped to the physical DAQC";
         case EXECUTION_SESSION_INPUT_VALUE: return "the virtual input value is invalid";
+        case EXECUTION_SESSION_CSV: return "could not export the binary log to CSV";
         default: return "unknown execution session status";
     }
 }

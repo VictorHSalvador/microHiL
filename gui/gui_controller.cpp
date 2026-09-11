@@ -235,3 +235,38 @@ QVariantList GuiController::PollSamples() {
 }
 
 bool GuiController::SimulationRunning() const { return ExecutionSessionGuiRunning(session_); }
+
+QVariantMap GuiController::Result() const {
+    QVariantMap result;
+    result.insert(QStringLiteral("available"), ExecutionSessionHasResult(session_));
+    if (!ExecutionSessionHasResult(session_)) return result;
+    const int state = ExecutionSessionResultState(session_);
+    const QString stateName = state == 0 ? QStringLiteral("Finished") : state == 1 ? QStringLiteral("Stopped") : QStringLiteral("Error");
+    result.insert(QStringLiteral("state"), stateName);
+    result.insert(QStringLiteral("stage"), QString::fromUtf8(ExecutionSessionResultStage(session_)));
+    result.insert(QStringLiteral("message"), QString::fromUtf8(ExecutionSessionResultMessage(session_)));
+    result.insert(QStringLiteral("completedSteps"), static_cast<qulonglong>(ExecutionSessionCompletedSteps(session_)));
+    result.insert(QStringLiteral("deadlineMisses"), static_cast<qulonglong>(ExecutionSessionDeadlineMisses(session_)));
+    result.insert(QStringLiteral("unusedReleases"), static_cast<qulonglong>(ExecutionSessionUnusedReleases(session_)));
+    result.insert(QStringLiteral("maxComputationMs"), ExecutionSessionMaxComputation(session_) * 1000.0);
+    result.insert(QStringLiteral("maxLatenessMs"), ExecutionSessionMaxLateness(session_) * 1000.0);
+    result.insert(QStringLiteral("schedFifoActive"), ExecutionSessionSchedFifoActive(session_));
+    result.insert(QStringLiteral("hasClosedLog"), ExecutionSessionHasClosedBinaryLog(session_));
+    result.insert(QStringLiteral("binaryLogPath"), QString::fromUtf8(ExecutionSessionBinaryLogPath(session_)));
+    return result;
+}
+
+bool GuiController::ExportCsv(const QString &path) {
+    uint64_t exportedRecords = 0U;
+    bool partial = false;
+    const QByteArray nativePath = path.toLocal8Bit();
+    const execution_session_status_t status = ExecutionSessionExportGuiCsv(session_, nativePath.constData(), &exportedRecords, &partial);
+    if (status == EXECUTION_SESSION_OK) {
+        error_message_ = partial ? QStringLiteral("CSV exportado parcialmente: %1 registro(s)").arg(exportedRecords)
+                                 : QStringLiteral("CSV exportado: %1 registro(s)").arg(exportedRecords);
+    } else {
+        error_message_ = QString::fromUtf8(ExecutionSessionStatusString(status));
+    }
+    emit ErrorChanged();
+    return status == EXECUTION_SESSION_OK;
+}
