@@ -119,7 +119,7 @@ A interface deve permitir habilitar/desabilitar logging binário dos valores fin
 
 **Critério de aceitação proposto (V-F-10; HOST + GUI):** Desabilitado não cria stream de saída; habilitado grava binário sem CSV concorrente nem subpassos internos; estatísticas finais continuam acessíveis independentemente do stream.
 
-**Design:** ARCH-GUI / IF-LOG. **Execução:** TASK-009. **Pendência:** implementação do sink e controles.
+**Design:** ARCH-GUI / IF-LOG. **Execução:** TASK-009. **Estado HOST:** controle GUI, resultado e conversão posterior são implementados; interação visual e cenários de falha pendem.
 
 ### REQ-F-11 — Registro Temporal das Saídas
 
@@ -159,7 +159,7 @@ Permitir abrir uma janela individual por saída antes de Play ou durante execuç
 
 **Critério de aceitação proposto (V-F-14; GUI):** Abrir antes de Play: gráfico vazio até amostras; fechar/reabrir em Running não reapresenta dados antigos; várias janelas independentes. Retenção de configurações não recria histórico destruído.
 
-**Design:** ARCH-GUI. **Execução:** TASK-009. **Pendência:** implementação e teste GUI.
+**Design:** ARCH-GUI. **Execução:** TASK-009. **Estado HOST:** implementação QML e consumo de fila concluídos; inspeção visual e caso de aceitação pendem.
 
 ### REQ-F-15 — Configuração dos Gráficos
 
@@ -169,7 +169,7 @@ Permitir mínimo, máximo e espaçamento das marcações do eixo Y por gráfico.
 
 **Critério de aceitação proposto (V-F-15; GUI):** Conferir exemplo Y, rejeitar espaçamento não positivo/não finito e limites inválidos; gráficos abertos compartilham a mesma janela temporal deslizante. Quantidade de amostras não é o espaçamento Y.
 
-**Design:** ARCH-GUI. **Execução:** TASK-009. **Pendência:** implementação e teste GUI.
+**Design:** ARCH-GUI. **Execução:** TASK-009. **Estado HOST:** configuração Y e janela temporal são implementadas; inspeção visual e caso de aceitação pendem.
 
 ### REQ-F-16 — Controle da Plotagem em Tempo Real
 
@@ -274,7 +274,7 @@ A plataforma deve disponibilizar conversão do binário de saídas para CSV some
 
 **Critério de aceitação proposto (V-F-26; HOST + GUI):** Converter depois de Finished/Stopped conforme contrato, bloquear conversão durante Running e rejeitar FMU incompatível. Comparar valores tipados do binário/CSV usando a ordem explicitamente registrada e conferida contra os metadados XML.
 
-**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Pendência:** ação e apresentação GUI; round-trip, incompatibilidade e cauda truncada foram exercitados no HOST em 08.09.2026.
+**Design:** ARCH-LOG / IF-LOG. **Execução:** TASK-002, TASK-009. **Estado HOST:** ação e apresentação GUI foram implementadas; round-trip, incompatibilidade e cauda truncada foram exercitados no HOST em 08.09.2026. Interação visual e FMU de produto pendem.
 
 ### REQ-F-27 — DISABLE após 60 segundos de streaming sem leitura pelo host
 

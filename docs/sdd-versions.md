@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.3**, de 11.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.4**, de 11.09.2026.
 
 Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
 
@@ -82,6 +82,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.1 | 11.09.2026 | PATCH | GUI passa a consumir a fila SPSC de amostras a 10 Hz e desenhar gráficos de saída com janela temporal comum e eixo Y configurável | sessão HOST, GUI Qt, testes, plano, matriz, evidence e sdd-versions | CTest 47/47 e GUI offscreen; inspeção visual, DAQC e HIL pendentes | 21f29bf |
 | 0.25.2 | 11.09.2026 | PATCH | Play da GUI é identificado como debug HOST até que a sequência HiL ENABLE→STREAMING seja integrada | GUI, plano e sdd-versions | Correção de comunicação; sem nova validação física | 76c0031 |
 | 0.25.3 | 11.09.2026 | PATCH | GUI recebe o resultado agregado após Join e exporta CSV apenas de log binário fechado | sessão HOST, GUI Qt, testes, plano, matriz, evidence e sdd-versions | CTest 47/47 e GUI offscreen; inspeção visual, FMU de produto, DAQC e HIL pendentes | 57f3cdf |
+| 0.25.4 | 11.09.2026 | PATCH | Especificação e arquitetura passam a refletir o estado HOST já implementado da GUI de resultado, CSV e gráficos | spec, architecture, sdd-versions e teste documental | Correção de rastreabilidade; sem nova execução física ou visual | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
