@@ -104,7 +104,7 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
         find_package(Qt6 6.2 REQUIRED COMPONENTS Quick QuickControls2)
         qt_add_executable(microhil_gui gui/main.cpp gui/gui_controller.cpp)
         set_target_properties(microhil_gui PROPERTIES AUTOMOC ON)
-        qt_add_resources(microhil_gui "microhil_gui_resources" PREFIX "/" FILES gui/Main.qml)
+        qt_add_resources(microhil_gui "microhil_gui_resources" PREFIX "/" FILES gui/Main.qml gui/OutputGraphWindow.qml)
         target_link_libraries(microhil_gui PRIVATE Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
     endif()
 

@@ -193,3 +193,45 @@ bool GuiController::SetVirtualInput(int index, const QString &value) {
     emit ErrorChanged();
     return status == EXECUTION_SESSION_OK;
 }
+
+bool GuiController::StartSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled) {
+    const execution_session_status_t status = ExecutionSessionStartGui(session_, stepSizeSeconds, stopTimeSeconds, loggingEnabled, plotEnabled);
+    gui_run_started_ = status == EXECUTION_SESSION_OK;
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
+    emit ErrorChanged();
+    return gui_run_started_;
+}
+
+bool GuiController::StopSimulation() {
+    const execution_session_status_t status = ExecutionSessionStopGui(session_);
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
+    emit ErrorChanged();
+    return status == EXECUTION_SESSION_OK;
+}
+
+QVariantList GuiController::PollSamples() {
+    QVariantList samples;
+    SimulationSample sample;
+    while (ExecutionSessionPollGuiSample(session_, &sample)) {
+        QVariantMap values;
+        const size_t count = ExecutionSessionSelectedOutputCount(session_);
+        for (size_t index = 0U; index < count && index < sample.value_count; ++index) {
+            values.insert(QString::fromUtf8(ExecutionSessionSelectedOutputName(session_, index)), sample.values[index]);
+        }
+        QVariantMap item;
+        item.insert(QStringLiteral("time"), sample.sim_time_s);
+        item.insert(QStringLiteral("values"), values);
+        samples.append(item);
+    }
+    if (gui_run_started_ && !ExecutionSessionGuiRunning(session_)) {
+        const execution_session_status_t status = ExecutionSessionJoinGui(session_);
+        gui_run_started_ = false;
+        if (status != EXECUTION_SESSION_OK) {
+            error_message_ = QString::fromUtf8(ExecutionSessionStatusString(status));
+            emit ErrorChanged();
+        }
+    }
+    return samples;
+}
+
+bool GuiController::SimulationRunning() const { return ExecutionSessionGuiRunning(session_); }

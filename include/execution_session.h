@@ -28,6 +28,7 @@ typedef struct execution_session {
     bool result_available;
     input_value_t virtual_input_values[INPUT_STATE_MAX_CHANNELS];
     bool virtual_input_set[INPUT_STATE_MAX_CHANNELS];
+    SampleQueue gui_plot_queue;
 } execution_session_t;
 #else
 typedef struct execution_session execution_session_t;
@@ -82,6 +83,13 @@ unsigned int ExecutionSessionInputValueReference(const execution_session_t *sess
 int ExecutionSessionInputType(const execution_session_t *session, size_t index);
 bool ExecutionSessionInputHasPhysicalMapping(const execution_session_t *session, size_t index);
 execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *session, size_t index, double value);
+execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled);
+execution_session_status_t ExecutionSessionStopGui(execution_session_t *session);
+execution_session_status_t ExecutionSessionJoinGui(execution_session_t *session);
+bool ExecutionSessionPollGuiSample(execution_session_t *session, SimulationSample *sample);
+bool ExecutionSessionGuiRunning(const execution_session_t *session);
+size_t ExecutionSessionSelectedOutputCount(const execution_session_t *session);
+const char *ExecutionSessionSelectedOutputName(const execution_session_t *session, size_t index);
 const char *ExecutionSessionProfilePath(const execution_session_t *session);
 unsigned int ExecutionSessionProfileId(const execution_session_t *session);
 size_t ExecutionSessionProfileMappingCount(const execution_session_t *session);

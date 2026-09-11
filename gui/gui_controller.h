@@ -37,6 +37,10 @@ public:
     Q_INVOKABLE QVariantList DaqcChannels(int numericType, bool inputDirection) const;
     Q_INVOKABLE bool SetOutputSelected(int index, bool selected);
     Q_INVOKABLE bool SetVirtualInput(int index, const QString &value);
+    Q_INVOKABLE bool StartSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled);
+    Q_INVOKABLE bool StopSimulation();
+    Q_INVOKABLE QVariantList PollSamples();
+    Q_INVOKABLE bool SimulationRunning() const;
 signals:
     void FmuChanged();
     void ProfileChanged();
@@ -44,6 +48,7 @@ signals:
 private:
     execution_session_t *session_ = nullptr;
     QString error_message_;
+    bool gui_run_started_ = false;
     static QString NumericTypeName(int type);
     static QString QuoteYaml(const QString &value);
 };

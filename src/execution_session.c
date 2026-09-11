@@ -237,6 +237,48 @@ execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *
     return EXECUTION_SESSION_OK;
 }
 
+execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled) {
+    execution_session_status_t status = ExecutionSessionSetTiming(session, step_size_s, stop_time_s);
+    if (status != EXECUTION_SESSION_OK) return status;
+    session->config.binary_log_enabled = logging_enabled;
+    session->config.plot_enabled = plot_enabled;
+    if ((status = ExecutionSessionPrepare(session)) != EXECUTION_SESSION_OK) return status;
+    if ((status = ExecutionSessionStartLogging(session)) != EXECUTION_SESSION_OK) {
+        ExecutionSessionAbort(session);
+        return status;
+    }
+    sample_queue_init(&session->gui_plot_queue);
+    if ((status = ExecutionSessionStart(session, plot_enabled ? &session->gui_plot_queue : NULL, NULL)) != EXECUTION_SESSION_OK) {
+        ExecutionSessionAbort(session);
+        return status;
+    }
+    return EXECUTION_SESSION_OK;
+}
+
+execution_session_status_t ExecutionSessionStopGui(execution_session_t *session) {
+    return ExecutionSessionRequestStop(session);
+}
+
+execution_session_status_t ExecutionSessionJoinGui(execution_session_t *session) {
+    return ExecutionSessionJoin(session);
+}
+
+bool ExecutionSessionPollGuiSample(execution_session_t *session, SimulationSample *sample) {
+    return session && sample && sample_queue_pop(&session->gui_plot_queue, sample);
+}
+
+bool ExecutionSessionGuiRunning(const execution_session_t *session) {
+    return ExecutionSessionIsRunning(session);
+}
+
+size_t ExecutionSessionSelectedOutputCount(const execution_session_t *session) {
+    return session && session->initialized ? session->config.output_count : 0U;
+}
+
+const char *ExecutionSessionSelectedOutputName(const execution_session_t *session, size_t index) {
+    return session && session->initialized && index < session->config.output_count ? session->config.outputs[index].name : "";
+}
+
 const char *ExecutionSessionProfilePath(const execution_session_t *session) {
     return session && session->initialized ? session->config.profile_path : "";
 }

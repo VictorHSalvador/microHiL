@@ -46,12 +46,11 @@ int main(int argc, char **argv) {
     for (size_t output_index = 0U; output_index < output_count; ++output_index) {
         Require(ExecutionSessionSetOutputSelected(&session, output_index, true) == EXECUTION_SESSION_OK, "could not select all FMU outputs");
     }
-    session.config.binary_log_enabled = false;
-    Require(ExecutionSessionSetTiming(&session, 0.01, 0.02) == EXECUTION_SESSION_OK, "could not configure session timing");
-    Require(ExecutionSessionPrepare(&session) == EXECUTION_SESSION_OK, "could not prepare the session FMU");
-    Require(ExecutionSessionStartLogging(&session) == EXECUTION_SESSION_OK, "disabled logging should not block the session");
-    Require(ExecutionSessionStart(&session, NULL, NULL) == EXECUTION_SESSION_OK, "could not start the session simulation");
-    Require(ExecutionSessionJoin(&session) == EXECUTION_SESSION_OK, "could not complete the session simulation");
+    Require(ExecutionSessionStartGui(&session, 0.01, 0.02, false, true) == EXECUTION_SESSION_OK, "could not start the GUI simulation");
+    Require(ExecutionSessionJoinGui(&session) == EXECUTION_SESSION_OK, "could not complete the GUI simulation");
+    SimulationSample plot_sample;
+    Require(ExecutionSessionPollGuiSample(&session, &plot_sample) && plot_sample.value_count == output_count,
+            "GUI session did not publish an output sample");
     const run_result_t *result = ExecutionSessionResult(&session);
     Require(result && result->simulation.state == SIMULATION_RUN_FINISHED && result->simulation.stats.completed_steps == 2U,
             "session result did not report the fixed simulation steps");

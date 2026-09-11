@@ -19,6 +19,8 @@ ApplicationWindow {
     property var outputItems: []
     property var inputItems: []
     property var mappingRows: []
+    property var graphConfigurations: ({})
+    property var graphWindows: ({})
     property string observedFmuPath: guiController.fmuPath
     property string observedProfilePath: guiController.profilePath
 
@@ -57,6 +59,30 @@ ApplicationWindow {
             result.push({ channel: row.channel, variable: row.variable, type: row.type, scale: Number(row.scale), offset: Number(row.offset) })
         }
         return result
+    }
+
+    function graphConfiguration(index) {
+        return graphConfigurations[index] || { minimum: "", maximum: "", resolution: "" }
+    }
+
+    function openGraph(index, name) {
+        var configuration = graphConfiguration(index)
+        var minimum = Number(configuration.minimum)
+        var maximum = Number(configuration.maximum)
+        var resolution = Number(configuration.resolution)
+        var timeWindow = Number(graphTimeWindowField.text)
+        if (!isFinite(minimum) || !isFinite(maximum) || !isFinite(resolution) || !isFinite(timeWindow) || maximum <= minimum || resolution <= 0 || timeWindow <= 0) {
+            profileError = "Configure mínimo, máximo, resolução e janela temporal antes de abrir o gráfico."
+            return
+        }
+        profileError = ""
+        var component = Qt.createComponent("qrc:/gui/OutputGraphWindow.qml")
+        if (component.status === Component.Ready) {
+            var graph = component.createObject(window, { outputName: name, yMinimum: minimum, yMaximum: maximum, yResolution: resolution, timeWindowSeconds: timeWindow })
+            var windows = Object.assign({}, graphWindows)
+            windows[name] = graph
+            graphWindows = windows
+        }
     }
 
     palette.window: "#f4f6f5"
@@ -166,8 +192,8 @@ ApplicationWindow {
                         anchors.fill: parent
                         Label { text: "Controle"; font.bold: true; font.pixelSize: 18 }
                         RowLayout {
-                            Button { text: "Play"; enabled: window.simulationState !== "Running"; onClicked: window.simulationState = "Ready" }
-                            Button { text: "Stop"; enabled: window.simulationState === "Running"; onClicked: window.simulationState = "Stopped" }
+                            Button { text: "Play"; enabled: window.simulationState !== "Running"; onClicked: { if (guiController.StartSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled, window.plotEnabled)) window.simulationState = "Running" } }
+                            Button { text: "Stop"; enabled: window.simulationState === "Running"; onClicked: guiController.StopSimulation() }
                         }
                         Label { text: "A ligação de Play/Stop ao controlador de execução C será disponibilizada pela API de orquestração."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     }
@@ -288,6 +314,10 @@ ApplicationWindow {
                     anchors.fill: parent
                     Label { text: "Gráficos de saída"; font.bold: true; font.pixelSize: 18 }
                     Label { text: "Abra gráficos por variável após a importação da FMU. Cada janela mantém histórico somente enquanto estiver aberta."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    RowLayout {
+                        Label { text: "Janela temporal comum (s)" }
+                        TextField { id: graphTimeWindowField; placeholderText: "> 0"; validator: DoubleValidator { bottom: 0.000001 } Layout.preferredWidth: 140 }
+                    }
                     Label { text: guiController.fmuPath ? guiController.modelName + " — " + guiController.inputCount + " entradas, " + guiController.outputCount + " saídas" : "" }
                     Label { text: guiController.profilePath ? "Perfil ESP32 " + guiController.profileId + " — " + guiController.profileMappingCount + " mapeamento(s)" : "" }
                     Label { text: "Saídas selecionadas para log e atuação"; font.bold: true; visible: guiController.fmuPath.length > 0 }
@@ -306,8 +336,28 @@ ApplicationWindow {
                             }
                         }
                     }
+                    Repeater {
+                        model: window.outputItems
+                        delegate: RowLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            Label { text: modelData.name + " — " + modelData.type; Layout.fillWidth: true }
+                            Button {
+                                text: "Configurar gráfico"
+                                onClicked: {
+                                    var configuration = window.graphConfiguration(modelData.index)
+                                    graphOutputIndex = modelData.index
+                                    graphOutputName = modelData.name
+                                    graphMinimumField.text = configuration.minimum
+                                    graphMaximumField.text = configuration.maximum
+                                    graphResolutionField.text = configuration.resolution
+                                    graphConfigurationDialog.open()
+                                }
+                            }
+                            Button { text: "Abrir gráfico"; onClicked: window.openGraph(modelData.index, modelData.name) }
+                        }
+                    }
                     Label { text: guiController.errorMessage; color: "#b33a3a"; visible: text.length > 0 }
-                    Button { text: "Configurar gráficos"; enabled: guiController.fmuPath.length > 0 }
                 }
             }
         }
@@ -319,4 +369,51 @@ ApplicationWindow {
     }
 
     onObservedProfilePathChanged: refreshMappings()
+
+    Timer {
+        interval: 100
+        running: true
+        repeat: true
+        onTriggered: {
+            var samples = guiController.PollSamples()
+            for (var sampleIndex = 0; sampleIndex < samples.length; ++sampleIndex) {
+                var sample = samples[sampleIndex]
+                for (var name in window.graphWindows) {
+                    var graph = window.graphWindows[name]
+                    if (graph && sample.values[name] !== undefined) {
+                        var values = graph.samples.slice()
+                        values.push({ time: sample.time, value: sample.values[name] })
+                        var start = sample.time - graph.timeWindowSeconds
+                        while (values.length > 0 && values[0].time < start) values.shift()
+                        graph.samples = values
+                    }
+                }
+            }
+            if (window.simulationState === "Running" && !guiController.SimulationRunning()) window.simulationState = "Finished"
+        }
+    }
+
+    property int graphOutputIndex: -1
+    property string graphOutputName: ""
+
+    Dialog {
+        id: graphConfigurationDialog
+        title: "Configurar gráfico — " + window.graphOutputName
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onAccepted: {
+            var configurations = Object.assign({}, window.graphConfigurations)
+            configurations[window.graphOutputIndex] = { minimum: graphMinimumField.text, maximum: graphMaximumField.text, resolution: graphResolutionField.text }
+            window.graphConfigurations = configurations
+        }
+        contentItem: GridLayout {
+            columns: 2
+            Label { text: "Mínimo Y" }
+            TextField { id: graphMinimumField; validator: DoubleValidator {} }
+            Label { text: "Máximo Y" }
+            TextField { id: graphMaximumField; validator: DoubleValidator {} }
+            Label { text: "Resolução Y" }
+            TextField { id: graphResolutionField; validator: DoubleValidator { bottom: 0.000001 } }
+        }
+    }
 }
