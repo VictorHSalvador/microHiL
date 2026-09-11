@@ -132,7 +132,7 @@ Separar aquisição/atuação, parser, controle de estado, diagnóstico e micro-
 
 A implementação inicial fixa aquisição/atuação no núcleo 1 com prioridade 9, comunicação no núcleo 0 com prioridade 8 e `daqc_ros` no núcleo 0 com prioridade 4 e pilha de 6144 bytes. Esses são parâmetros de implementação para manter ROS abaixo do tráfego crítico, não evidência de orçamento, ausência de inversão de prioridade ou cumprimento de deadline; a qualificação deve medi-los no alvo.
 
-UART0 usada para dados não pode misturar logs de debug sem enquadramento. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE não podem bloquear o caminho de CONFIG.
+UART0 usada para dados não pode misturar logs de debug sem enquadramento. A configuração versionada do firmware desabilita console, logs da aplicação e logs do bootloader nessa UART; diagnóstico operacional segue por `DaqcErrors` e pelo lado HOST. Debug do host não habilita prints indiscriminados do firmware no enlace. Controle DISABLE e confirmação precisam de caminho limitado mesmo sob carga. DATA e XRCE não podem bloquear o caminho de CONFIG.
 
 
 ### Supervisão de leitura e concorrência no firmware

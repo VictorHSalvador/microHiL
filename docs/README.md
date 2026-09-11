@@ -26,6 +26,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/host-run-logging-2026-09-08.md](evidence/host-run-logging-2026-09-08.md) | Ambiente, comandos, resultados e limites executados da TASK-002 |
 | [evidence/micro-ros-host-baseline-2026-09-09.md](evidence/micro-ros-host-baseline-2026-09-09.md) | Build HOST do setup/Agent Humble e incompatibilidade observada com a baseline ESP-IDF 4.4.8 |
 | [evidence/host-ros-setup-config-2026-09-10.md](evidence/host-ros-setup-config-2026-09-10.md) | Build HOST das interfaces ROS ampliadas para configuração ADC/PWM |
+| [evidence/esp32-ch340-config-smoke-2026-09-11.md](evidence/esp32-ch340-config-smoke-2026-09-11.md) | Gravação física ESP32 e ensaio seguro CONFIG ENABLE→DISABLE pela CH340 |
 
 ## Fontes e precedência
 
@@ -39,7 +40,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.25.5**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.25.6**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 

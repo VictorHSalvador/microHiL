@@ -1,8 +1,8 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.5**, de 11.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.6**, de 11.09.2026.
 
-Status da versão: **baseline documental consolidada; TASK-001 e TASK-002 HOST implementadas, evidenciadas e auditadas mecanicamente; validação do produto pendente**.
+Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; validação do produto permanece pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
@@ -11,8 +11,8 @@ Este arquivo é o registro único de versões do conjunto SDD. Ele não substitu
 | Eixo | Estado em 0.8.0 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
-| Implementação | TASK-001 e TASK-002 HOST concluídas; codec/logging/conversão implementados, requisitos de produto seguem parciais ou pendentes | Build independente e runner compilados; não inferir execução de FMU ou conformidade integral |
-| Verificação | CTest 23/23 normal e 23/23 ASan+UBSan; harness e critérios da feature executados | Não executa FMU, ROS, USB, firmware, GUI, Raspberry Pi, bancada, HIL ou timing real |
+| Implementação | Componentes HOST, runner ROS e firmware ESP32 evoluíram de forma incremental; requisitos de produto seguem parciais ou pendentes | Build independente, runner ROS e firmware compilados; não inferir conformidade integral |
+| Verificação | CTest ROS 48/48 no HOST; firmware gravado em ESP32 e CONFIG ENABLE→DISABLE observado pela CH340 | Não executa sessão XRCE, tópicos ROS, perfil aplicado, DATA, I/O, Raspberry Pi, HIL ou timing real |
 
 ## Esquema de versão
 
@@ -83,7 +83,8 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.2 | 11.09.2026 | PATCH | Play da GUI é identificado como debug HOST até que a sequência HiL ENABLE→STREAMING seja integrada | GUI, plano e sdd-versions | Correção de comunicação; sem nova validação física | 76c0031 |
 | 0.25.3 | 11.09.2026 | PATCH | GUI recebe o resultado agregado após Join e exporta CSV apenas de log binário fechado | sessão HOST, GUI Qt, testes, plano, matriz, evidence e sdd-versions | CTest 47/47 e GUI offscreen; inspeção visual, FMU de produto, DAQC e HIL pendentes | 57f3cdf |
 | 0.25.4 | 11.09.2026 | PATCH | Especificação e arquitetura passam a refletir o estado HOST já implementado da GUI de resultado, CSV e gráficos | spec, architecture, sdd-versions e teste documental | Correção de rastreabilidade; sem nova execução física ou visual | 1de5185 |
-| 0.25.5 | 11.09.2026 | PATCH | Evidência nova da variante ROS 2 do runner com interfaces geradas localmente e CTest 48/48 | plan, matriz, evidence, sdd-versions e teste documental | Build e testes HOST; sem TTY física, CH340, ESP32 ou HIL | alterações locais; registrar commit quando criado |
+| 0.25.5 | 11.09.2026 | PATCH | Evidência nova da variante ROS 2 do runner com interfaces geradas localmente e CTest 48/48 | plan, matriz, evidence, sdd-versions e teste documental | Build e testes HOST; sem TTY física, CH340, ESP32 ou HIL | b6f7555 |
+| 0.25.6 | 11.09.2026 | PATCH | Console e logs foram desabilitados na UART do protocolo; firmware final gravado e CONFIG ENABLE→DISABLE verificado pela CH340 | sdkconfig.defaults, arquitetura, plano, matriz, evidência, README, sdd-versions e teste documental | ESP32 físico, gravação com hash verificado, CONFIG seguro e teste documental 29/29; `onp-spec audit` não aprovado por incompatibilidade local e provas antigas desatualizadas | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
