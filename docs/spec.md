@@ -99,7 +99,7 @@ A interface deve indicar pelo menos Idle, Running, Error, Stopped e Finished. N�
 
 **Critério de aceitação proposto (V-F-08; HOST + GUI):** Exercitar estados mínimos, fechamento de workers e nova execução; não declarar Finished antes de agregar resultado. Testar proteção em Error e novo Play; não há estado Paused requerido.
 
-**Design:** ARCH-STATE. **Execução:** TASK-003, TASK-009. **Estado HOST:** checkbox configura a proteção antes do Play e permanece bloqueado durante Running; teste de transições Error por aquisição DAQC permanece pendente.
+**Design:** ARCH-STATE. **Execução:** TASK-003, TASK-009. **Estado HOST:** checkbox configura a proteção antes do Play e permanece bloqueado durante Running; o diagnóstico HOST lista todos os inputs que atingirem o limite no mesmo passo; transições por aquisição DAQC permanecem pendentes.
 
 ### REQ-F-09 — Apresentação de Falhas
 

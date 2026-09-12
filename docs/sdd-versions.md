@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.13**, de 12.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.14**, de 12.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -92,6 +92,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.11 | 12.09.2026 | PATCH | Novo Play debug limpa as amostras das janelas de gráfico abertas; a sessão HOST é verificada em duas execuções consecutivas com logger e fila recriados | GUI QML, teste da sessão, plano, matriz, evidência e SDD | Build GUI, CTest 47/47, teste documental 29/29 e início offscreen; interação visual manual ainda pendente | 492914d |
 | 0.25.12 | 12.09.2026 | PATCH | Checkbox de gráficos passa a controlar a publicação durante Running, sem parar a FMU nem reter backlog para reativação | sessão, thread de simulação, GUI, requisitos, arquitetura, plano, matriz, evidência e SDD | CTest 47/47; inspeção visual e medição de carga GUI pendentes | f663c7e |
 | 0.25.13 | 12.09.2026 | PATCH | GUI expõe a proteção opcional de 100 inputs inválidos consecutivos antes do Play e bloqueia sua alteração em Running | sessão, GUI, requisitos, plano, matriz, evidência e SDD | CTest 47/47; injeção DAQC e interação visual pendentes | alterações locais; registrar commit quando criado |
+| 0.25.14 | 12.09.2026 | PATCH | Diagnóstico de proteção passa a listar todos os inputs que atingirem o limite no mesmo passo | thread de simulação, requisitos, plano, evidência e SDD | CTest 47/47; cenário DAQC físico pendente | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

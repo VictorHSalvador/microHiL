@@ -134,12 +134,21 @@ static void SetRunFailure(RtSimulationContext *context, const char *stage, const
 }
 
 static void SetInputProtectionFailure(RtSimulationContext *context, const input_step_t *step) {
-    const size_t channel_index = step->invalid_limit_channels[0];
-    const input_channel_state_t *channel = &context->input_state.channels[channel_index];
     context->run_result.state = SIMULATION_RUN_ERROR;
     context->run_result.code = -1;
     snprintf(context->run_result.stage, sizeof(context->run_result.stage), "%s", "input-protection");
-    snprintf(context->run_result.message, sizeof(context->run_result.message), "invalid input limit: %.70s", channel->descriptor.input_name);
+    size_t used = (size_t)snprintf(context->run_result.message, sizeof(context->run_result.message), "%s", "invalid input limit:");
+    for (size_t index = 0U; index < step->invalid_limit_channel_count && used < sizeof(context->run_result.message); ++index) {
+        const input_channel_state_t *channel = &context->input_state.channels[step->invalid_limit_channels[index]];
+        const int written = snprintf(context->run_result.message + used, sizeof(context->run_result.message) - used, "%s%.70s",
+                                     index == 0U ? " " : ", ", channel->descriptor.input_name);
+        if (written < 0) break;
+        if ((size_t)written >= sizeof(context->run_result.message) - used) {
+            used = sizeof(context->run_result.message);
+        } else {
+            used += (size_t)written;
+        }
+    }
 }
 
 static void ReleasePreparedSimulation(RtSimulationContext *context) {

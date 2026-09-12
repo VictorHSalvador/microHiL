@@ -1,6 +1,6 @@
 # Plano e backlog de retomada
 
-Baseline 0.25.13. Decisões de produto e ICD foram consolidados; a TASK-001 concluiu a fundação de build HOST com evidência limitada ao host. ESP-IDF v5.2.6 e micro-ROS Humble compilaram em integração cruzada do firmware; a imagem final foi gravada em um ESP32 físico e respondeu ao CONFIG seguro pela CH340. UART 8N1 é configurável de 9.600 a 152.000 bit/s, sem RTS/CTS, com baseline selecionada de 152.000 bit/s e MTU XRCE de 128 bytes. O coordenador C usa exclusivamente TTY POSIX da CH340 e Qt Quick/QML é a GUI escolhida. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
+Baseline 0.25.14. Decisões de produto e ICD foram consolidados; a TASK-001 concluiu a fundação de build HOST com evidência limitada ao host. ESP-IDF v5.2.6 e micro-ROS Humble compilaram em integração cruzada do firmware; a imagem final foi gravada em um ESP32 físico e respondeu ao CONFIG seguro pela CH340. UART 8N1 é configurável de 9.600 a 152.000 bit/s, sem RTS/CTS, com baseline selecionada de 152.000 bit/s e MTU XRCE de 128 bytes. O coordenador C usa exclusivamente TTY POSIX da CH340 e Qt Quick/QML é a GUI escolhida. Parâmetros dependentes de medição permanecem critérios de cada tarefa e não impedem os componentes HOST independentes. Datas de entrega e duração de sprint não foram definidas.
 
 ## TASK-000 — Preparar documentação
 
