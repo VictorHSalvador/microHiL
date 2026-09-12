@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade
 
-Revisão 0.26.1, baseline conjunta [SDD-MICROHIL 0.26.1](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; a seleção de saídas numéricas pela GUI também foi testada no HOST. A DAQC física foi gravada e respondeu a CONFIG seguro pela CH340; a sessão XRCE física permanece pendente; isso não infere validação de GUI, Raspberry Pi, micro-ROS, perfil, I/O, HIL ou deadlines.
+Revisão 0.26.2, baseline conjunta [SDD-MICROHIL 0.26.2](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; a seleção de saídas numéricas pela GUI também foi testada no HOST. A DAQC física foi gravada e respondeu a CONFIG seguro pela CH340; a sessão XRCE física permanece pendente; isso não infere validação de GUI, Raspberry Pi, micro-ROS, perfil, I/O, HIL ou deadlines.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 
@@ -65,3 +65,4 @@ I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente;
 | REQ-NF-30 | ARCH-LOG / ARCH-GUI | TASK-002, TASK-004, TASK-009 | src/binary_logger.c; src/run_logging.c; src/plotter.c | P | V-NF-30 / HOST + alvo | [TASK-002](evidence/host-run-logging-2026-09-08.md): sink fora do produtor e plot separado; sem medição de cadência/GUI/alvo |
 | REQ-NF-31 | ARCH-TIME / IF-SAMPLE | TASK-004, TASK-006, TASK-007 | src/rt_simulation.c; include/rt_simulation.h | P | V-NF-31 / HOST + HIL | Sem execução do caso de aceitação |
 | REQ-NF-32 | ARCH-TIME | TASK-004, TASK-010 | Não implementado | A | V-NF-32 / HOST + HIL | Sem execução |
+Revisão 0.26.2: correção documental sem mudança de requisito, contrato ou evidência de produto. `context.md` agora identifica YAML como a configuração persistida e trata a avaliação do commit inicial como histórico; a execução vigente continua rastreada nas TASKs, no plano e nas evidências.
