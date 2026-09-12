@@ -215,7 +215,15 @@ ApplicationWindow {
                         Label { text: "Duração (s)" }
                         TextField { id: stopTimeField; text: "60"; validator: DoubleValidator { bottom: 0.000001 } }
                         CheckBox { text: "Registrar saídas"; checked: window.loggingEnabled; onToggled: window.loggingEnabled = checked; Layout.columnSpan: 2 }
-                        CheckBox { text: "Atualizar gráficos"; checked: window.plotEnabled; onToggled: window.plotEnabled = checked; Layout.columnSpan: 2 }
+                        CheckBox {
+                            text: "Atualizar gráficos"
+                            checked: window.plotEnabled
+                            onToggled: {
+                                window.plotEnabled = checked
+                                guiController.SetPlotEnabled(checked)
+                            }
+                            Layout.columnSpan: 2
+                        }
                     }
                 }
                 Frame {

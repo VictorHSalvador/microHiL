@@ -41,6 +41,7 @@ public:
     Q_INVOKABLE bool SetVirtualInput(int index, const QString &value);
     Q_INVOKABLE bool StartSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled);
     Q_INVOKABLE bool StopSimulation();
+    Q_INVOKABLE bool SetPlotEnabled(bool enabled);
     Q_INVOKABLE QVariantList PollSamples();
     Q_INVOKABLE bool SimulationRunning() const;
     Q_INVOKABLE QVariantMap Result() const;

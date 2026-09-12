@@ -177,7 +177,7 @@ A janela de simulação deve disponibilizar um controle que permita habilitar ou
 
 **Critério de aceitação proposto (V-F-16; GUI + alvo):** Desabilitar/reativar atualização durante Running; passos continuam e estado se mantém; ao reativar, exibir dados conforme política de janela sem backlog ilimitado.
 
-**Design:** ARCH-GUI. **Execução:** TASK-009. **Pendência:** implementação e medição de carga GUI.
+**Design:** ARCH-GUI. **Execução:** TASK-009. **Estado HOST:** o checkbox controla atomicamente a publicação de amostras durante Running; a interface descarta amostras residuais enquanto desabilitada. Medição de carga GUI permanece pendente.
 
 ### REQ-F-17 — Entradas Virtuais
 

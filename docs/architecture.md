@@ -90,6 +90,7 @@ Direção visual confirmada: Linux Mint. Proposta de paleta inicial (design, nã
 | Controle/comportamento | Contrato confirmado |
 |---|---|
 | Play/Stop | Independentes da criação dos gráficos; checkbox de proteção de inválidos; sem pausa manual |
+| Atualização gráfica | Checkbox altera atomicamente a publicação para a fila durante Running; a GUI drena e descarta resíduos desabilitados, sem backlog para reativação |
 | Abrir gráfico | Um por saída, possível antes de Play; janela vazia até receber amostras |
 | Configurar gráfico | Controle distinto da abertura; mínimo, máximo e espaçamento Y |
 | Y −2…2, espaçamento 1 | Marcações −2, −1, 0, 1, 2; não é quantidade de amostras |

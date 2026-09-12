@@ -12,6 +12,7 @@ static void ClearRunState(execution_session_t *session) {
     session->result = (run_result_t){0};
     atomic_store_explicit(&session->stop_requested, false, memory_order_relaxed);
     atomic_store_explicit(&session->producer_done, false, memory_order_relaxed);
+    atomic_store_explicit(&session->gui_plot_enabled, false, memory_order_relaxed);
     session->prepared = false;
     session->logging_started = false;
     session->run_started = false;
@@ -243,22 +244,32 @@ execution_session_status_t ExecutionSessionStartGui(execution_session_t *session
     execution_session_status_t status = ExecutionSessionSetTiming(session, step_size_s, stop_time_s);
     if (status != EXECUTION_SESSION_OK) return status;
     session->config.binary_log_enabled = logging_enabled;
-    session->config.plot_enabled = plot_enabled;
+    // The GUI controls publication through an atomic flag while the run is active.
+    session->config.plot_enabled = true;
+    atomic_store_explicit(&session->gui_plot_enabled, plot_enabled, memory_order_relaxed);
     if ((status = ExecutionSessionPrepare(session)) != EXECUTION_SESSION_OK) return status;
     if ((status = ExecutionSessionStartLogging(session)) != EXECUTION_SESSION_OK) {
         ExecutionSessionAbort(session);
         return status;
     }
     sample_queue_init(&session->gui_plot_queue);
-    if ((status = ExecutionSessionStart(session, plot_enabled ? &session->gui_plot_queue : NULL, NULL)) != EXECUTION_SESSION_OK) {
+    if (RtSimulationStart(&session->simulation, session->logging_started ? &session->logging : NULL, &session->gui_plot_queue, NULL,
+                          &session->stop_requested, &session->producer_done, &session->gui_plot_enabled) != 0) {
         ExecutionSessionAbort(session);
-        return status;
+        return EXECUTION_SESSION_START;
     }
+    session->run_started = true;
     return EXECUTION_SESSION_OK;
 }
 
 execution_session_status_t ExecutionSessionStopGui(execution_session_t *session) {
     return ExecutionSessionRequestStop(session);
+}
+
+execution_session_status_t ExecutionSessionSetGuiPlotEnabled(execution_session_t *session, bool enabled) {
+    if (!session || !session->initialized) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    atomic_store_explicit(&session->gui_plot_enabled, enabled, memory_order_relaxed);
+    return EXECUTION_SESSION_OK;
 }
 
 execution_session_status_t ExecutionSessionJoinGui(execution_session_t *session) {
@@ -407,7 +418,7 @@ execution_session_status_t ExecutionSessionStartLogging(execution_session_t *ses
 execution_session_status_t ExecutionSessionStart(execution_session_t *session, SampleQueue *plot_queue, daq_output_bridge_t *output_bridge) {
     if (!session || !session->prepared || session->run_started) return EXECUTION_SESSION_NOT_READY;
     if (RtSimulationStart(&session->simulation, session->logging_started ? &session->logging : NULL, plot_queue, output_bridge,
-                          &session->stop_requested, &session->producer_done) != 0) {
+                          &session->stop_requested, &session->producer_done, NULL) != 0) {
         return EXECUTION_SESSION_START;
     }
     session->run_started = true;

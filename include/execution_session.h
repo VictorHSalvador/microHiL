@@ -25,6 +25,7 @@ typedef struct execution_session {
     run_result_t result;
     _Atomic bool stop_requested;
     _Atomic bool producer_done;
+    _Atomic bool gui_plot_enabled;
     bool initialized;
     bool prepared;
     bool logging_started;
@@ -90,6 +91,7 @@ bool ExecutionSessionInputHasPhysicalMapping(const execution_session_t *session,
 execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *session, size_t index, double value);
 execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled);
 execution_session_status_t ExecutionSessionStopGui(execution_session_t *session);
+execution_session_status_t ExecutionSessionSetGuiPlotEnabled(execution_session_t *session, bool enabled);
 execution_session_status_t ExecutionSessionJoinGui(execution_session_t *session);
 bool ExecutionSessionPollGuiSample(execution_session_t *session, SimulationSample *sample);
 bool ExecutionSessionGuiRunning(const execution_session_t *session);

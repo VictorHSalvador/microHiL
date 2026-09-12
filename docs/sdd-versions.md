@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.11**, de 12.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.12**, de 12.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -90,6 +90,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.9 | 12.09.2026 | PATCH | GUI remove gráfico fechado do registro, oferece Boolean virtual binário e evita tentativa FIFO no Play debug | GUI, sessão/tempo, testes, plano, matriz, evidência e SDD | Build GUI e runner; CTest 47/47 e teste documental 29/29; inspeção visual pendente | 9d3e09b |
 | 0.25.10 | 12.09.2026 | PATCH | Play debug volta a solicitar SCHED_FIFO; autorização é concedida por capacidade do executável, sem executar GUI como root | rt_simulation, README, plano, evidência e SDD | Verificação HOST pendente desta revisão; sem qualificação temporal | alterações locais; registrar commit quando criado |
 | 0.25.11 | 12.09.2026 | PATCH | Novo Play debug limpa as amostras das janelas de gráfico abertas; a sessão HOST é verificada em duas execuções consecutivas com logger e fila recriados | GUI QML, teste da sessão, plano, matriz, evidência e SDD | Build GUI, CTest 47/47, teste documental 29/29 e início offscreen; interação visual manual ainda pendente | 492914d |
+| 0.25.12 | 12.09.2026 | PATCH | Checkbox de gráficos passa a controlar a publicação durante Running, sem parar a FMU nem reter backlog para reativação | sessão, thread de simulação, GUI, requisitos, arquitetura, plano, matriz, evidência e SDD | CTest 47/47; inspeção visual e medição de carga GUI pendentes | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

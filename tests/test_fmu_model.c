@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     Require(RtSimulationPrepare(&simulation, &model, &config) == 0, "could not prepare the FMU before starting the simulation thread");
     Require(simulation.input_state_ready && simulation.prepared && simulation.stats.completed_steps == 0U,
             "preparation did not leave initialized inputs without executing a simulation step");
-    Require(RtSimulationStart(&simulation, NULL, NULL, NULL, &stop_requested, &producer_done) == 0,
+    Require(RtSimulationStart(&simulation, NULL, NULL, NULL, &stop_requested, &producer_done, NULL) == 0,
             "could not start a prepared simulation");
     Require(RtSimulationJoin(&simulation) == 0 && simulation.run_result.stats.completed_steps == 2U,
             "prepared simulation did not execute the requested fixed steps");

@@ -19,6 +19,7 @@ typedef struct {
     const AppConfig *config;
     input_channel_descriptor_t input_descriptors[INPUT_STATE_MAX_CHANNELS];
     SampleQueue *plot_queue;
+    _Atomic bool *plot_enabled;
     _Atomic bool *stop_requested;
     _Atomic bool *plot_producer_done;
     run_logging_t *logging;
@@ -37,7 +38,7 @@ int RtSimulationPrepare(RtSimulationContext *context, FmuModel *model, const App
 int RtSimulationCheckHilRealtime(const AppConfig *config, char *message, size_t message_size);
 void RtSimulationAbort(RtSimulationContext *context);
 int RtSimulationStart(RtSimulationContext *context, run_logging_t *logging, SampleQueue *plot_queue, daq_output_bridge_t *output_bridge,
-                      _Atomic bool *stop_requested, _Atomic bool *plot_producer_done);
+                      _Atomic bool *stop_requested, _Atomic bool *plot_producer_done, _Atomic bool *plot_enabled);
 int RtSimulationJoin(RtSimulationContext *context);
 
 #endif

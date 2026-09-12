@@ -249,7 +249,9 @@ static void *SimulationThread(void *arg) {
         plot_sample.wall_time_s = ElapsedSeconds(&wall_start, &now);
 
         if (context->logging) (void)RunLoggingPublish(context->logging, &log_sample);
-        if (context->config->plot_enabled && context->plot_queue) (void)sample_queue_push(context->plot_queue, &plot_sample);
+        if (context->plot_queue && (!context->plot_enabled || atomic_load_explicit(context->plot_enabled, memory_order_relaxed))) {
+            (void)sample_queue_push(context->plot_queue, &plot_sample);
+        }
 
         sim_time += h;
         ++sequence;
@@ -312,10 +314,11 @@ void RtSimulationAbort(RtSimulationContext *context) {
 }
 
 int RtSimulationStart(RtSimulationContext *context, run_logging_t *logging, SampleQueue *plot_queue, daq_output_bridge_t *output_bridge,
-                      _Atomic bool *stop_requested, _Atomic bool *plot_producer_done) {
+                      _Atomic bool *stop_requested, _Atomic bool *plot_producer_done, _Atomic bool *plot_enabled) {
     if (!context || !context->prepared || context->thread_started || !stop_requested) return -1;
     context->logging = logging;
     context->plot_queue = plot_queue;
+    context->plot_enabled = plot_enabled;
     context->output_bridge = output_bridge;
     context->require_realtime = output_bridge != NULL;
     context->stop_requested = stop_requested;

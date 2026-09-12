@@ -210,6 +210,13 @@ bool GuiController::StopSimulation() {
     return status == EXECUTION_SESSION_OK;
 }
 
+bool GuiController::SetPlotEnabled(bool enabled) {
+    const execution_session_status_t status = ExecutionSessionSetGuiPlotEnabled(session_, enabled);
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
+    emit ErrorChanged();
+    return status == EXECUTION_SESSION_OK;
+}
+
 QVariantList GuiController::PollSamples() {
     QVariantList samples;
     SimulationSample sample;
