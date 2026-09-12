@@ -53,9 +53,10 @@ QString GuiController::QuoteYaml(const QString &value) {
     return QStringLiteral("'") + escaped + QStringLiteral("'");
 }
 
-bool GuiController::SaveProfile(const QString &path, double stepSizeSeconds, double stopTimeSeconds, int adcResolutionBits,
+bool GuiController::SaveProfile(const QString &path, double stepSizeSeconds, double stopTimeSeconds, int acquisitionFrequencyHz, int adcResolutionBits,
                                 const QVariantList &adcAttenuations, const QVariantList &pwmConfigurations, const QVariantList &mappings) {
-    if (!session_ || path.isEmpty() || adcAttenuations.size() != 6 || pwmConfigurations.size() != 2 || mappings.size() > PROFILE_CONFIG_MAX_MAPPINGS) {
+    if (!session_ || path.isEmpty() || acquisitionFrequencyHz < 1 || acquisitionFrequencyHz > static_cast<int>(PROFILE_CONFIG_MAX_ACQUISITION_FREQUENCY_HZ) ||
+        adcAttenuations.size() != 6 || pwmConfigurations.size() != 2 || mappings.size() > PROFILE_CONFIG_MAX_MAPPINGS) {
         error_message_ = QStringLiteral("invalid YAML profile parameters");
         emit ErrorChanged();
         return false;
@@ -66,6 +67,7 @@ bool GuiController::SaveProfile(const QString &path, double stepSizeSeconds, dou
     stream.setRealNumberNotation(QTextStream::SmartNotation);
     stream.setRealNumberPrecision(17);
     stream << "version: 1\nprofile:\n  id: 1\nexecution:\n  step_size_s: " << stepSizeSeconds << "\n  stop_time_s: " << stopTimeSeconds;
+    stream << "\nacquisition:\n  frequency_hz: " << acquisitionFrequencyHz;
     stream << "\nadc:\n  resolution_bits: " << adcResolutionBits << "\n  attenuation:\n";
     static const char *const adcChannels[] = {"GPIO32_AI", "GPIO33_AI", "GPIO34_AI", "GPIO35_AI", "GPIO36_AI", "GPIO39_AI"};
     for (int index = 0; index < adcAttenuations.size(); ++index) stream << "    " << adcChannels[index] << ": " << adcAttenuations.at(index).toInt() << "\n";

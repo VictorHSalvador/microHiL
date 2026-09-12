@@ -124,7 +124,8 @@ static bool ConfigurePwm(const daqc_configuration_t *configuration) {
 }
 
 bool DaqcProfileConfigure(const daqc_configuration_t *configuration) {
-    if (!configuration || configuration->adc_resolution_bits < 9U || configuration->adc_resolution_bits > 12U) return false;
+    if (!configuration || configuration->adc_resolution_bits < 9U || configuration->adc_resolution_bits > 12U ||
+        configuration->acquisition_frequency_hz == 0U || configuration->acquisition_frequency_hz > DAQC_ACQUISITION_MAX_FREQUENCY_HZ) return false;
     for (size_t index = 0U; index < 6U; ++index) if (configuration->adc_attenuation[index] > 3U) return false;
     for (size_t index = 0U; index < 2U; ++index) {
         if (configuration->pwm_frequency_hz[index] == 0U || configuration->pwm_resolution_bits[index] == 0U || configuration->pwm_resolution_bits[index] > 20U) return false;
@@ -178,6 +179,11 @@ bool DaqcProfileAcquire(uint8_t payload[DAQC_ACQUISITION_SIZE]) {
         WriteFloat(payload + 4U + index * sizeof(float), (float)millivolts / 1000.0F);
     }
     return true;
+}
+
+uint32_t DaqcProfileAcquisitionPeriodUs(void) {
+    if (!g_configured || g_configuration.acquisition_frequency_hz == 0U) return 0U;
+    return 1000000U / g_configuration.acquisition_frequency_hz;
 }
 
 void DaqcProfileSetSafeOutputs(void) {

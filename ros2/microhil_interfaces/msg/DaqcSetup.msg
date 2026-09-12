@@ -13,3 +13,4 @@ uint8 adc_resolution_bits
 uint8[6] adc_attenuation
 uint32[2] pwm_frequency_hz
 uint8[2] pwm_resolution_bits
+uint16 acquisition_frequency_hz

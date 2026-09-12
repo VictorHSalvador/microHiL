@@ -32,7 +32,7 @@ public:
     QString ErrorMessage() const;
     Q_INVOKABLE bool LoadFmu(const QString &path);
     Q_INVOKABLE bool LoadProfile(const QString &path);
-    Q_INVOKABLE bool SaveProfile(const QString &path, double stepSizeSeconds, double stopTimeSeconds, int adcResolutionBits,
+    Q_INVOKABLE bool SaveProfile(const QString &path, double stepSizeSeconds, double stopTimeSeconds, int acquisitionFrequencyHz, int adcResolutionBits,
                                  const QVariantList &adcAttenuations, const QVariantList &pwmConfigurations, const QVariantList &mappings);
     Q_INVOKABLE QVariantList Inputs() const;
     Q_INVOKABLE QVariantList Outputs() const;

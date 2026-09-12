@@ -55,6 +55,12 @@ RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos d
 
 ## Detalhes de implementação e validação
 
+### Revisão 0.26.0 — aquisição DAQC configurável
+
+O usuário confirmou que a aquisição deve permanecer ativa em tarefa separada durante STREAMING e ter frequência configurável. A taxa representa a leitura periódica de AI/DI, não a frequência de passos da FMU. A DAQC mantém somente o snapshot corrente; o host usa o último DATA completo recebido antes da fronteira FMI, sem criar fila crescente ou executar a FMU no leitor.
+
+O YAML passa a aceitar `acquisition.frequency_hz`; perfis novos gravados pela GUI iniciam em 100 Hz. A implementação admite 1…400 Hz. O teto é um limite de software para o payload ESP32 de 33 bytes no fio (5 bytes de cabeçalho mais 28 de aquisição) a 152.000 bit/s, deixando margem para CONFIG, READ_ACK e XRCE; não é uma medição da CH340 nem garantia temporal. A taxa efetiva, jitter e coexistência com XRCE exigem ensaio em bancada.
+
 | ID | Contrato consolidado | Parâmetro/evidência restante |
 |---|---|---|
 | Q-01 | RaspDAQ tem rclpy/FunctionFS; MICROHIL acrescenta MID 04 XRCE sob coordenador único | Fixar micro-ROS/Agent, MTU XRCE 128, fragmentação, QoS e medir interferência |

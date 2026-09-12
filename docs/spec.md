@@ -223,7 +223,7 @@ Antes de executar, validar FMU, passo/duração, perfil DAQC, mapeamento I/O e c
 
 **Atualização 0.2:** respostas do usuário registradas em ADR-002; detalhes não resolvidos permanecem explícitos.
 
-**Critério de aceitação proposto (V-F-21; HOST + integração):** Carregar configurações com variável removida, tipo alterado, perfil/hash divergente, função GPIO em conflito e timing inválido; obter diagnóstico específico antes de atuar e impedir STREAMING quando firmware rejeitar o descritor.
+**Critério de aceitação proposto (V-F-21; HOST + integração):** Carregar configurações com variável removida, tipo alterado, perfil/hash divergente, função GPIO em conflito, timing inválido e frequência de aquisição fora do contrato; obter diagnóstico específico antes de atuar e impedir STREAMING quando firmware rejeitar o descritor.
 
 **Design:** ARCH-CORE / IF-CORE. **Execução:** TASK-003, TASK-006. **Pendência:** fixtures de incompatibilidade e perfil físico.
 
@@ -244,7 +244,7 @@ O host deve validar cada canal adquirido pela DAQC antes de inseri-lo no input F
 
 **Critério de aceitação proposto (V-F-23; HOST + integração):** Enviar válido A, NaN, Inf, dado fora do contrato e válido B por canal: FMU deve consumir A,A,A,A,B. Um canal inválido não altera o valor válido de outro. Não emitir comando de zeramento físico como efeito do filtro. Testar primeira amostra inválida usando referência inicial válida da entrada FMU; referência inicial ausente/inválida não pode ser apresentada como último dado DAQC válido.
 
-**Design:** ARCH-CORE / ARCH-IO / IF-SAMPLE. **Execução:** TASK-003, TASK-006, TASK-007. **Pendência:** limites físicos do mapa dependem de caracterização; referência inicial está definida.
+**Design:** ARCH-CORE / ARCH-IO / IF-SAMPLE. **Execução:** TASK-003, TASK-006, TASK-007, TASK-008. **Pendência:** a frequência de aquisição é configurada fora do ciclo e a leitura periódica permanece separada da simulação; limites físicos do mapa dependem de caracterização; referência inicial está definida.
 
 ### REQ-F-24 — Parada por 100 passos consecutivos com aquisição inválida
 

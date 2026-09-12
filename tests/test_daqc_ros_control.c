@@ -21,6 +21,7 @@ int main(void) {
             .adc_attenuation = {3U, 3U, 3U, 3U, 3U, 3U},
             .pwm_frequency_hz = {20000U, 20000U},
             .pwm_resolution_bits = {10U, 10U},
+            .acquisition_frequency_hz = 100U,
         },
     };
     Require(DaqcRosControlPublishSetup(&control, 2U, &profile, true) == DAQC_ROS_CONTROL_OK,

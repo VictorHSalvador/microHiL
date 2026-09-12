@@ -224,6 +224,7 @@ daqc_ros_control_status_t DaqcRosControlPublishSetup(daqc_ros_control_t *control
         .profile_id = profile->profile_id,
         .apply_configuration = apply_configuration ? 1U : 0U,
         .adc_resolution_bits = configuration->adc_resolution_bits,
+        .acquisition_frequency_hz = configuration->acquisition_frequency_hz,
     };
     memcpy(message.adc_attenuation, configuration->adc_attenuation, sizeof(message.adc_attenuation));
     memcpy(message.pwm_frequency_hz, configuration->pwm_frequency_hz, sizeof(message.pwm_frequency_hz));

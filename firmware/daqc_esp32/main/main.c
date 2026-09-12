@@ -69,9 +69,17 @@ static void CommunicationTask(void *argument) {
 static void IoTask(void *argument) {
     (void)argument;
     uint8_t payload[28];
+    int64_t next_acquisition_us = esp_timer_get_time();
     while (true) {
-        if (DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING && DaqcProfileAcquire(payload)) {
-            (void)DaqcTransportSendAcquisition(g_sequence++, payload);
+        if (DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING) {
+            const int64_t now_us = esp_timer_get_time();
+            if (now_us >= next_acquisition_us) {
+                const uint32_t period_us = DaqcProfileAcquisitionPeriodUs();
+                if (period_us > 0U && DaqcProfileAcquire(payload)) (void)DaqcTransportSendAcquisition(g_sequence++, payload);
+                next_acquisition_us = now_us + period_us;
+            }
+        } else {
+            next_acquisition_us = esp_timer_get_time();
         }
         if (DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING && esp_timer_get_time() - g_read_ack_time_us >= 60000000LL) {
             if (DaqcControlApplyCommand(&g_control, DAQC_COMMAND_DISABLE) == DAQC_CONTROL_OK) DaqcRosRequestStatePublication();

@@ -43,6 +43,13 @@ static bool ParseUint8(yaml_node_t *node, uint8_t *value) {
     return true;
 }
 
+static bool ParseUint16(yaml_node_t *node, uint16_t *value) {
+    unsigned int parsed = 0U;
+    if (!value || !ParseUnsigned(node, &parsed) || parsed > UINT16_MAX) return false;
+    *value = (uint16_t)parsed;
+    return true;
+}
+
 static bool ParseUint32(yaml_node_t *node, uint32_t *value) {
     const char *text = Scalar(node);
     char *end = NULL;
@@ -110,11 +117,13 @@ static bool HasOnlyKeys(yaml_document_t *document, yaml_node_t *mapping, const c
 
 static bool ParseDaqcConfiguration(yaml_document_t *document, yaml_node_t *root, profile_daqc_configuration_t *configuration) {
     static const char *const adc_keys[] = {"resolution_bits", "attenuation"};
+    static const char *const acquisition_keys[] = {"frequency_hz"};
     static const char *const attenuation_channels[] = {"GPIO32_AI", "GPIO33_AI", "GPIO34_AI", "GPIO35_AI", "GPIO36_AI", "GPIO39_AI"};
     static const char *const pwm_channels[] = {"GPIO18_PWM", "GPIO19_PWM"};
     static const char *const pwm_keys[] = {"frequency_hz", "resolution_bits"};
     yaml_node_t *adc = MappingValue(document, root, "adc");
     yaml_node_t *pwm = MappingValue(document, root, "pwm");
+    yaml_node_t *acquisition = MappingValue(document, root, "acquisition");
     yaml_node_t *attenuation = MappingValue(document, adc, "attenuation");
     if (!configuration || !HasOnlyKeys(document, adc, adc_keys, sizeof(adc_keys) / sizeof(adc_keys[0])) ||
         !HasOnlyKeys(document, attenuation, attenuation_channels, sizeof(attenuation_channels) / sizeof(attenuation_channels[0])) ||
@@ -135,6 +144,11 @@ static bool ParseDaqcConfiguration(yaml_document_t *document, yaml_node_t *root,
             configuration->pwm_frequency_hz[index] == 0U || configuration->pwm_resolution_bits[index] == 0U ||
             configuration->pwm_resolution_bits[index] > 20U) return false;
     }
+    configuration->acquisition_frequency_hz = PROFILE_CONFIG_DEFAULT_ACQUISITION_FREQUENCY_HZ;
+    if (!acquisition) return true;
+    if (!HasOnlyKeys(document, acquisition, acquisition_keys, sizeof(acquisition_keys) / sizeof(acquisition_keys[0])) ||
+        !ParseUint16(MappingValue(document, acquisition, "frequency_hz"), &configuration->acquisition_frequency_hz) ||
+        configuration->acquisition_frequency_hz == 0U || configuration->acquisition_frequency_hz > PROFILE_CONFIG_MAX_ACQUISITION_FREQUENCY_HZ) return false;
     return true;
 }
 

@@ -135,7 +135,7 @@ ApplicationWindow {
                 return
             }
             window.profileError = ""
-            guiController.SaveProfile(selectedFile.toString().replace("file://", ""), Number(stepSizeField.text), Number(stopTimeField.text), Number(adcResolutionField.text),
+            guiController.SaveProfile(selectedFile.toString().replace("file://", ""), Number(stepSizeField.text), Number(stopTimeField.text), Number(acquisitionFrequencyField.text), Number(adcResolutionField.text),
                                       [Number(adc32Field.text), Number(adc33Field.text), Number(adc34Field.text), Number(adc35Field.text), Number(adc36Field.text), Number(adc39Field.text)],
                                       [{ frequency_hz: Number(pwm18FrequencyField.text), resolution_bits: Number(pwm18ResolutionField.text) },
                                        { frequency_hz: Number(pwm19FrequencyField.text), resolution_bits: Number(pwm19ResolutionField.text) }], mappings)
@@ -376,6 +376,10 @@ ApplicationWindow {
                     Label { text: "Todos os campos ADC/PWM são obrigatórios, inclusive para canais sem mapeamento. A DAQC ainda confirma a combinação PWM antes de Streaming."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     GridLayout {
                         columns: 4
+                        Label { text: "Aquisição DAQC (Hz)" }
+                        TextField { id: acquisitionFrequencyField; text: "100"; placeholderText: "1–400"; validator: IntValidator { bottom: 1; top: 400 } }
+                        Label { text: "" }
+                        Label { text: "" }
                         Label { text: "Resolução ADC (bits)" }
                         TextField { id: adcResolutionField; placeholderText: "9–12"; validator: IntValidator { bottom: 9; top: 12 } }
                         Label { text: "Atenuação GPIO32" }

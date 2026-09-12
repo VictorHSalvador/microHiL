@@ -12,12 +12,15 @@
 #define PROFILE_CONFIG_MAX_MAPPINGS 19U
 #define PROFILE_CONFIG_ADC_CHANNELS 6U
 #define PROFILE_CONFIG_PWM_CHANNELS 2U
+#define PROFILE_CONFIG_DEFAULT_ACQUISITION_FREQUENCY_HZ 100U
+#define PROFILE_CONFIG_MAX_ACQUISITION_FREQUENCY_HZ 400U
 
 typedef struct {
     uint8_t adc_resolution_bits;
     uint8_t adc_attenuation[PROFILE_CONFIG_ADC_CHANNELS];
     uint32_t pwm_frequency_hz[PROFILE_CONFIG_PWM_CHANNELS];
     uint8_t pwm_resolution_bits[PROFILE_CONFIG_PWM_CHANNELS];
+    uint16_t acquisition_frequency_hz;
 } profile_daqc_configuration_t;
 
 typedef struct {

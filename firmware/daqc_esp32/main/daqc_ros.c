@@ -118,6 +118,7 @@ static void SetupCallback(const void *message) {
     }
     const daqc_configuration_t configuration = {
         .adc_resolution_bits = setup->adc_resolution_bits,
+        .acquisition_frequency_hz = setup->acquisition_frequency_hz,
         .adc_attenuation = {setup->adc_attenuation[0], setup->adc_attenuation[1], setup->adc_attenuation[2],
                             setup->adc_attenuation[3], setup->adc_attenuation[4], setup->adc_attenuation[5]},
         .pwm_frequency_hz = {setup->pwm_frequency_hz[0], setup->pwm_frequency_hz[1]},
