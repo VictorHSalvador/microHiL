@@ -139,7 +139,7 @@ A plataforma deve coletar as métricas temporais e de falha necessárias à apre
 
 **Critério de aceitação proposto (V-F-12; HOST + alvo):** Cenário controlado produz agregados corretos e os apresenta no fim; habilitar/desabilitar logging não muda cálculos. Não exigir métricas por passo dentro do binário de saídas.
 
-**Design:** ARCH-TIME / IF-LOG. **Execução:** TASK-002, TASK-004. **Pendência:** instrumentação e validação dos agregados.
+**Design:** ARCH-TIME / IF-LOG. **Execução:** TASK-002, TASK-004. **Estado HOST:** runner HiL preserva e apresenta contadores seriais disponíveis; médias e validação no alvo permanecem pendentes.
 
 ### REQ-F-13 — Apresentação dos Resultados de Desempenho
 

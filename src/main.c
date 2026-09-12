@@ -444,6 +444,8 @@ static int run_simulation(execution_session_t *session, char last_log_path[PATH_
 #ifdef MICROHIL_WITH_ROS2_CONTROL
     daqc_runtime_t daqc_runtime;
     daq_output_bridge_t *output_bridge = NULL;
+    daq_serial_service_stats_t daqc_stats = {0};
+    bool daqc_stats_available = false;
 #endif
     bool plot_started = false;
     *last_log_closed = false;
@@ -504,7 +506,10 @@ static int run_simulation(execution_session_t *session, char last_log_path[PATH_
     rc = ExecutionSessionJoin(session);
     g_stop_requested = NULL;
 #ifdef MICROHIL_WITH_ROS2_CONTROL
-    if (config->daqc_enabled) StopDaqcRuntime(&daqc_runtime, config);
+    if (config->daqc_enabled) {
+        daqc_stats_available = DaqSerialServiceGetStats(&daqc_runtime.serial_service, &daqc_stats);
+        StopDaqcRuntime(&daqc_runtime, config);
+    }
 #endif
     if (plot_started) (void)plotter_join(&plot_context);
     const run_result_t *run_result = ExecutionSessionResult(session);
@@ -522,6 +527,14 @@ static int run_simulation(execution_session_t *session, char last_log_path[PATH_
     printf("Unused releases:           %llu\n", (unsigned long long)run_result->simulation.stats.unused_releases);
     printf("Max FMU computation time:  %.6f ms\n", run_result->simulation.stats.max_computation_s * 1000.0);
     printf("Max deadline lateness:     %.6f ms\n", run_result->simulation.stats.max_lateness_s * 1000.0);
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    if (daqc_stats_available) {
+        printf("DAQC RX bytes:             %llu\n", (unsigned long long)daqc_stats.received_bytes);
+        printf("DAQC TX frames:            %llu\n", (unsigned long long)daqc_stats.transmitted_frames);
+        printf("DAQC read timeouts:        %llu\n", (unsigned long long)daqc_stats.read_timeouts);
+        printf("DAQC I/O failures:         %llu\n", (unsigned long long)daqc_stats.io_failures);
+    }
+#endif
     if (plot_started) printf("Dropped plot samples:      %llu\n", (unsigned long long)sample_queue_dropped(&plot_queue));
     printf("=============================\n\n");
     PrintLoggingResult(&run_result->logging);

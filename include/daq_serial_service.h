@@ -30,6 +30,13 @@ typedef struct {
     bool initialized;
 } daq_serial_service_t;
 
+typedef struct {
+    uint64_t received_bytes;
+    uint64_t transmitted_frames;
+    uint64_t read_timeouts;
+    uint64_t io_failures;
+} daq_serial_service_stats_t;
+
 typedef enum {
     DAQ_SERIAL_SERVICE_OK = 0,
     DAQ_SERIAL_SERVICE_INVALID_ARGUMENT,
@@ -40,6 +47,7 @@ typedef enum {
 daq_serial_service_status_t DaqSerialServiceStart(daq_serial_service_t *service, const daq_serial_service_config_t *config);
 void DaqSerialServiceStop(daq_serial_service_t *service);
 bool DaqSerialServiceIsRunning(const daq_serial_service_t *service);
+bool DaqSerialServiceGetStats(const daq_serial_service_t *service, daq_serial_service_stats_t *stats);
 const char *DaqSerialServiceStatusString(daq_serial_service_status_t status);
 
 #endif

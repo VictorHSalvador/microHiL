@@ -83,6 +83,17 @@ bool DaqSerialServiceIsRunning(const daq_serial_service_t *service) {
     return service && service->initialized && atomic_load_explicit(&service->running, memory_order_acquire);
 }
 
+bool DaqSerialServiceGetStats(const daq_serial_service_t *service, daq_serial_service_stats_t *stats) {
+    if (!service || !service->initialized || !stats) return false;
+    *stats = (daq_serial_service_stats_t){
+        .received_bytes = atomic_load_explicit(&service->received_bytes, memory_order_relaxed),
+        .transmitted_frames = atomic_load_explicit(&service->transmitted_frames, memory_order_relaxed),
+        .read_timeouts = atomic_load_explicit(&service->read_timeouts, memory_order_relaxed),
+        .io_failures = atomic_load_explicit(&service->io_failures, memory_order_relaxed),
+    };
+    return true;
+}
+
 const char *DaqSerialServiceStatusString(daq_serial_service_status_t status) {
     switch (status) {
         case DAQ_SERIAL_SERVICE_OK: return "ok";

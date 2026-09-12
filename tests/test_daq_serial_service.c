@@ -109,6 +109,9 @@ int main(void) {
             outgoing[2] == DAQ_PROTOCOL_MID_DATA && outgoing[3] == 7U && outgoing[4] == 0U && outgoing[5] == 0x5aU,
             "serial service emitted an unexpected DATA frame");
     Require(atomic_load_explicit(&service.received_bytes, memory_order_relaxed) == incoming_size, "serial service did not account for received bytes");
+    daq_serial_service_stats_t stats;
+    Require(DaqSerialServiceGetStats(&service, &stats) && stats.received_bytes == incoming_size && stats.transmitted_frames > 0U,
+            "serial service did not expose the communication statistics");
     Require(atomic_load_explicit(&service.transmitted_frames, memory_order_relaxed) == 1U, "serial service did not account for transmitted frame");
 
     DaqSerialServiceStop(&service);
