@@ -89,6 +89,8 @@ unsigned int ExecutionSessionInputValueReference(const execution_session_t *sess
 int ExecutionSessionInputType(const execution_session_t *session, size_t index);
 bool ExecutionSessionInputHasPhysicalMapping(const execution_session_t *session, size_t index);
 execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *session, size_t index, double value);
+execution_session_status_t ExecutionSessionSetStopOnInvalidInputLimit(execution_session_t *session, bool enabled);
+bool ExecutionSessionStopOnInvalidInputLimit(const execution_session_t *session);
 execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled);
 execution_session_status_t ExecutionSessionStopGui(execution_session_t *session);
 execution_session_status_t ExecutionSessionSetGuiPlotEnabled(execution_session_t *session, bool enabled);

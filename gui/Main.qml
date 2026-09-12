@@ -16,6 +16,7 @@ ApplicationWindow {
     property string fmuPath: ""
     property bool loggingEnabled: true
     property bool plotEnabled: true
+    property bool stopOnInvalidInputLimit: true
     property var outputItems: []
     property var inputItems: []
     property var mappingRows: []
@@ -215,6 +216,15 @@ ApplicationWindow {
                         Label { text: "Duração (s)" }
                         TextField { id: stopTimeField; text: "60"; validator: DoubleValidator { bottom: 0.000001 } }
                         CheckBox { text: "Registrar saídas"; checked: window.loggingEnabled; onToggled: window.loggingEnabled = checked; Layout.columnSpan: 2 }
+                        CheckBox {
+                            text: "Parar após 100 entradas inválidas consecutivas"
+                            checked: window.stopOnInvalidInputLimit
+                            enabled: window.simulationState !== "Running"
+                            onToggled: {
+                                if (guiController.SetStopOnInvalidInputLimit(checked)) window.stopOnInvalidInputLimit = checked
+                            }
+                            Layout.columnSpan: 2
+                        }
                         CheckBox {
                             text: "Atualizar gráficos"
                             checked: window.plotEnabled

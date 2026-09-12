@@ -240,6 +240,17 @@ execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *
     return EXECUTION_SESSION_OK;
 }
 
+execution_session_status_t ExecutionSessionSetStopOnInvalidInputLimit(execution_session_t *session, bool enabled) {
+    if (!session || !session->initialized) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
+    session->config.stop_on_invalid_input_limit = enabled;
+    return EXECUTION_SESSION_OK;
+}
+
+bool ExecutionSessionStopOnInvalidInputLimit(const execution_session_t *session) {
+    return session && session->initialized && session->config.stop_on_invalid_input_limit;
+}
+
 execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled) {
     execution_session_status_t status = ExecutionSessionSetTiming(session, step_size_s, stop_time_s);
     if (status != EXECUTION_SESSION_OK) return status;

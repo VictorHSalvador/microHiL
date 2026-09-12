@@ -31,6 +31,11 @@ int main(int argc, char **argv) {
     unlink(csv_path);
 
     ExecutionSessionInit(&session);
+    Require(ExecutionSessionStopOnInvalidInputLimit(&session), "session did not preserve the default invalid-input protection");
+    Require(ExecutionSessionSetStopOnInvalidInputLimit(&session, false) == EXECUTION_SESSION_OK && !ExecutionSessionStopOnInvalidInputLimit(&session),
+            "could not disable invalid-input protection before a run");
+    Require(ExecutionSessionSetStopOnInvalidInputLimit(&session, true) == EXECUTION_SESSION_OK && ExecutionSessionStopOnInvalidInputLimit(&session),
+            "could not re-enable invalid-input protection before a run");
     Require(ExecutionSessionLoadFmu(&session, argv[1]) == EXECUTION_SESSION_OK, "could not load the fixture FMU into the session");
     Require(fmu_model_name(&session.model)[0] != '\0', "session did not preserve the FMU model name");
     const size_t real_input = FindInput(&session, "u_real");
