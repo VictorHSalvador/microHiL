@@ -1,3 +1,4 @@
+/* Implementação do módulo daqc ros. */
 #include "daqc_ros.h"
 
 #include <stdatomic.h>

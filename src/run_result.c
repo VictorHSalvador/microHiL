@@ -1,3 +1,4 @@
+/* Implementação do módulo run result. */
 #include "run_result.h"
 
 void RunResultAggregate(run_result_t *result, const simulation_run_result_t *simulation, const run_logging_result_t *logging) {

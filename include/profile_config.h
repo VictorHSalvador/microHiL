@@ -1,6 +1,8 @@
 #ifndef PROFILE_CONFIG_H
 #define PROFILE_CONFIG_H
 
+/* Contrato público do módulo profile config. */
+
 #include <stddef.h>
 #include <stdint.h>
 

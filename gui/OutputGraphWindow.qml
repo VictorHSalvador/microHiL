@@ -1,3 +1,4 @@
+// Interface QML para o módulo OutputGraphWindow.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window

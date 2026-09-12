@@ -1,3 +1,4 @@
+/* Implementação do módulo daq output bridge. */
 #include "daq_output_bridge.h"
 
 static daq_output_bridge_status_t PublishPayload(daq_output_bridge_t *bridge, const uint8_t *payload) {

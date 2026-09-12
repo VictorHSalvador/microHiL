@@ -1,3 +1,4 @@
+/* Implementação do módulo execution session. */
 #include "execution_session.h"
 #include "log_converter.h"
 #include <stdlib.h>

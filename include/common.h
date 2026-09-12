@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+/* Contrato público do módulo common. */
+
 #include <stddef.h>
 #include <stdint.h>
 

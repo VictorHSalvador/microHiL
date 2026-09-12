@@ -1,6 +1,8 @@
 #ifndef DAQ_STATE_CONTROL_H
 #define DAQ_STATE_CONTROL_H
 
+/* Contrato público do módulo daq state control. */
+
 #include <stdint.h>
 
 #include "daq_coordinator.h"

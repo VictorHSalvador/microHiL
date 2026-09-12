@@ -1,6 +1,8 @@
 #ifndef RELEASE_SCHEDULE_H
 #define RELEASE_SCHEDULE_H
 
+/* Contrato público do módulo release schedule. */
+
 #include <stdbool.h>
 #include <stdint.h>
 

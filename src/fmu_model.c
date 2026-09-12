@@ -1,3 +1,4 @@
+/* Implementação do módulo fmu model. */
 #include "fmu_model.h"
 #include <stdio.h>
 #include <stdlib.h>

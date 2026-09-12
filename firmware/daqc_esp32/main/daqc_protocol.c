@@ -1,3 +1,4 @@
+/* Implementação do módulo daqc protocol. */
 #include "daqc_protocol.h"
 
 #include <string.h>

@@ -1,3 +1,4 @@
+/* Implementação do módulo daqc transport. */
 #include "daqc_transport.h"
 
 #include "daqc_protocol.h"

@@ -1,6 +1,8 @@
 #ifndef DAQ_SERIAL_SERVICE_H
 #define DAQ_SERIAL_SERVICE_H
 
+/* Contrato público do módulo daq serial service. */
+
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <stdint.h>

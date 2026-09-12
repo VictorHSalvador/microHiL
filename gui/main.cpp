@@ -1,3 +1,4 @@
+/* Implementação do módulo main. */
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>

@@ -1,6 +1,8 @@
 #ifndef FMU_MODEL_H
 #define FMU_MODEL_H
 
+/* Contrato público do módulo fmu model. */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <fmilib.h>

@@ -1,3 +1,4 @@
+/* Implementação do módulo daqc profile. */
 #include "daqc_profile.h"
 #include "daqc_protocol.h"
 

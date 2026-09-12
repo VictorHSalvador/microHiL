@@ -1,6 +1,8 @@
 #ifndef RT_SIMULATION_H
 #define RT_SIMULATION_H
 
+/* Contrato público do módulo rt simulation. */
+
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>

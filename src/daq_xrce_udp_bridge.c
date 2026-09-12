@@ -1,3 +1,4 @@
+/* Implementação do módulo daq xrce udp bridge. */
 #include "daq_xrce_udp_bridge.h"
 
 #include <arpa/inet.h>

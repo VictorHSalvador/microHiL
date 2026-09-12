@@ -1,6 +1,8 @@
 #ifndef GUI_CONTROLLER_H
 #define GUI_CONTROLLER_H
 
+/* Contrato público do módulo gui controller. */
+
 #include <QObject>
 #include <QVariantList>
 extern "C" {

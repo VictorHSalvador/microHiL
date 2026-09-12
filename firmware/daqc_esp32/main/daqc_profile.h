@@ -1,6 +1,8 @@
 #ifndef DAQC_PROFILE_H
 #define DAQC_PROFILE_H
 
+/* Contrato público do módulo daqc profile. */
+
 #include <stdbool.h>
 #include <stdint.h>
 

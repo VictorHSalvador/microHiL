@@ -1,3 +1,4 @@
+/* Implementação do módulo app config. */
 #include "app_config.h"
 #include <math.h>
 #include <stdio.h>

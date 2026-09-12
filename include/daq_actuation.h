@@ -1,6 +1,8 @@
 #ifndef DAQ_ACTUATION_H
 #define DAQ_ACTUATION_H
 
+/* Contrato público do módulo daq actuation. */
+
 #include <stdbool.h>
 
 #include "daq_schema.h"

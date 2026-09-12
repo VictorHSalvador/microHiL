@@ -1,3 +1,4 @@
+/* Implementação do módulo log converter. */
 #define _POSIX_C_SOURCE 200809L
 
 #include "log_converter.h"

@@ -1,3 +1,4 @@
+/* Implementação do módulo plotter. */
 #define _POSIX_C_SOURCE 200809L
 #include "plotter.h"
 #include <stdio.h>

@@ -10,7 +10,7 @@ Resultados devem separar esperado de observado e informar ambiente, procedimento
 
 ## Código e comentários
 
-Todo código próprio deve convergir para comentários em inglês, de desenvolvedor, breves e úteis. Comentar motivos, invariantes, ownership, restrições e unidades quando necessários; evitar paráfrases linha a linha, mensagens sobre geração por IA e comentários ornamentais. Preservar o conteúdo útil de comentários existentes; traduzir ou ajustar somente no incremento revisado. Documentação funcional e explicações ao usuário permanecem em português. Comentários do código de terceiros e snapshots de evidência conservam a origem.
+Todo código próprio de produção deve usar comentários de desenvolvedor, breves e úteis, em português ou inglês. Comentários explicam motivo, invariante, ownership, restrição, unidade ou contrato não óbvio; não narram cada linha, não ensinam sintaxe básica, não mencionam IA e não funcionam como ornamento. Comentários novos e revisados não justificam quebra cosmética de chamadas ou assinaturas. Preservar o conteúdo útil de comentários existentes; traduzir ou ajustar somente no incremento revisado. Documentação funcional e explicações ao usuário permanecem em português. Comentários do código de terceiros e snapshots de evidência conservam a origem.
 
 | Elemento | C | Python |
 |---|---|---|

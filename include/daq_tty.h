@@ -1,6 +1,8 @@
 #ifndef DAQ_TTY_H
 #define DAQ_TTY_H
 
+/* Contrato público do módulo daq tty. */
+
 #include <stddef.h>
 #include <stdint.h>
 

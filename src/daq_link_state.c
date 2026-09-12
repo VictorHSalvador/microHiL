@@ -1,3 +1,4 @@
+/* Implementação do módulo daq link state. */
 #include "daq_link_state.h"
 
 #include <string.h>

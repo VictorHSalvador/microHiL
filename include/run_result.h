@@ -1,6 +1,8 @@
 #ifndef RUN_RESULT_H
 #define RUN_RESULT_H
 
+/* Contrato público do módulo run result. */
+
 #include <stdbool.h>
 #include <stdint.h>
 

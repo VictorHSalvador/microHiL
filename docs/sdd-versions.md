@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.7**, de 11.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.8**, de 11.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -86,6 +86,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.5 | 11.09.2026 | PATCH | Evidência nova da variante ROS 2 do runner com interfaces geradas localmente e CTest 48/48 | plan, matriz, evidence, sdd-versions e teste documental | Build e testes HOST; sem TTY física, CH340, ESP32 ou HIL | b6f7555 |
 | 0.25.6 | 11.09.2026 | PATCH | Console e logs foram desabilitados na UART do protocolo; firmware final gravado e CONFIG ENABLE→DISABLE verificado pela CH340 | sdkconfig.defaults, arquitetura, plano, matriz, evidência, README, sdd-versions e teste documental | ESP32 físico, gravação com hash verificado, CONFIG seguro e teste documental 29/29; `onp-spec audit` não aprovado por incompatibilidade local e provas antigas desatualizadas | alterações locais; registrar commit quando criado |
 | 0.25.7 | 11.09.2026 | PATCH | Correção do framing XRCE interno, chave inicial do cliente e política de tentativa fora de STREAMING; ensaio físico delimitou o handshake como pendência | firmware, decisions, arquitetura, ICD, plano, matriz, evidência, README, sdd-versions e teste documental | CONFIG físico continua aprovado; quadro XRCE/Agent foi observado antes da correção de ordem, mas a sessão completa não foi repetida com sucesso | alterações locais; registrar commit quando criado |
+| 0.25.8 | 12.09.2026 | PATCH | Regra de comentários aplicada a todos os arquivos próprios de produção; idioma pode ser português ou inglês | constitution, ADR-001, fontes HOST/GUI/firmware, sdd-versions e teste documental | Build e CTest HOST pendentes desta revisão; cabeçalhos não alteram contrato ou comportamento | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

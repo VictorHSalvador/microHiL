@@ -1,6 +1,8 @@
 #ifndef DAQC_ROS_H
 #define DAQC_ROS_H
 
+/* Contrato público do módulo daqc ros. */
+
 #include <stdbool.h>
 
 #include "daqc_control.h"

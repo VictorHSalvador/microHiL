@@ -1,6 +1,8 @@
 #ifndef DAQC_CONTROL_H
 #define DAQC_CONTROL_H
 
+/* Contrato público do módulo daqc control. */
+
 #include <stdbool.h>
 #include <stdint.h>
 

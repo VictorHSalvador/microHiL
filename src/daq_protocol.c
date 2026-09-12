@@ -1,3 +1,4 @@
+/* Implementação do módulo daq protocol. */
 #include "daq_protocol.h"
 
 #include <string.h>

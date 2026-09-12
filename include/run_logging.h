@@ -1,6 +1,8 @@
 #ifndef RUN_LOGGING_H
 #define RUN_LOGGING_H
 
+/* Contrato público do módulo run logging. */
+
 #include <stdbool.h>
 
 #include "app_config.h"

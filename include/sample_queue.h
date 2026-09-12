@@ -1,6 +1,8 @@
 #ifndef SAMPLE_QUEUE_H
 #define SAMPLE_QUEUE_H
 
+/* Contrato público do módulo sample queue. */
+
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <stdint.h>

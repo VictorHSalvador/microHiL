@@ -1,3 +1,4 @@
+/* Implementação do módulo daq serial service. */
 #include "daq_serial_service.h"
 
 #include <string.h>

@@ -1,3 +1,4 @@
+/* Implementação do módulo input state. */
 #include "input_state.h"
 
 #include <limits.h>

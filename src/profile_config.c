@@ -1,3 +1,4 @@
+/* Implementação do módulo profile config. */
 #include "profile_config.h"
 
 #include <errno.h>

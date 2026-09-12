@@ -1,6 +1,8 @@
 #ifndef DAQ_COORDINATOR_H
 #define DAQ_COORDINATOR_H
 
+/* Contrato público do módulo daq coordinator. */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

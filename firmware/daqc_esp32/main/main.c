@@ -1,3 +1,4 @@
+/* Implementação do módulo main. */
 #include <string.h>
 
 #include "daqc_control.h"

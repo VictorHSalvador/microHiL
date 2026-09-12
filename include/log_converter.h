@@ -1,6 +1,8 @@
 #ifndef LOG_CONVERTER_H
 #define LOG_CONVERTER_H
 
+/* Contrato público do módulo log converter. */
+
 #include <stdbool.h>
 #include <stdint.h>
 

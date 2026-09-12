@@ -1,3 +1,4 @@
+/* Implementação do módulo daqc ros control. */
 #define _POSIX_C_SOURCE 200809L
 #include "daqc_ros_control.h"
 

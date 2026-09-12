@@ -1,6 +1,8 @@
 #ifndef DAQ_LINK_STATE_H
 #define DAQ_LINK_STATE_H
 
+/* Contrato público do módulo daq link state. */
+
 #include <stdbool.h>
 #include <pthread.h>
 #include <stddef.h>

@@ -1,6 +1,8 @@
 #ifndef LOG_FORMAT_H
 #define LOG_FORMAT_H
 
+/* Contrato público do módulo log format. */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

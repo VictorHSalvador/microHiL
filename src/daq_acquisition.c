@@ -1,3 +1,4 @@
+/* Implementação do módulo daq acquisition. */
 #include "daq_acquisition.h"
 
 static bool IsInputFunction(daq_channel_function_t function) {

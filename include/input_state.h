@@ -1,6 +1,8 @@
 #ifndef INPUT_STATE_H
 #define INPUT_STATE_H
 
+/* Contrato público do módulo input state. */
+
 #include <stdbool.h>
 #include <pthread.h>
 #include <stddef.h>

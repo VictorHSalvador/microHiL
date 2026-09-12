@@ -1,3 +1,4 @@
+/* Implementação do módulo daq coordinator. */
 #include "daq_coordinator.h"
 
 #include <stdlib.h>

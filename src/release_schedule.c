@@ -1,3 +1,4 @@
+/* Implementação do módulo release schedule. */
 #include "release_schedule.h"
 
 #include <math.h>

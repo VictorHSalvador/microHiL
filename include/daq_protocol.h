@@ -1,6 +1,8 @@
 #ifndef DAQ_PROTOCOL_H
 #define DAQ_PROTOCOL_H
 
+/* Contrato público do módulo daq protocol. */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

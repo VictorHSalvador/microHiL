@@ -1,6 +1,8 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
 
+/* Contrato público do módulo app config. */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include "common.h"

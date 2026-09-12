@@ -1,3 +1,4 @@
+/* Implementação do módulo daq actuation. */
 #include "daq_actuation.h"
 
 #include <float.h>

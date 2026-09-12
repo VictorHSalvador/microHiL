@@ -1,6 +1,8 @@
 #ifndef DAQ_OUTPUT_BRIDGE_H
 #define DAQ_OUTPUT_BRIDGE_H
 
+/* Contrato público do módulo daq output bridge. */
+
 #include "daq_actuation.h"
 #include "daq_coordinator.h"
 

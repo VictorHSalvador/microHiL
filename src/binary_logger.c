@@ -1,3 +1,4 @@
+/* Implementação do módulo binary logger. */
 #include "binary_logger.h"
 
 #include <string.h>

@@ -1,6 +1,8 @@
 #ifndef DAQ_ACQUISITION_H
 #define DAQ_ACQUISITION_H
 
+/* Contrato público do módulo daq acquisition. */
+
 #include <stdint.h>
 
 #include "daq_schema.h"

@@ -1,6 +1,8 @@
 #ifndef EXECUTION_SESSION_H
 #define EXECUTION_SESSION_H
 
+/* Contrato público do módulo execution session. */
+
 #include <stdint.h>
 
 #include "fmu_model.h"

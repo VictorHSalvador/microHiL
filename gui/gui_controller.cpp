@@ -1,3 +1,4 @@
+/* Implementação do módulo gui controller. */
 #include "gui_controller.h"
 
 #include <QFile>

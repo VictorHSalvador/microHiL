@@ -1,6 +1,8 @@
 #ifndef DAQ_SCHEMA_H
 #define DAQ_SCHEMA_H
 
+/* Contrato público do módulo daq schema. */
+
 #include <stddef.h>
 #include <stdint.h>
 

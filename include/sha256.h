@@ -1,6 +1,8 @@
 #ifndef SHA256_H
 #define SHA256_H
 
+/* Contrato público do módulo sha256. */
+
 #include <stdint.h>
 
 #define SHA256_DIGEST_SIZE 32U

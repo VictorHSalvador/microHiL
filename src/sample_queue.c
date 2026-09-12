@@ -1,3 +1,4 @@
+/* Implementação do módulo sample queue. */
 #include "sample_queue.h"
 
 void sample_queue_init(SampleQueue *queue) {

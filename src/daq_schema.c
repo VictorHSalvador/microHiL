@@ -1,3 +1,4 @@
+/* Implementação do módulo daq schema. */
 #include "daq_schema.h"
 
 #include <limits.h>

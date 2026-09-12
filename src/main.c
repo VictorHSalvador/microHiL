@@ -1,3 +1,4 @@
+/* Implementação do módulo main. */
 #define _POSIX_C_SOURCE 200809L
 #include "app_config.h"
 #include "daq_coordinator.h"

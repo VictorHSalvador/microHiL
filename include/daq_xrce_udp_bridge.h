@@ -1,6 +1,8 @@
 #ifndef DAQ_XRCE_UDP_BRIDGE_H
 #define DAQ_XRCE_UDP_BRIDGE_H
 
+/* Contrato público do módulo daq xrce udp bridge. */
+
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <stdint.h>

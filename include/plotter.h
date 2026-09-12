@@ -1,6 +1,8 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
+/* Contrato público do módulo plotter. */
+
 #include <pthread.h>
 #include <stdatomic.h>
 #include "app_config.h"

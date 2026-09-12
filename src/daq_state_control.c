@@ -1,3 +1,4 @@
+/* Implementação do módulo daq state control. */
 #define _POSIX_C_SOURCE 200809L
 #include "daq_state_control.h"
 

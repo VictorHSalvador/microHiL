@@ -1,6 +1,8 @@
 #ifndef DAQC_TRANSPORT_H
 #define DAQC_TRANSPORT_H
 
+/* Contrato público do módulo daqc transport. */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

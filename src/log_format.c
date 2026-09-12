@@ -1,3 +1,4 @@
+/* Implementação do módulo log format. */
 #include "log_format.h"
 
 #include <limits.h>

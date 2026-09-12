@@ -1,3 +1,4 @@
+/* Implementação do módulo run logging. */
 #include "run_logging.h"
 
 #include "sha256.h"

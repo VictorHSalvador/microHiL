@@ -1,3 +1,4 @@
+/* Implementação do módulo sha256. */
 #include "sha256.h"
 
 #include <stdio.h>
