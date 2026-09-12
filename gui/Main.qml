@@ -85,9 +85,20 @@ ApplicationWindow {
         var component = Qt.createComponent("qrc:/gui/OutputGraphWindow.qml")
         if (component.status === Component.Ready) {
             var graph = component.createObject(window, { outputName: name, yMinimum: minimum, yMaximum: maximum, yResolution: resolution, timeWindowSeconds: timeWindow })
+            if (graph === null) {
+                profileError = "Não foi possível criar a janela de gráfico."
+                return
+            }
             var windows = Object.assign({}, graphWindows)
             windows[name] = graph
             graphWindows = windows
+            graph.discarded.connect(function() {
+                if (graphWindows[name] === graph) {
+                    var currentWindows = Object.assign({}, graphWindows)
+                    delete currentWindows[name]
+                    graphWindows = currentWindows
+                }
+            })
         }
     }
 
@@ -306,13 +317,23 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             visible: !modelData.physicalMapped
                             Label { text: modelData.name + " (" + modelData.type + ")"; Layout.preferredWidth: 320; elide: Text.ElideRight }
+                            CheckBox {
+                                visible: modelData.type === "Boolean"
+                                text: checked ? "1" : "0"
+                                onToggled: guiController.SetVirtualInput(modelData.index, checked ? "1" : "0")
+                            }
                             TextField {
                                 id: virtualValueField
                                 Layout.preferredWidth: 180
                                 placeholderText: modelData.type === "Boolean" ? "0 ou 1" : "Valor"
+                                visible: modelData.type !== "Boolean"
                                 validator: DoubleValidator {}
                             }
-                            Button { text: "Aplicar"; onClicked: guiController.SetVirtualInput(modelData.index, virtualValueField.text) }
+                            Button {
+                                visible: modelData.type !== "Boolean"
+                                text: "Aplicar"
+                                onClicked: guiController.SetVirtualInput(modelData.index, virtualValueField.text)
+                            }
                         }
                     }
                     Label { text: guiController.profilePath.length > 0 ? "Entradas ligadas à DAQC não são exibidas como virtuais." : "Carregue ou salve um perfil para identificar entradas físicas."; color: "#546e5d" }
@@ -428,7 +449,7 @@ ApplicationWindow {
                 var sample = samples[sampleIndex]
                 for (var name in window.graphWindows) {
                     var graph = window.graphWindows[name]
-                    if (graph && sample.values[name] !== undefined) {
+                    if (graph && Array.isArray(graph.samples) && sample.values[name] !== undefined) {
                         var values = graph.samples.slice()
                         values.push({ time: sample.time, value: sample.values[name] })
                         var start = sample.time - graph.timeWindowSeconds

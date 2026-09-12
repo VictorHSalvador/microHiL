@@ -18,6 +18,7 @@ Window {
     property real yResolution: 0.1
     property real timeWindowSeconds: 10
     property var samples: []
+    signal discarded()
 
     Canvas {
         id: chart
@@ -65,5 +66,8 @@ Window {
     }
 
     onSamplesChanged: chart.requestPaint()
-    onClosing: graphWindow.destroy()
+    onClosing: {
+        discarded()
+        graphWindow.destroy()
+    }
 }

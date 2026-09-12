@@ -35,9 +35,14 @@ int main(int argc, char **argv) {
     Require(fmu_model_name(&session.model)[0] != '\0', "session did not preserve the FMU model name");
     const size_t real_input = FindInput(&session, "u_real");
     const size_t integer_input = FindInput(&session, "u_integer");
-    Require(real_input < ExecutionSessionInputCount(&session) && integer_input < ExecutionSessionInputCount(&session), "session did not expose the fixture inputs");
+    const size_t boolean_input = FindInput(&session, "u_boolean");
+    Require(real_input < ExecutionSessionInputCount(&session) && integer_input < ExecutionSessionInputCount(&session) &&
+                boolean_input < ExecutionSessionInputCount(&session),
+            "session did not expose the fixture inputs");
     Require(ExecutionSessionSetVirtualInput(&session, integer_input, 23.0) == EXECUTION_SESSION_OK, "could not set an integer virtual input");
     Require(ExecutionSessionSetVirtualInput(&session, integer_input, 23.5) == EXECUTION_SESSION_INPUT_VALUE, "session accepted a fractional integer virtual input");
+    Require(ExecutionSessionSetVirtualInput(&session, boolean_input, 1.0) == EXECUTION_SESSION_OK, "could not set a Boolean virtual input");
+    Require(ExecutionSessionSetVirtualInput(&session, boolean_input, 2.0) == EXECUTION_SESSION_INPUT_VALUE, "session accepted an invalid Boolean virtual input");
     Require(ExecutionSessionLoadProfile(&session, argv[2]) == EXECUTION_SESSION_OK, "could not load the compatible YAML profile into the session");
     Require(session.config.profile_loaded && session.config.profile.mapping_count == 3U, "session did not retain the resolved YAML profile");
     Require(ExecutionSessionInputHasPhysicalMapping(&session, real_input), "session did not identify the physical input mapping");

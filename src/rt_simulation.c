@@ -159,7 +159,8 @@ static void *SimulationThread(void *arg) {
     context->result = -1;
     context->run_result = (simulation_run_result_t){.state = SIMULATION_RUN_ERROR, .code = -1};
 
-    if (ConfigureRealtimeThread(context) != 0) {
+    /* Debug runs use the normal scheduler unless strict or HiL execution requires FIFO. */
+    if ((context->require_realtime || context->config->strict_realtime) && ConfigureRealtimeThread(context) != 0) {
         SetRunFailure(context, "realtime", "could not configure the simulation thread");
         goto finish;
     }
