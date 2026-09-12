@@ -7,3 +7,8 @@ Procedimento: compilar `fmu_rt_runner`; importar a FMU; selecionar as três saí
 Resultado observado: a FMU terminou 10 passos, sem deadlines perdidos ou liberações não usadas. O maior tempo de computação observado foi 0,026663 ms. `SCHED_FIFO` não foi concedido ao processo e o runner continuou porque a execução não era HiL e o modo estrito estava desabilitado.
 
 Limites: é uma única execução de fixture em máquina Linux; não qualifica WCET, jitter, escalonamento, Raspberry Pi, DAQC, ROS, micro-ROS, sinais elétricos ou HIL.
+
+
+## Logging e CSV
+
+Uma segunda execução com o mesmo passo e duração habilitou o log binário. Foram aceitas e persistidas 10 amostras, sem descarte; o último `sequence` foi 9. Após o fechamento, a conversão produziu `/tmp/microhil-timing.csv` com cabeçalho tipado e 10 registros. O resultado permanece limitado a HOST e não qualifica o caminho HiL.
