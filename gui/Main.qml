@@ -71,6 +71,14 @@ ApplicationWindow {
         return graphConfigurations[index] || { minimum: "", maximum: "", resolution: "" }
     }
 
+    function clearGraphSamples() {
+        // A new execution must not reuse points from a previous FMU lifecycle.
+        for (var name in graphWindows) {
+            var graph = graphWindows[name]
+            if (graph && Array.isArray(graph.samples)) graph.samples = []
+        }
+    }
+
     function openGraph(index, name) {
         var configuration = graphConfiguration(index)
         var minimum = Number(configuration.minimum)
@@ -221,6 +229,7 @@ ApplicationWindow {
                                 enabled: window.simulationState !== "Running"
                                 onClicked: {
                                     if (guiController.StartSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled, window.plotEnabled)) {
+                                        window.clearGraphSamples()
                                         window.runResult = window.emptyRunResult()
                                         window.simulationState = "Running"
                                     }

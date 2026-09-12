@@ -59,17 +59,20 @@ int main(int argc, char **argv) {
         Require(ExecutionSessionSetOutputSelected(&session, output_index, true) == EXECUTION_SESSION_OK, "could not select all FMU outputs");
     }
     snprintf(session.config.binary_log_path, sizeof(session.config.binary_log_path), "%s", binary_log_path);
-    Require(ExecutionSessionStartGui(&session, 0.01, 0.02, true, true) == EXECUTION_SESSION_OK, "could not start the GUI simulation");
-    Require(ExecutionSessionJoinGui(&session) == EXECUTION_SESSION_OK, "could not complete the GUI simulation");
-    SimulationSample plot_sample;
-    Require(ExecutionSessionPollGuiSample(&session, &plot_sample) && plot_sample.value_count == output_count,
-            "GUI session did not publish an output sample");
-    const run_result_t *result = ExecutionSessionResult(&session);
-    Require(result && result->simulation.state == SIMULATION_RUN_FINISHED && result->simulation.stats.completed_steps == 2U,
-            "session result did not report the fixed simulation steps");
-    Require(ExecutionSessionHasResult(&session) && ExecutionSessionCompletedSteps(&session) == 2U,
-            "public GUI result did not preserve the execution metrics");
-    Require(ExecutionSessionHasClosedBinaryLog(&session), "session did not close the binary log for CSV conversion");
+    for (unsigned int run_index = 0U; run_index < 2U; ++run_index) {
+        Require(ExecutionSessionStartGui(&session, 0.01, 0.02, true, true) == EXECUTION_SESSION_OK,
+                "could not start the GUI simulation");
+        Require(ExecutionSessionJoinGui(&session) == EXECUTION_SESSION_OK, "could not complete the GUI simulation");
+        SimulationSample plot_sample;
+        Require(ExecutionSessionPollGuiSample(&session, &plot_sample) && plot_sample.value_count == output_count,
+                "GUI session did not publish an output sample");
+        const run_result_t *result = ExecutionSessionResult(&session);
+        Require(result && result->simulation.state == SIMULATION_RUN_FINISHED && result->simulation.stats.completed_steps == 2U,
+                "session result did not report the fixed simulation steps");
+        Require(ExecutionSessionHasResult(&session) && ExecutionSessionCompletedSteps(&session) == 2U,
+                "public GUI result did not preserve the execution metrics");
+        Require(ExecutionSessionHasClosedBinaryLog(&session), "session did not close the binary log for CSV conversion");
+    }
     uint64_t exported_records = 0U;
     bool partial = false;
     Require(ExecutionSessionExportGuiCsv(&session, csv_path, &exported_records, &partial) == EXECUTION_SESSION_OK && !partial && exported_records == 2U,
