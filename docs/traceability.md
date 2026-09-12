@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade
 
-Revisão 0.26.4, baseline conjunta [SDD-MICROHIL 0.26.4](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; a seleção de saídas numéricas pela GUI também foi testada no HOST. A imagem atual com aquisição 1…100 Hz foi gravada em uma DAQC física e confirmou CONFIG DISABLE pela CH340. A sessão XRCE física permanece pendente; isso não infere validação de GUI, Raspberry Pi, micro-ROS, perfil, I/O, HIL ou deadlines.
+Revisão 0.26.5, baseline conjunta [SDD-MICROHIL 0.26.5](sdd-versions.md). [spec.md](spec.md) preserva 53 IDs de origem e acrescenta F-23…27/NF-32 (59 requisitos). A sessão de execução e a base Qt avançaram somente os requisitos HOST indicados abaixo; a seleção de saídas numéricas pela GUI também foi testada no HOST. A imagem atual com aquisição 1…100 Hz foi gravada em uma DAQC física e confirmou CONFIG DISABLE pela CH340. A sessão XRCE física permanece pendente; isso não infere validação de GUI, Raspberry Pi, micro-ROS, perfil, I/O, HIL ou deadlines.
 
 I = mecanismo identificado, não aceitação integral; P = parcial; A = ausente; D = divergente; NA = sem componente. Design em [architecture.md](architecture.md), contratos em [ICD](contracts/interfaces.md), tarefas em [plan.md](plan.md). Os V-* de produto permanecem planejados; as evidências TASK-001/TASK-002 demonstram apenas build e testes HOST delimitados.
 

@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.4**, de 12.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.5**, de 12.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -100,6 +100,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.2 | 12.09.2026 | PATCH | Contexto e plano corrigidos para identificar YAML como a configuração persistida vigente e separar avaliação inicial do estado atual | contexto, README, plano, rastreabilidade, evidência, sdd-versions e teste documental | [context-coherence-2026-09-12](evidence/context-coherence-2026-09-12.md): teste documental 29/29; sem execução de produto | alterações locais; registrar commit quando criado |
 | 0.26.3 | 12.09.2026 | PATCH | Regeneração micro-ROS e build ESP-IDF v5.2.6 confirmam o campo de frequência 1…100 Hz no firmware atual | firmware, plano, rastreabilidade, README, evidência, sdd-versions e teste documental | [esp32-acquisition-build-2026-09-12](evidence/esp32-acquisition-build-2026-09-12.md): build cruzado concluído; sem gravação desta imagem, Agent, DATA, I/O ou HIL | alterações locais; registrar commit quando criado |
 | 0.26.4 | 12.09.2026 | PATCH | Imagem atual com aquisição 1…100 Hz gravada em ESP32 e confirmada em CONFIG DISABLE pela CH340 | plano, rastreabilidade, README, evidência, sdd-versions e teste documental | [esp32-acquisition-config-smoke-2026-09-12](evidence/esp32-acquisition-config-smoke-2026-09-12.md): gravação e CONFIG seguro físicos; sem STREAMING, Agent, DATA, I/O ou HIL | alterações locais; registrar commit quando criado |
+| 0.26.5 | 12.09.2026 | PATCH | Diagnóstico XRCE delimita ausência de MID 04 antes da ponte UDP/Agent, sem mudar contrato | plano, rastreabilidade, README, evidência, sdd-versions e teste documental | [esp32-xrce-diagnostic-2026-09-12](evidence/esp32-xrce-diagnostic-2026-09-12.md): ensaio físico negativo delimitado; sem causa ou correção declarada | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
