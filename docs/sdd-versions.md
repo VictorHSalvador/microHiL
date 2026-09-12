@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.9**, de 11.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.10**, de 11.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -87,7 +87,8 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.6 | 11.09.2026 | PATCH | Console e logs foram desabilitados na UART do protocolo; firmware final gravado e CONFIG ENABLE→DISABLE verificado pela CH340 | sdkconfig.defaults, arquitetura, plano, matriz, evidência, README, sdd-versions e teste documental | ESP32 físico, gravação com hash verificado, CONFIG seguro e teste documental 29/29; `onp-spec audit` não aprovado por incompatibilidade local e provas antigas desatualizadas | alterações locais; registrar commit quando criado |
 | 0.25.7 | 11.09.2026 | PATCH | Correção do framing XRCE interno, chave inicial do cliente e política de tentativa fora de STREAMING; ensaio físico delimitou o handshake como pendência | firmware, decisions, arquitetura, ICD, plano, matriz, evidência, README, sdd-versions e teste documental | CONFIG físico continua aprovado; quadro XRCE/Agent foi observado antes da correção de ordem, mas a sessão completa não foi repetida com sucesso | alterações locais; registrar commit quando criado |
 | 0.25.8 | 12.09.2026 | PATCH | Regra de comentários aplicada a todos os arquivos próprios de produção; idioma pode ser português ou inglês | constitution, ADR-001, fontes HOST/GUI/firmware, sdd-versions e teste documental | Build HOST limpo 45/45, teste documental 29/29 e GUI Qt iniciada em offscreen; cabeçalhos não alteram contrato ou comportamento | e36fa25, 41d0df9 |
-| 0.25.9 | 12.09.2026 | PATCH | GUI remove gráfico fechado do registro, oferece Boolean virtual binário e evita tentativa FIFO no Play debug | GUI, sessão/tempo, testes, plano, matriz, evidência e SDD | Build GUI e runner; CTest 47/47 e teste documental 29/29; inspeção visual pendente | alterações locais; registrar commit quando criado |
+| 0.25.9 | 12.09.2026 | PATCH | GUI remove gráfico fechado do registro, oferece Boolean virtual binário e evita tentativa FIFO no Play debug | GUI, sessão/tempo, testes, plano, matriz, evidência e SDD | Build GUI e runner; CTest 47/47 e teste documental 29/29; inspeção visual pendente | 9d3e09b |
+| 0.25.10 | 12.09.2026 | PATCH | Play debug volta a solicitar SCHED_FIFO; autorização é concedida por capacidade do executável, sem executar GUI como root | rt_simulation, README, plano, evidência e SDD | Verificação HOST pendente desta revisão; sem qualificação temporal | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
