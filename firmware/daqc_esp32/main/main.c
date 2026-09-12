@@ -84,7 +84,8 @@ static void IoTask(void *argument) {
         if (DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING && esp_timer_get_time() - g_read_ack_time_us >= 60000000LL) {
             if (DaqcControlApplyCommand(&g_control, DAQC_COMMAND_DISABLE) == DAQC_CONTROL_OK) DaqcRosRequestStatePublication();
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
+        /* A one-tick delay prevents polling when the configured rate is 100 Hz. */
+        vTaskDelay(1U);
     }
 }
 

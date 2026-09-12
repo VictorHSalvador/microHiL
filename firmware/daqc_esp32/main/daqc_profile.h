@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define DAQC_PROFILE_ESP32 1U
-#define DAQC_ACQUISITION_MAX_FREQUENCY_HZ 400U
+#define DAQC_ACQUISITION_MAX_FREQUENCY_HZ 100U
 
 typedef struct {
     uint8_t adc_resolution_bits;

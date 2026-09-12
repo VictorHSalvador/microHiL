@@ -59,7 +59,12 @@ RTS/CTS não será pesquisado nem usado neste incremento. São sinais físicos d
 
 O usuário confirmou que a aquisição deve permanecer ativa em tarefa separada durante STREAMING e ter frequência configurável. A taxa representa a leitura periódica de AI/DI, não a frequência de passos da FMU. A DAQC mantém somente o snapshot corrente; o host usa o último DATA completo recebido antes da fronteira FMI, sem criar fila crescente ou executar a FMU no leitor.
 
-O YAML passa a aceitar `acquisition.frequency_hz`; perfis novos gravados pela GUI iniciam em 100 Hz. A implementação admite 1…400 Hz. O teto é um limite de software para o payload ESP32 de 33 bytes no fio (5 bytes de cabeçalho mais 28 de aquisição) a 152.000 bit/s, deixando margem para CONFIG, READ_ACK e XRCE; não é uma medição da CH340 nem garantia temporal. A taxa efetiva, jitter e coexistência com XRCE exigem ensaio em bancada.
+O YAML passa a aceitar `acquisition.frequency_hz`; perfis novos gravados pela GUI iniciam em 100 Hz. A implementação inicial admitia 1…400 Hz com base no orçamento nominal do frame ESP32 de 33 bytes a 152.000 bit/s; esse número não era medição da CH340 nem garantia temporal.
+
+### Revisão 0.26.1 — cadência limitada pelo tick FreeRTOS
+
+A inspeção de `sdkconfig` confirmou `CONFIG_FREERTOS_HZ=100`. A conversão de 1 ms para ticks retornava zero e mantinha a tarefa de I/O em polling. Para preservar o núcleo de I/O, a implementação passa a aguardar explicitamente um tick e admite `acquisition.frequency_hz` de 1…100 Hz. A mudança não altera o passo da FMU nem cria recuperação; expandir essa faixa exigirá uma decisão de agendamento de maior resolução e nova medição no ESP32.
+
 
 | ID | Contrato consolidado | Parâmetro/evidência restante |
 |---|---|---|

@@ -377,7 +377,7 @@ ApplicationWindow {
                     GridLayout {
                         columns: 4
                         Label { text: "Aquisição DAQC (Hz)" }
-                        TextField { id: acquisitionFrequencyField; text: "100"; placeholderText: "1–400"; validator: IntValidator { bottom: 1; top: 400 } }
+                        TextField { id: acquisitionFrequencyField; text: "100"; placeholderText: "1–100"; validator: IntValidator { bottom: 1; top: 100 } }
                         Label { text: "" }
                         Label { text: "" }
                         Label { text: "Resolução ADC (bits)" }
