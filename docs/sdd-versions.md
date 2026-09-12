@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.25.15**, de 12.09.2026.
+Versão vigente: **SDD-MICROHIL 0.25.16**, de 12.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -94,6 +94,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.25.13 | 12.09.2026 | PATCH | GUI expõe a proteção opcional de 100 inputs inválidos consecutivos antes do Play e bloqueia sua alteração em Running | sessão, GUI, requisitos, plano, matriz, evidência e SDD | CTest 47/47; injeção DAQC e interação visual pendentes | alterações locais; registrar commit quando criado |
 | 0.25.14 | 12.09.2026 | PATCH | Diagnóstico de proteção passa a listar todos os inputs que atingirem o limite no mesmo passo | thread de simulação, requisitos, plano, evidência e SDD | CTest 47/47; cenário DAQC físico pendente | f33ec62 |
 | 0.25.15 | 12.09.2026 | PATCH | Runner preserva e apresenta estatísticas seriais antes do desligamento DAQC | serviço serial, runner, requisitos e SDD | CTest 47/47; medição em bancada pendente | alterações locais; registrar commit quando criado |
+| 0.25.16 | 12.09.2026 | PATCH | Ensaio TTY cobre DATA de aquisição, snapshot FMI e READ_ACK prioritário | teste serial, plano, evidência e SDD | CTest 47/47; sem dispositivo físico | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

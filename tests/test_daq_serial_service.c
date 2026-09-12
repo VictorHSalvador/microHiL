@@ -64,6 +64,7 @@ int main(void) {
     };
     daq_schema_t schema;
     input_state_t input_state;
+    input_step_t input_step;
     daq_coordinator_t coordinator;
     daq_serial_service_t service;
     char path[128];
@@ -108,11 +109,22 @@ int main(void) {
     Require(outgoing_size == 6U && outgoing[0] == DAQ_PROTOCOL_SYNC_FIRST && outgoing[1] == DAQ_PROTOCOL_SYNC_SECOND &&
             outgoing[2] == DAQ_PROTOCOL_MID_DATA && outgoing[3] == 7U && outgoing[4] == 0U && outgoing[5] == 0x5aU,
             "serial service emitted an unexpected DATA frame");
-    Require(atomic_load_explicit(&service.received_bytes, memory_order_relaxed) == incoming_size, "serial service did not account for received bytes");
+    const uint8_t acquisition_payload[] = {0U, 0U, 0x20U, 0x40U};
+    Require(DaqProtocolEncodeData(incoming, sizeof(incoming), 9U, acquisition_payload, sizeof(acquisition_payload)) == 9U &&
+                WriteAll(master, incoming, 9U),
+            "could not send acquisition DATA");
+    Require(ReadFrame(master, outgoing, sizeof(outgoing), &outgoing_size) && outgoing_size == 5U &&
+                outgoing[2] == DAQ_PROTOCOL_MID_READ_ACK && outgoing[3] == 9U && outgoing[4] == 0U,
+            "serial service did not prioritize READ_ACK after acquisition DATA");
+    Require(InputStatePrepareStep(&input_state, &input_step) == INPUT_STATE_STATUS_OK && fabs(input_step.values[0].real_value - 2.5) < 1e-12,
+            "serial service did not publish acquisition DATA to the FMU snapshot");
+    Require(atomic_load_explicit(&service.received_bytes, memory_order_relaxed) == incoming_size + 9U,
+            "serial service did not account for received bytes");
     daq_serial_service_stats_t stats;
-    Require(DaqSerialServiceGetStats(&service, &stats) && stats.received_bytes == incoming_size && stats.transmitted_frames > 0U,
+    Require(DaqSerialServiceGetStats(&service, &stats) && stats.received_bytes == incoming_size + 9U &&
+                stats.transmitted_frames >= 2U,
             "serial service did not expose the communication statistics");
-    Require(atomic_load_explicit(&service.transmitted_frames, memory_order_relaxed) == 1U, "serial service did not account for transmitted frame");
+    Require(atomic_load_explicit(&service.transmitted_frames, memory_order_relaxed) == 2U, "serial service did not account for transmitted frames");
 
     DaqSerialServiceStop(&service);
     DaqCoordinatorDestroy(&coordinator);

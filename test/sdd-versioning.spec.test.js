@@ -70,7 +70,7 @@ RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
   const version_files = fs.readdirSync(path.join(ROOT, 'docs')).filter((name) => /^sdd-versions\.md$/.test(name));
   assert.deepEqual(version_files, ['sdd-versions.md']);
   assert.match(index, /\[sdd-versions\.md\]\(sdd-versions\.md\)/);
-  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.25\.15\*\*, de 12\.09\.2026/);
+  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.25\.16\*\*, de 12\.09\.2026/);
   assert.match(versioning, /Status da versão:/);
 });
 
@@ -84,12 +84,12 @@ RegisterTest('AC-002: O estado separa especificação, implementação e verific
 
 RegisterTest('AC-003: Cada revisão possui metadados mínimos @spec:AC-003', () => {
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
-  assert.equal(rows.length, 64);
+  assert.equal(rows.length, 65);
   for (const row of rows) {
     assert.equal(row.length, 7);
     assert.ok(row.every((cell) => cell.length > 0));
   }
-  assert.deepEqual(rows.map((row) => row[0]), ['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0', '0.6.0', '0.7.0', '0.7.1', '0.7.2', '0.7.3', '0.7.4', '0.8.0', '0.8.1', '0.9.0', '0.10.0', '0.11.0', '0.11.1', '0.11.2', '0.13.0', '0.13.1', '0.14.0', '0.15.0', '0.15.1', '0.16.0', '0.16.1', '0.17.0', '0.17.1', '0.17.2', '0.17.3', '0.17.4', '0.17.5', '0.17.6', '0.17.7', '0.18.0', '0.19.0', '0.20.0', '0.21.0', '0.21.1', '0.21.2', '0.21.3', '0.22.0', '0.22.1', '0.23.0', '0.23.1', '0.23.2', '0.23.3', '0.23.4', '0.24.0', '0.25.0', '0.25.1', '0.25.2', '0.25.3', '0.25.4', '0.25.5', '0.25.6', '0.25.7', '0.25.8', '0.25.9', '0.25.10', '0.25.11', '0.25.12', '0.25.13', '0.25.14', '0.25.15']);
+  assert.deepEqual(rows.map((row) => row[0]), ['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0', '0.6.0', '0.7.0', '0.7.1', '0.7.2', '0.7.3', '0.7.4', '0.8.0', '0.8.1', '0.9.0', '0.10.0', '0.11.0', '0.11.1', '0.11.2', '0.13.0', '0.13.1', '0.14.0', '0.15.0', '0.15.1', '0.16.0', '0.16.1', '0.17.0', '0.17.1', '0.17.2', '0.17.3', '0.17.4', '0.17.5', '0.17.6', '0.17.7', '0.18.0', '0.19.0', '0.20.0', '0.21.0', '0.21.1', '0.21.2', '0.21.3', '0.22.0', '0.22.1', '0.23.0', '0.23.1', '0.23.2', '0.23.3', '0.23.4', '0.24.0', '0.25.0', '0.25.1', '0.25.2', '0.25.3', '0.25.4', '0.25.5', '0.25.6', '0.25.7', '0.25.8', '0.25.9', '0.25.10', '0.25.11', '0.25.12', '0.25.13', '0.25.14', '0.25.15', '0.25.16']);
 });
 
 RegisterTest('AC-004: O procedimento de atualização é explícito @spec:AC-004', () => {
