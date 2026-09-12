@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.2**, de 12.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.3**, de 12.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; a DAQC foi gravada e respondeu ao CONFIG seguro pela CH340; o handshake XRCE físico permanece pendente; validação do produto permanece pendente**.
 
@@ -98,6 +98,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.0 | 12.09.2026 | MINOR | Frequência de aquisição DAQC configurável no YAML e em `DaqcSetup`; tarefa periódica do ESP32 usa 100 Hz inicial e aceita 1…400 Hz | spec, decisões, TARGET, arquitetura, ICD, plano, matriz, interfaces ROS, HOST, firmware, GUI, testes, evidência e SDD | Interface ROS Humble gerada, runner ROS CTest 48/48 e GUI/HOST CTest 47/47; SDK ESP-IDF/placa/HIL não executados nesta revisão | b3908b9 |
 | 0.26.1 | 12.09.2026 | PATCH | Limite de aquisição corrigido para 1…100 Hz e espera de pelo menos um tick FreeRTOS evita polling no núcleo I/O | firmware, perfil YAML, GUI, decisões, TARGET, arquitetura, ICD, plano, matriz, evidência e SDD | [host-acquisition-tick-2026-09-12](evidence/host-acquisition-tick-2026-09-12.md): CTest 47/47 e teste documental 29/29; build ESP-IDF e alvo pendentes | a19a5b5 |
 | 0.26.2 | 12.09.2026 | PATCH | Contexto e plano corrigidos para identificar YAML como a configuração persistida vigente e separar avaliação inicial do estado atual | contexto, README, plano, rastreabilidade, evidência, sdd-versions e teste documental | [context-coherence-2026-09-12](evidence/context-coherence-2026-09-12.md): teste documental 29/29; sem execução de produto | alterações locais; registrar commit quando criado |
+| 0.26.3 | 12.09.2026 | PATCH | Regeneração micro-ROS e build ESP-IDF v5.2.6 confirmam o campo de frequência 1…100 Hz no firmware atual | firmware, plano, rastreabilidade, README, evidência, sdd-versions e teste documental | [esp32-acquisition-build-2026-09-12](evidence/esp32-acquisition-build-2026-09-12.md): build cruzado concluído; sem gravação desta imagem, Agent, DATA, I/O ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
