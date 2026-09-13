@@ -32,6 +32,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/esp32-config-retry-smoke-2026-09-13.md](evidence/esp32-config-retry-smoke-2026-09-13.md) | CONFIG confirmado com espera pós-reset e tentativas limitadas; 0.26.7 gravada |
 | [evidence/esp32-xrce-bridge-smoke-2026-09-13.md](evidence/esp32-xrce-bridge-smoke-2026-09-13.md) | Ponte MID 04 com Agent UDP e nó ROS observados em DISABLE |
 | [evidence/esp32-harness-rx-fix-2026-09-13.md](evidence/esp32-harness-rx-fix-2026-09-13.md) | Correção do acúmulo RX do harness antes do parser CONFIG |
+| [evidence/esp32-streaming-smoke-2026-09-13.md](evidence/esp32-streaming-smoke-2026-09-13.md) | Ensaio físico de transição para STREAMING, aquisição periódica a ~96,4 Hz e confirmação READ_ACK |
 
 ## Fontes e precedência
 
@@ -45,7 +46,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.26.10**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.26.11**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.26.0–0.26.4: a configuração YAML aceita `acquisition.frequency_hz`; novos perfis GUI iniciam em 100 Hz e o limite vigente é 1…100 Hz, compatível com o tick FreeRTOS de 10 ms configurado. A frequência configura a tarefa de aquisição da DAQC fora do ciclo FMI e não altera o passo da FMU. A [evidência HOST](evidence/host-configurable-acquisition-2026-09-12.md) cobre a geração da interface ROS e 48 testes; a [evidência ESP-IDF](evidence/esp32-acquisition-build-2026-09-12.md) confirma a regeneração do firmware atual; a [evidência física](evidence/esp32-acquisition-config-smoke-2026-09-12.md) confirma a gravação e CONFIG DISABLE. O ensaio da frequência, Agent e I/O continuam pendentes. A revisão 0.26.2 também corrigiu o contexto que ainda chamava essa configuração persistida de binária.
 
@@ -58,6 +59,8 @@ Revisão 0.26.8: a imagem 0.26.7 foi compilada, gravada e teve hashes confirmado
 Revisão 0.26.9: o harness passou a abrir a CH340 antes de ajustar DTR/RTS, igual ao procedimento manual que confirmou CONFIG, e usa timeout de leitura de 20 ms. Em ponte temporária de 8 s, com a DAQC em DISABLE e Agent Humble UDP local, houve 468 frames MID 04 DAQC→Agent e 285 Agent→DAQC; foram observados o nó `/microhil_daqc` e os tópicos `/daqc_errors`, `/daqc_setup` e `/daqc_state`. Não houve STREAMING, DATA ou I/O físico.
 
 Revisão 0.26.10: `read_disable_confirmation()` lia bytes da UART, mas não os adicionava ao buffer consumido pelo parser. O harness agora acumula cada chunk antes de extrair frames, corrigindo o falso negativo CONFIG mesmo quando a resposta chega fragmentada. A UART já havia respondido no procedimento manual; esta correção é no diagnóstico HOST e não altera firmware, protocolo ou os limites do ensaio MID 04.
+
+Revisão 0.26.11: validação física do ciclo completo de estados e aquisição periódica no ESP32 físico via `tools/esp32_streaming_smoke.py`. Foi demonstrada a rejeição de segurança ao tentar entrar em STREAMING sem configuração prévia (`REQ-F-02`/`F-18`), e o sucesso após publicação de `DaqcSetup` via ROS 2: transição para STREAMING, recepção de 289 frames de aquisição DATA (33 bytes) a ~96,4 Hz contendo DI e AI calibrados em Volts, com envio de confirmação `READ_ACK` para cada frame (`REQ-F-27`), seguido de parada segura em DISABLE com saídas físicas em nível zero.
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
