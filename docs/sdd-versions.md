@@ -1,8 +1,8 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.7**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.8**, de 13.09.2026.
 
-Status da versão: **componentes HOST e firmware em avanço incremental; a hipótese de pilha/execução síncrona micro-ROS recebeu correção diagnóstica, ainda sem gravação ou ensaio CONFIG desta imagem; validação do produto permanece pendente**.
+Status da versão: **componentes HOST e firmware em avanço incremental; a imagem 0.26.7 gravada confirmou CONFIG com espera pós-reset e tentativas limitadas, corrigindo o falso bloqueio do harness; validação do produto permanece pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
@@ -103,6 +103,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.5 | 12.09.2026 | PATCH | Diagnóstico XRCE delimita ausência de MID 04 antes da ponte UDP/Agent, sem mudar contrato | plano, rastreabilidade, README, evidência, sdd-versions e teste documental | [esp32-xrce-diagnostic-2026-09-12](evidence/esp32-xrce-diagnostic-2026-09-12.md): ensaio físico negativo delimitado; sem causa ou correção declarada | alterações locais; registrar commit quando criado |
 | 0.26.6 | 13.09.2026 | PATCH | Espera ociosa UART corrigida com notificação `esp_timer`, guarda degradada e parser XRCE limitado; harness passa a respeitar reset de aplicação, CONFIG DISABLE e todos os tamanhos do ICD | arquitetura, plano, matriz, README, sdd-versions, harness, firmware, testes e evidência | [esp32-xrce-scheduling-2026-09-13](evidence/esp32-xrce-scheduling-2026-09-13.md): builds e testes passaram, flash teve hash confirmado, mas CONFIG físico não respondeu; XRCE continua sem resultado | alterações locais; registrar commit quando criado |
 | 0.26.7 | 13.09.2026 | PATCH | `app_main` não inicializa mais micro-ROS de forma síncrona; a supervisora de 8192 bytes inicia e repete a tentativa fora de STREAMING, após a tarefa UART | firmware, arquitetura, decisões, plano, matriz, README, sdd-versions e evidência | [esp32-ros-supervisor-diagnostic-2026-09-13](evidence/esp32-ros-supervisor-diagnostic-2026-09-13.md): inspeção estática e testes HOST; gravação e CONFIG DISABLE desta imagem permanecem obrigatórios | alterações locais; registrar commit quando criado |
+| 0.26.8 | 13.09.2026 | PATCH | Harness físico espera 1 s após reset e confirma CONFIG por tentativas limitadas, sem mudar firmware ou ICD | harness, testes, README, decisões, plano, matriz, evidência, sdd-versions e teste documental | [esp32-config-retry-smoke-2026-09-13](evidence/esp32-config-retry-smoke-2026-09-13.md): 0.26.7 gravada; CONFIG 5/5 pós-reset e 9/10 sem reset; MID 04 observado | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

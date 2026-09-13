@@ -14,6 +14,7 @@ MID_READ_ACK = 0x03
 MID_XRCE = 0x04
 DATA_FRAME_SIZE = 33
 XRCE_MTU = 128
+CONFIG_CONFIRM_TIMEOUT_MAX = 5.0
 
 
 def extract_frames(buffer):
@@ -86,14 +87,32 @@ def read_disable_confirmation(port, buffer, capture, timeout):
     return False
 
 
-def confirm_disable(port, buffer, capture, label):
+def confirm_disable(port, buffer, capture, label, attempts, retry_interval, timeout):
+    deadline = time.monotonic() + timeout
     command = encode_disable()
-    port.write(command)
-    port.flush()
-    print(f"{label}-disable-command", command.hex(), flush=True)
-    if not read_disable_confirmation(port, buffer, capture, 2.0):
-        raise RuntimeError(f"{label} CONFIG DISABLE confirmation missing")
-    print(f"{label}-disable-confirmed", flush=True)
+    for attempt in range(1, attempts + 1):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        port.write(command)
+        port.flush()
+        print(f"{label}-disable-command", f"attempt={attempt}", command.hex(), flush=True)
+        wait_time = min(remaining, retry_interval) if attempt < attempts else remaining
+        if read_disable_confirmation(port, buffer, capture, wait_time):
+            print(f"{label}-disable-confirmed", f"attempt={attempt}", flush=True)
+            return
+    raise RuntimeError(f"{label} CONFIG DISABLE confirmation missing after {attempts} attempts")
+
+
+def validate_confirmation_arguments(arguments):
+    if arguments.post_reset_wait < 0:
+        raise RuntimeError("post-reset wait must not be negative")
+    if arguments.config_attempts < 1:
+        raise RuntimeError("CONFIG attempts must be at least one")
+    if arguments.config_retry_interval < 0:
+        raise RuntimeError("CONFIG retry interval must not be negative")
+    if not 0 < arguments.config_timeout <= CONFIG_CONFIRM_TIMEOUT_MAX:
+        raise RuntimeError(f"CONFIG timeout must be in (0, {CONFIG_CONFIRM_TIMEOUT_MAX}]")
 
 
 def parse_arguments():
@@ -103,12 +122,17 @@ def parse_arguments():
     parser.add_argument("--agent-port", type=int, default=8888)
     parser.add_argument("--duration", type=float, default=15.0)
     parser.add_argument("--no-reset", action="store_true")
+    parser.add_argument("--post-reset-wait", type=float, default=1.0)
+    parser.add_argument("--config-attempts", type=int, default=5)
+    parser.add_argument("--config-retry-interval", type=float, default=0.2)
+    parser.add_argument("--config-timeout", type=float, default=2.0)
     parser.add_argument("--capture", help="path for raw DAQC-to-host bytes")
     return parser.parse_args()
 
 
 def main():
     arguments = parse_arguments()
+    validate_confirmation_arguments(arguments)
     try:
         import serial
     except ImportError as error:
@@ -125,8 +149,10 @@ def main():
     try:
         if not arguments.no_reset:
             reset_application(port)
+            time.sleep(arguments.post_reset_wait)
         buffer = bytearray()
-        confirm_disable(port, buffer, capture, "boot")
+        confirm_disable(port, buffer, capture, "boot", arguments.config_attempts, arguments.config_retry_interval,
+                        arguments.config_timeout)
         boot_confirmed = True
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -166,7 +192,8 @@ def main():
     finally:
         try:
             if boot_confirmed:
-                confirm_disable(port, buffer, capture, "final")
+                confirm_disable(port, buffer, capture, "final", arguments.config_attempts, arguments.config_retry_interval,
+                                arguments.config_timeout)
         finally:
             if capture:
                 capture.close()

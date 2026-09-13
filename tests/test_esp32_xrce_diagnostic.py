@@ -3,6 +3,7 @@
 
 import importlib.util
 import pathlib
+from types import SimpleNamespace
 import unittest
 
 MODULE_PATH = pathlib.Path(__file__).parents[1] / "tools" / "esp32_xrce_diagnostic.py"
@@ -51,6 +52,35 @@ class FrameExtractionTests(unittest.TestCase):
         self.assertEqual(DIAGNOSTIC.encode_disable(), b"\x59\x72\x01\x01")
         self.assertTrue(DIAGNOSTIC.is_disable_confirmation((0x01, b"\x01\x01")))
         self.assertFalse(DIAGNOSTIC.is_disable_confirmation((0x01, b"\x01")))
+
+    def test_disable_confirmation_retries_until_the_response_arrives(self):
+        class FakePort:
+            def __init__(self):
+                self.writes = []
+
+            def write(self, value):
+                self.writes.append(value)
+
+            def flush(self):
+                pass
+
+        port = FakePort()
+        responses = iter([False, False, True])
+        original_read = DIAGNOSTIC.read_disable_confirmation
+        DIAGNOSTIC.read_disable_confirmation = lambda *_: next(responses)
+        try:
+            DIAGNOSTIC.confirm_disable(port, bytearray(), None, "test", 3, 0.0, 1.0)
+        finally:
+            DIAGNOSTIC.read_disable_confirmation = original_read
+        self.assertEqual(port.writes, [DIAGNOSTIC.encode_disable()] * 3)
+
+    def test_confirmation_arguments_bound_the_total_timeout(self):
+        valid = SimpleNamespace(post_reset_wait=1.0, config_attempts=5, config_retry_interval=0.2, config_timeout=2.0)
+        DIAGNOSTIC.validate_confirmation_arguments(valid)
+        invalid = SimpleNamespace(post_reset_wait=1.0, config_attempts=5, config_retry_interval=0.2,
+                                  config_timeout=DIAGNOSTIC.CONFIG_CONFIRM_TIMEOUT_MAX + 0.1)
+        with self.assertRaises(RuntimeError):
+            DIAGNOSTIC.validate_confirmation_arguments(invalid)
 
     def test_ros_start_runs_only_from_the_supervisor_stack(self):
         source = MAIN_PATH.read_text(encoding="utf-8")
