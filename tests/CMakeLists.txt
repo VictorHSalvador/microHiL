@@ -19,6 +19,10 @@ target_link_libraries(test_input_state PRIVATE microhil_host_components m)
 add_executable(test_daq_protocol test_daq_protocol.c)
 target_link_libraries(test_daq_protocol PRIVATE microhil_host_components m)
 
+add_executable(test_daqc_protocol test_daqc_protocol.c "${CMAKE_SOURCE_DIR}/firmware/daqc_esp32/main/daqc_protocol.c")
+target_include_directories(test_daqc_protocol PRIVATE "${CMAKE_SOURCE_DIR}/firmware/daqc_esp32/main")
+target_link_libraries(test_daqc_protocol PRIVATE microhil_project_warnings)
+
 add_executable(test_daq_tty test_daq_tty.c)
 target_link_libraries(test_daq_tty PRIVATE microhil_host_components m)
 
@@ -101,6 +105,7 @@ add_test(NAME daq_protocol_frames COMMAND test_daq_protocol frames)
 add_test(NAME daq_protocol_fragmentation COMMAND test_daq_protocol fragmentation)
 add_test(NAME daq_protocol_sequence COMMAND test_daq_protocol sequence)
 add_test(NAME daq_protocol_xrce_mtu COMMAND test_daq_protocol xrce_mtu)
+add_test(NAME daqc_protocol_firmware_frames COMMAND test_daqc_protocol)
 add_test(NAME daq_tty_validation COMMAND test_daq_tty)
 add_test(NAME daq_serial_service_round_trip COMMAND test_daq_serial_service)
 add_test(NAME daq_schema_validation COMMAND test_daq_schema)

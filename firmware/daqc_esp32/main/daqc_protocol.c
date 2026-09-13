@@ -17,7 +17,11 @@ static size_t FrameSize(const daqc_parser_t *parser) {
     if (parser->buffer[2] == DAQC_MID_CONFIG) return 4U;
     if (parser->buffer[2] == DAQC_MID_DATA) return 5U + DAQC_ACTUATION_SIZE;
     if (parser->buffer[2] == DAQC_MID_READ_ACK) return 5U;
-    if (parser->buffer[2] == DAQC_MID_XRCE) return parser->buffered_size < 5U ? 0U : 5U + ReadLe16(parser->buffer + 3U);
+    if (parser->buffer[2] == DAQC_MID_XRCE) {
+        if (parser->buffered_size < 5U) return 0U;
+        const uint16_t payload_size = ReadLe16(parser->buffer + 3U);
+        return payload_size <= DAQC_XRCE_MTU ? 5U + payload_size : 1U;
+    }
     return 1U;
 }
 

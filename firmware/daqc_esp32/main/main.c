@@ -22,6 +22,12 @@ static volatile bool g_read_ack_seen;
 #define DAQC_ROS_RETRY_INTERVAL_MS 1000U
 #define DAQC_COMMUNICATION_STARTUP_DELAY_MS 10U
 #define DAQC_COMMUNICATION_TASK_STACK_SIZE 4096U
+#define DAQC_COMMUNICATION_IDLE_WAIT_US 1000U
+#define DAQC_COMMUNICATION_WAIT_GUARD_MS 10U
+
+static TaskHandle_t g_communication_task;
+static esp_timer_handle_t g_communication_wait_timer;
+static volatile bool g_communication_timer_failure;
 
 static bool SendConfigState(uint8_t command) {
     return DaqcTransportSendConfig(command, DaqcControlState(&g_control));
@@ -57,12 +63,31 @@ static bool ProcessFrame(const daqc_frame_t *frame, void *context) {
     return true;
 }
 
+static void CommunicationWaitTimerCallback(void *argument) {
+    (void)argument;
+    if (g_communication_task) xTaskNotifyGive(g_communication_task);
+}
+
 static void CommunicationTask(void *argument) {
     (void)argument;
     uint8_t bytes[128];
     while (true) {
-        const int count = DaqcTransportReadRaw(bytes, sizeof(bytes), 5);
+        const int count = DaqcTransportReadRaw(bytes, sizeof(bytes), 0U);
         if (count > 0) (void)DaqcParserFeed(&g_parser, bytes, (size_t)count, ProcessFrame, NULL);
+        if (count <= 0) {
+            (void)ulTaskNotifyTake(pdTRUE, 0U);
+            const esp_err_t timer_status = esp_timer_start_once(g_communication_wait_timer, DAQC_COMMUNICATION_IDLE_WAIT_US);
+            if (timer_status == ESP_OK) {
+                if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(DAQC_COMMUNICATION_WAIT_GUARD_MS)) == 0U) {
+                    g_communication_timer_failure = true;
+                }
+                (void)esp_timer_stop(g_communication_wait_timer);
+            } else {
+                /* A failed timer must yield instead of monopolizing core 0. */
+                g_communication_timer_failure = true;
+                vTaskDelay(1U);
+            }
+        }
     }
 }
 
@@ -100,8 +125,15 @@ static void RosSupervisorTask(void *argument) {
 void app_main(void) {
     DaqcParserInit(&g_parser);
     if (!DaqcControlInit(&g_control) || !DaqcTransportInit()) return;
+    const esp_timer_create_args_t wait_timer = {
+        .callback = CommunicationWaitTimerCallback,
+        .arg = NULL,
+        .name = "daqc_comm_wait",
+    };
+    if (esp_timer_create(&wait_timer, &g_communication_wait_timer) != ESP_OK) return;
     g_read_ack_time_us = esp_timer_get_time();
-    xTaskCreatePinnedToCore(CommunicationTask, "daqc_comm", DAQC_COMMUNICATION_TASK_STACK_SIZE, NULL, 8U, NULL, 0);
+    if (xTaskCreatePinnedToCore(CommunicationTask, "daqc_comm", DAQC_COMMUNICATION_TASK_STACK_SIZE, NULL, 8U,
+                                &g_communication_task, 0) != pdPASS) return;
     vTaskDelay(pdMS_TO_TICKS(DAQC_COMMUNICATION_STARTUP_DELAY_MS));
     (void)DaqcRosStart(&g_control);
     xTaskCreatePinnedToCore(RosSupervisorTask, "daqc_ros_supervisor", DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE, NULL,
