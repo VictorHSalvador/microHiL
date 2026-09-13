@@ -70,7 +70,7 @@ RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
   const version_files = fs.readdirSync(path.join(ROOT, 'docs')).filter((name) => /^sdd-versions\.md$/.test(name));
   assert.deepEqual(version_files, ['sdd-versions.md']);
   assert.match(index, /\[sdd-versions\.md\]\(sdd-versions\.md\)/);
-  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.26\.13\*\*, de 13\.09\.2026/);
+  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.26\.14\*\*, de 13\.09\.2026/);
   assert.match(versioning, /Status da versão:/);
 });
 
@@ -79,16 +79,18 @@ RegisterTest('AC-002: O estado separa especificação, implementação e verific
   assert.match(versioning, /\| Especificação \|/);
   assert.match(versioning, /\| Implementação \|/);
   assert.match(versioning, /\| Verificação \|/);
-  assert.match(versioning, /Não executa sessão XRCE, tópicos ROS, perfil aplicado, DATA, I\/O, Raspberry Pi, HIL ou timing real/i);
+  assert.match(versioning, /Não executa coordenador C, atuação medida, Raspberry Pi, malha HIL ou qualificação temporal/i);
 });
 
 RegisterTest('AC-003: Cada revisão possui metadados mínimos @spec:AC-003', () => {
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
-  assert.equal(rows.length, 79);
+  assert.equal(rows.length, 80);
   for (const row of rows) {
     assert.equal(row.length, 7);
     assert.ok(row.every((cell) => cell.length > 0));
   }
+  assert.equal(rows.at(-1)[0], '0.26.14');
+  rows.pop();
   assert.equal(rows.at(-1)[0], '0.26.13');
   rows.pop();
   assert.equal(rows.at(-1)[0], '0.26.12');
@@ -143,7 +145,7 @@ RegisterTest('P-002: Existe uma única especificação normativa do produto @pri
 
 RegisterTest('P-003: Estado documental não é estado de implementação @principle:P-003', () => {
   const versioning = Read('docs/sdd-versions.md');
-  assert.match(versioning, /o ciclo completo de transição de estados \(DISABLE→ENABLE→STREAMING→DISABLE\), aquisição periódica a ~96,4 Hz e confirmação cumulativa READ_ACK foram comprovados fisicamente na placa ESP32; tensão\/duty cycle de saída não foram medidos e a validação com coordenador C permanece pendente/);
+  assert.match(versioning, /o ciclo completo de estados, aquisição periódica, READ_ACK e o watchdog de 60 s sem avanço de ACK foram comprovados fisicamente na placa ESP32; tensão\/duty cycle de saída não foram medidos e a validação com coordenador C permanece pendente/);
   assert.match(versioning, /Aprovação documental não significa implementação/);
 });
 

@@ -1,18 +1,18 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.13**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.14**, de 13.09.2026.
 
-Status da versão: **componentes HOST e firmware em avanço incremental; o ciclo completo de transição de estados (DISABLE→ENABLE→STREAMING→DISABLE), aquisição periódica a ~96,4 Hz e confirmação cumulativa READ_ACK foram comprovados fisicamente na placa ESP32; tensão/duty cycle de saída não foram medidos e a validação com coordenador C permanece pendente**.
+Status da versão: **componentes HOST e firmware em avanço incremental; o ciclo completo de estados, aquisição periódica, READ_ACK e o watchdog de 60 s sem avanço de ACK foram comprovados fisicamente na placa ESP32; tensão/duty cycle de saída não foram medidos e a validação com coordenador C permanece pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.8.0 | Evidência/limite |
+| Eixo | Estado em 0.26.14 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
 | Implementação | Componentes HOST, runner ROS e firmware ESP32 evoluíram de forma incremental; requisitos de produto seguem parciais ou pendentes | Build independente, runner ROS e firmware compilados; não inferir conformidade integral |
-| Verificação | CTest ROS 48/48 no HOST; firmware gravado em ESP32 e CONFIG ENABLE→DISABLE observado pela CH340 | Não executa sessão XRCE, tópicos ROS, perfil aplicado, DATA, I/O, Raspberry Pi, HIL ou timing real |
+| Verificação | CTest ROS 48/48 no HOST; firmware gravado em ESP32; setup ROS, STREAMING, DATA, READ_ACK e watchdog observados pela CH340 | Não executa coordenador C, atuação medida, Raspberry Pi, malha HIL ou qualificação temporal |
 
 ## Esquema de versão
 
@@ -109,6 +109,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.11 | 13.09.2026 | PATCH | Validação física de transição para STREAMING, aquisição periódica de 33 bytes a ~96,4 Hz e confirmação READ_ACK com firmware 0.26.7 | harness, testes, README, plano, matriz, evidência, sdd-versions e teste documental | [esp32-streaming-smoke-2026-09-13](evidence/esp32-streaming-smoke-2026-09-13.md): 289 frames DATA e READ_ACK em 3 s; sem atuação de produto ou HIL | alterações locais; registrar commit quando criado |
 | 0.26.12 | 13.09.2026 | PATCH | Auditoria da evidência STREAMING: rastreabilidade atualizada e limites da medição elétrica explicitados | README, plano, matriz, evidência, sdd-versions e teste documental | [esp32-streaming-smoke-2026-09-13](evidence/esp32-streaming-smoke-2026-09-13.md): estado/DATA/ACK físicos observados; sem medição de saída elétrica, atuação ou HIL | alterações locais; registrar commit quando criado |
 | 0.26.13 | 13.09.2026 | PATCH | Harness STREAMING solicita DISABLE em `finally` após aceitar o estado, inclusive em falha de coleta | harness, testes, README, plano, matriz, evidência, sdd-versions e teste documental | [esp32-streaming-harness-safe-stop-2026-09-13](evidence/esp32-streaming-harness-safe-stop-2026-09-13.md): testes HOST; sem novo ensaio físico ou medida elétrica | alterações locais; registrar commit quando criado |
+| 0.26.14 | 13.09.2026 | PATCH | Ensaio físico confirma o watchdog: após corte de READ_ACK, DATA cessou ao completar 60 s e permaneceu ausente durante 5 s de observação | harness, plano, matriz, README, evidência, sdd-versions e teste documental | [esp32-watchdog-no-ack-2026-09-13](evidence/esp32-watchdog-no-ack-2026-09-13.md): 5.983 frames até 60,00 s; sem medição elétrica, atuação ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

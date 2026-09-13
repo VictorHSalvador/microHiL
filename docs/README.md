@@ -34,6 +34,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/esp32-harness-rx-fix-2026-09-13.md](evidence/esp32-harness-rx-fix-2026-09-13.md) | Correção do acúmulo RX do harness antes do parser CONFIG |
 | [evidence/esp32-streaming-smoke-2026-09-13.md](evidence/esp32-streaming-smoke-2026-09-13.md) | Ensaio físico de transição para STREAMING, aquisição periódica a ~96,4 Hz e confirmação READ_ACK |
 | [evidence/esp32-streaming-harness-safe-stop-2026-09-13.md](evidence/esp32-streaming-harness-safe-stop-2026-09-13.md) | `finally` do harness solicita DISABLE depois de STREAMING, inclusive em falha de coleta |
+| [evidence/esp32-watchdog-no-ack-2026-09-13.md](evidence/esp32-watchdog-no-ack-2026-09-13.md) | Ensaio físico do watchdog após 60 s sem avanço de READ_ACK |
 
 ## Fontes e precedência
 
@@ -47,7 +48,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.26.13**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.26.14**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.26.0–0.26.4: a configuração YAML aceita `acquisition.frequency_hz`; novos perfis GUI iniciam em 100 Hz e o limite vigente é 1…100 Hz, compatível com o tick FreeRTOS de 10 ms configurado. A frequência configura a tarefa de aquisição da DAQC fora do ciclo FMI e não altera o passo da FMU. A [evidência HOST](evidence/host-configurable-acquisition-2026-09-12.md) cobre a geração da interface ROS e 48 testes; a [evidência ESP-IDF](evidence/esp32-acquisition-build-2026-09-12.md) confirma a regeneração do firmware atual; a [evidência física](evidence/esp32-acquisition-config-smoke-2026-09-12.md) confirma a gravação e CONFIG DISABLE. O ensaio da frequência, Agent e I/O continuam pendentes. A revisão 0.26.2 também corrigiu o contexto que ainda chamava essa configuração persistida de binária.
 
@@ -66,6 +67,8 @@ Revisão 0.26.11: validação física do ciclo completo de estados e aquisição
 Revisão 0.26.12: a auditoria corrigiu a rastreabilidade do ensaio 0.26.11 e delimitou a evidência. A cessação de DATA e a confirmação CONFIG DISABLE foram observadas; o firmware solicita o nível seguro, mas não houve medição elétrica de tensão ou duty cycle de saída. Os valores analógicos observados são a conversão por line fitting do ESP-IDF, não uma calibração de bancada.
 
 Revisão 0.26.13: o harness de STREAMING passou a solicitar DISABLE em `finally` após a aceitação de STREAMING, inclusive se a coleta falhar. A mudança é verificada no HOST e não substitui ensaio elétrico.
+
+Revisão 0.26.14: o ensaio físico sem READ_ACK observou 5.983 frames DATA em 59,98 s. O último frame chegou a 60,00 s após o corte do ACK; não houve novo DATA nos 5 s restantes da observação, antes do cleanup confirmar DISABLE. Isso confirma o watchdog de progresso de leitura nesta placa e firmware, sem comprovar atuação física nem HIL.
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 
