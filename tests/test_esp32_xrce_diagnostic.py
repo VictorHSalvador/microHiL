@@ -37,6 +37,22 @@ class FrameExtractionTests(unittest.TestCase):
             DIAGNOSTIC.time.sleep = original_sleep
         self.assertEqual(transitions, [("dtr", False), ("rts", True), ("rts", False)])
 
+    def test_serial_port_opens_before_reset_lines_are_changed(self):
+        events = []
+
+        class FakePort:
+            def __setattr__(self, name, value):
+                events.append((name, value))
+
+        class FakeSerial:
+            @staticmethod
+            def Serial(port, baud, timeout):
+                events.append(("open", port, baud, timeout))
+                return FakePort()
+
+        DIAGNOSTIC.open_serial_port(FakeSerial, "/dev/ttyUSB0", 152000)
+        self.assertEqual(events, [("open", "/dev/ttyUSB0", 152000, 0.02), ("dtr", False), ("rts", False)])
+
     def test_fragmented_xrce_waits_for_complete_bounded_payload(self):
         frame = b"\x59\x72\x04\x03\x00\x80\x01\x02"
         buffer = bytearray(frame[:-1])

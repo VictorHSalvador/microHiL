@@ -30,6 +30,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/esp32-xrce-agent-smoke-2026-09-11.md](evidence/esp32-xrce-agent-smoke-2026-09-11.md) | Ensaio físico XRCE/Agent e limitação atual da sessão |
 | [evidence/esp32-ros-supervisor-diagnostic-2026-09-13.md](evidence/esp32-ros-supervisor-diagnostic-2026-09-13.md) | Correção diagnóstica do início ROS fora de `app_main`; ensaio CONFIG desta imagem pendente |
 | [evidence/esp32-config-retry-smoke-2026-09-13.md](evidence/esp32-config-retry-smoke-2026-09-13.md) | CONFIG confirmado com espera pós-reset e tentativas limitadas; 0.26.7 gravada |
+| [evidence/esp32-xrce-bridge-smoke-2026-09-13.md](evidence/esp32-xrce-bridge-smoke-2026-09-13.md) | Ponte MID 04 com Agent UDP e nó ROS observados em DISABLE |
 
 ## Fontes e precedência
 
@@ -43,7 +44,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.26.8**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.26.9**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisões 0.26.0–0.26.4: a configuração YAML aceita `acquisition.frequency_hz`; novos perfis GUI iniciam em 100 Hz e o limite vigente é 1…100 Hz, compatível com o tick FreeRTOS de 10 ms configurado. A frequência configura a tarefa de aquisição da DAQC fora do ciclo FMI e não altera o passo da FMU. A [evidência HOST](evidence/host-configurable-acquisition-2026-09-12.md) cobre a geração da interface ROS e 48 testes; a [evidência ESP-IDF](evidence/esp32-acquisition-build-2026-09-12.md) confirma a regeneração do firmware atual; a [evidência física](evidence/esp32-acquisition-config-smoke-2026-09-12.md) confirma a gravação e CONFIG DISABLE. O ensaio da frequência, Agent e I/O continuam pendentes. A revisão 0.26.2 também corrigiu o contexto que ainda chamava essa configuração persistida de binária.
 
@@ -52,6 +53,8 @@ Revisão 0.26.6: a comunicação UART deixa de depender de uma conversão de mil
 Revisão 0.26.7: a inspeção da imagem sem resposta CONFIG observou que `app_main`, com pilha configurada de 4096 bytes, ainda executava `DaqcRosStart` de forma síncrona. A inicialização micro-ROS passa a ocorrer somente pela supervisora no núcleo 0, criada após a tarefa UART com pilha de 8192 bytes; ela mantém a tentativa a cada segundo apenas fora de STREAMING. Esta é uma correção diagnóstica, não a causa confirmada da ausência de resposta. A evidência registra testes HOST e exige gravar esta imagem e obter CONFIG DISABLE pela CH340 antes de inferir resultado de XRCE ou ROS.
 
 Revisão 0.26.8: a imagem 0.26.7 foi compilada, gravada e teve hashes confirmados. Após reset, espera de 1 s e cinco CONFIG DISABLE a cada 200 ms, houve cinco confirmações `5972010101`; sem reset, houve nove confirmações em dez tentativas. MID 04 de inicialização apareceu nessa janela. O falso bloqueio anterior vinha de uma única tentativa após somente 200 ms. O harness agora usa espera pós-reset, tentativas e timeout total configuráveis e limitados; o resultado confirma CONFIG nesse procedimento, sem validar XRCE, Agent, tópicos, DATA, I/O, timing ou HIL.
+
+Revisão 0.26.9: o harness passou a abrir a CH340 antes de ajustar DTR/RTS, igual ao procedimento manual que confirmou CONFIG, e usa timeout de leitura de 20 ms. Em ponte temporária de 8 s, com a DAQC em DISABLE e Agent Humble UDP local, houve 468 frames MID 04 DAQC→Agent e 285 Agent→DAQC; foram observados o nó `/microhil_daqc` e os tópicos `/daqc_errors`, `/daqc_setup` e `/daqc_state`. Não houve STREAMING, DATA ou I/O físico.
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 

@@ -115,6 +115,13 @@ def validate_confirmation_arguments(arguments):
         raise RuntimeError(f"CONFIG timeout must be in (0, {CONFIG_CONFIRM_TIMEOUT_MAX}]")
 
 
+def open_serial_port(serial_module, port_name, baud):
+    port = serial_module.Serial(port_name, baud, timeout=0.02)
+    port.dtr = False
+    port.rts = False
+    return port
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", default="/dev/ttyUSB0")
@@ -137,13 +144,7 @@ def main():
         import serial
     except ImportError as error:
         raise RuntimeError("pyserial is required only to run the physical diagnostic") from error
-    port = serial.Serial()
-    port.port = arguments.port
-    port.baudrate = arguments.baud
-    port.timeout = 0
-    port.dtr = False
-    port.rts = False
-    port.open()
+    port = open_serial_port(serial, arguments.port, arguments.baud)
     capture = open(arguments.capture, "wb") if arguments.capture else None
     boot_confirmed = False
     try:
