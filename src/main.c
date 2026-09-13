@@ -601,6 +601,10 @@ int main(void) {
     for (;;) {
         print_menu();
         int option = read_int("Option: ", -1);
+        if (feof(stdin)) {
+            ExecutionSessionDestroy(&session);
+            return 0;
+        }
         switch (option) {
             case 1: (void)load_fmu_menu(model, config); break;
             case 2: if (model->fmu) list_outputs(model); else printf("Load an FMU first.\n"); break;

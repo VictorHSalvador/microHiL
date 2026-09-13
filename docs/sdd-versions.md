@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.15**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.16**, de 13.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; estados, aquisição, READ_ACK, watchdog e três caminhos de atuação foram comprovados fisicamente na placa ESP32; duty intermediário, precisão/carga elétrica e a validação com coordenador C permanecem pendentes**.
 
@@ -111,6 +111,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.13 | 13.09.2026 | PATCH | Harness STREAMING solicita DISABLE em `finally` após aceitar o estado, inclusive em falha de coleta | harness, testes, README, plano, matriz, evidência, sdd-versions e teste documental | [esp32-streaming-harness-safe-stop-2026-09-13](evidence/esp32-streaming-harness-safe-stop-2026-09-13.md): testes HOST; sem novo ensaio físico ou medida elétrica | alterações locais; registrar commit quando criado |
 | 0.26.14 | 13.09.2026 | PATCH | Ensaio físico confirma o watchdog: após corte de READ_ACK, DATA cessou ao completar 60 s e permaneceu ausente durante 5 s de observação | harness, plano, matriz, README, evidência, sdd-versions e teste documental | [esp32-watchdog-no-ack-2026-09-13](evidence/esp32-watchdog-no-ack-2026-09-13.md): 5.983 frames até 60,00 s; sem medição elétrica, atuação ou HIL | alterações locais; registrar commit quando criado |
 | 0.26.15 | 13.09.2026 | PATCH | Atuação DATA host→DAQC passou a ser aplicada pela tarefa de I/O no núcleo 1; loopbacks físicos confirmam DO GPIO16, DAC GPIO25 e PWM GPIO18 em nível alto | firmware, harness, testes, arquitetura, plano, matriz, README, evidência e sdd-versions | [esp32-actuation-loopback-2026-09-13](evidence/esp32-actuation-loopback-2026-09-13.md): DI alto, DAC 1,6715 V e PWM alto 3,118 V; sem duty intermediário, carga, coordenador C ou HIL | alterações locais; registrar commit quando criado |
+| 0.26.16 | 13.09.2026 | PATCH | Runner terminal encerra normalmente quando stdin fecha, sem repetir menu em loop | src/main.c, plano, sdd-versions e teste documental | Build ROS do runner e execução com stdin fechado; sem DAQC ou HIL nesta correção | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
