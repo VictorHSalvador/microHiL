@@ -132,6 +132,8 @@ def parse_arguments():
     parser.add_argument("--baud", type=int, default=152000)
     parser.add_argument("--agent-port", type=int, default=8888)
     parser.add_argument("--streaming-duration", type=float, default=3.0)
+    parser.add_argument("--watchdog-no-ack-duration", type=float, default=0.0,
+                        help="Collect DATA without READ_ACK for this many seconds to exercise the DAQC watchdog")
     parser.add_argument("--setup-wait", type=float, default=6.0)
     parser.add_argument("--skip-ros-setup", action="store_true")
     parser.add_argument("--auto-publish-setup", action="store_true", help="Auto publish ROS 2 /daqc_setup")
@@ -229,12 +231,16 @@ def main():
         return 0
 
     print(f"SUCCESS: DAQC accepted STREAMING! (state={state})")
-    print(f"\n=== Step 5: Collecting DATA packets and sending READ_ACK for {args.streaming_duration}s ===")
+    watchdog_mode = args.watchdog_no_ack_duration > 0.0
+    collection_duration = args.watchdog_no_ack_duration if watchdog_mode else args.streaming_duration
+    action = "without READ_ACK for watchdog validation" if watchdog_mode else "and sending READ_ACK"
+    print(f"\n=== Step 5: Collecting DATA packets {action} for {collection_duration}s ===")
     data_count = 0
     last_seq = None
     first_time = None
     last_time = None
-    stream_end = time.monotonic() + args.streaming_duration
+    collection_start = time.monotonic()
+    stream_end = collection_start + collection_duration
 
     try:
         while time.monotonic() < stream_end:
@@ -252,12 +258,14 @@ def main():
                             if parsed:
                                 seq = parsed["sequence"]
                                 last_seq = seq
-                                # Immediately send READ_ACK
-                                ack_bytes = encode_read_ack(seq)
-                                port.write(ack_bytes)
-                                port.flush()
+                                if not watchdog_mode:
+                                    # Acknowledge each consumed acquisition frame outside the firmware I/O task.
+                                    ack_bytes = encode_read_ack(seq)
+                                    port.write(ack_bytes)
+                                    port.flush()
                                 if data_count <= 5 or data_count % 20 == 0:
-                                    print(f"DATA #{data_count:03d} seq={seq:05d} DI={parsed['di']} AI={parsed['ai']} V -> ACK sent")
+                                    ack_status = "ACK withheld" if watchdog_mode else "ACK sent"
+                                    print(f"DATA #{data_count:03d} seq={seq:05d} DI={parsed['di']} AI={parsed['ai']} V -> {ack_status}")
                         elif mid == MID_XRCE:
                             udp.send(payload[2:])
                 else:
@@ -269,6 +277,8 @@ def main():
         duration = (last_time - first_time) if (first_time and last_time and last_time > first_time) else 0.0
         freq = (data_count / duration) if duration > 0 else 0.0
         print(f"\nCollected {data_count} DATA frames in {duration:.2f}s (~{freq:.1f} Hz)")
+        if watchdog_mode:
+            print(f"Last DATA arrived {last_time - collection_start:.2f}s after READ_ACK was withheld" if last_time else "No DATA arrived")
         return 0
     finally:
         print("\n=== Step 6: Transition STREAMING -> DISABLE (Safe Stop) ===")
