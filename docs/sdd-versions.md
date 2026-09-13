@@ -1,8 +1,8 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.9**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.10**, de 13.09.2026.
 
-Status da versão: **componentes HOST e firmware em avanço incremental; a ponte MID 04 em DISABLE confirmou tráfego bidirecional com Agent local e a presença do nó/tópicos ROS, sem validar STREAMING, I/O ou tempo real; validação do produto permanece pendente**.
+Status da versão: **componentes HOST e firmware em avanço incremental; o harness passou a acumular RX antes do parser CONFIG, corrigindo falso negativo no diagnóstico, enquanto a ponte MID 04 em DISABLE permanece limitada a controle ROS; validação do produto permanece pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
@@ -105,6 +105,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.7 | 13.09.2026 | PATCH | `app_main` não inicializa mais micro-ROS de forma síncrona; a supervisora de 8192 bytes inicia e repete a tentativa fora de STREAMING, após a tarefa UART | firmware, arquitetura, decisões, plano, matriz, README, sdd-versions e evidência | [esp32-ros-supervisor-diagnostic-2026-09-13](evidence/esp32-ros-supervisor-diagnostic-2026-09-13.md): inspeção estática e testes HOST; gravação e CONFIG DISABLE desta imagem permanecem obrigatórios | alterações locais; registrar commit quando criado |
 | 0.26.8 | 13.09.2026 | PATCH | Harness físico espera 1 s após reset e confirma CONFIG por tentativas limitadas, sem mudar firmware ou ICD | harness, testes, README, decisões, plano, matriz, evidência, sdd-versions e teste documental | [esp32-config-retry-smoke-2026-09-13](evidence/esp32-config-retry-smoke-2026-09-13.md): 0.26.7 gravada; CONFIG 5/5 pós-reset e 9/10 sem reset; MID 04 observado | alterações locais; registrar commit quando criado |
 | 0.26.9 | 13.09.2026 | PATCH | Harness abre a CH340 antes de ajustar DTR/RTS e usa timeout de leitura de 20 ms; evidência registra ponte MID 04 em DISABLE | harness, testes, README, decisões, plano, matriz, evidência, sdd-versions e teste documental | [esp32-xrce-bridge-smoke-2026-09-13](evidence/esp32-xrce-bridge-smoke-2026-09-13.md): CONFIG, 468 frames DAQC→Agent, 285 Agent→DAQC e nó/tópicos ROS; sem STREAMING, DATA, I/O ou HIL | alterações locais; registrar commit quando criado |
+| 0.26.10 | 13.09.2026 | PATCH | Harness acumula cada chunk RX antes de executar o parser de confirmação CONFIG | harness, testes, README, decisões, plano, matriz, evidência, sdd-versions e teste documental | [esp32-harness-rx-fix-2026-09-13](evidence/esp32-harness-rx-fix-2026-09-13.md): testes HOST normal e fragmentado; sem novo ensaio físico desta alteração | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

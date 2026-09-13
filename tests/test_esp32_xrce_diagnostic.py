@@ -69,6 +69,19 @@ class FrameExtractionTests(unittest.TestCase):
         self.assertTrue(DIAGNOSTIC.is_disable_confirmation((0x01, b"\x01\x01")))
         self.assertFalse(DIAGNOSTIC.is_disable_confirmation((0x01, b"\x01")))
 
+    def test_disable_confirmation_accumulates_normal_and_fragmented_frames(self):
+        class FakePort:
+            def __init__(self, chunks):
+                self.chunks = iter(chunks)
+
+            def read(self, _):
+                return next(self.chunks)
+
+        frame = b"\x59\x72\x01\x01\x01"
+        for chunks in ([frame], [frame[:3], frame[3:]]):
+            with self.subTest(chunks=chunks):
+                self.assertTrue(DIAGNOSTIC.read_disable_confirmation(FakePort(chunks), bytearray(), None, 0.1))
+
     def test_disable_confirmation_retries_until_the_response_arrives(self):
         class FakePort:
             def __init__(self):

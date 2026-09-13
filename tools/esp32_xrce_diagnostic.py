@@ -75,6 +75,7 @@ def read_disable_confirmation(port, buffer, capture, timeout):
     while time.monotonic() < deadline:
         chunk = port.read(256)
         if chunk:
+            buffer.extend(chunk)
             if capture:
                 capture.write(chunk)
                 capture.flush()
