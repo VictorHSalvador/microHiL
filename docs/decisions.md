@@ -160,3 +160,9 @@ Em 11.09.2026, o usuário confirmou que YAML é exclusivamente configuração e 
 A chave inicial fixa do cliente micro-ROS é `0x4D48494C`; o integrador deve torná-la distinta por DAQC ativa quando houver mais de uma no mesmo Agent. O framing serial interno do Micro XRCE-DDS fica desabilitado, pois a UART já é enquadrada exclusivamente pelo MID 04 do ICD. A tentativa de iniciar ou recuperar o cliente ocorre uma vez por segundo somente em DISABLE ou ENABLE, nunca durante STREAMING. A política não adiciona tráfego de recuperação ao caminho crítico.
 
 A gravação física de 11.09 confirmou CONFIG pela CH340. Um ensaio anterior observou tráfego XRCE cru e resposta do Agent; após a correção de framing e reordenação de inicialização, a sessão XRCE completa ainda não foi observada. Essa pendência não autoriza inferir compatibilidade de tópicos ou tempo real.
+
+## Diagnóstico de inicialização ROS — 0.26.7
+
+Fato observado no código que não respondeu CONFIG após a revisão 0.26.6: `app_main`, cuja pilha é configurada em 4096 bytes, chamava `DaqcRosStart` de forma síncrona depois de criar a tarefa UART. A hipótese é que a inicialização micro-ROS nessa pilha possa resetar ou falhar antes de a recepção CONFIG permanecer disponível; ela ainda não foi confirmada em placa. A correção diagnóstica cria a supervisora de ROS com 8192 bytes no núcleo 0 após a tarefa UART e delega a ela toda chamada de início. A supervisora continua tentando somente em DISABLE ou ENABLE, uma vez por segundo, e não altera o ICD, os MIDs nem a prioridade de CONFIG.
+
+O próximo ensaio deve gravar a imagem desta revisão, executar o reset de aplicação do harness e confirmar `CONFIG DISABLE` (`59 72 01 01` → `59 72 01 01 01`) antes de qualquer teste XRCE. A confirmação elimina esta hipótese como bloqueio de inicialização para esse caso; a ausência mantém o diagnóstico aberto e exige captura de reset/boot e estado das tarefas, sem atribuir causa ao micro-ROS.

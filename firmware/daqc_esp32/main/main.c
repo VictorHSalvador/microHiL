@@ -135,8 +135,7 @@ void app_main(void) {
     if (xTaskCreatePinnedToCore(CommunicationTask, "daqc_comm", DAQC_COMMUNICATION_TASK_STACK_SIZE, NULL, 8U,
                                 &g_communication_task, 0) != pdPASS) return;
     vTaskDelay(pdMS_TO_TICKS(DAQC_COMMUNICATION_STARTUP_DELAY_MS));
-    (void)DaqcRosStart(&g_control);
-    xTaskCreatePinnedToCore(RosSupervisorTask, "daqc_ros_supervisor", DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE, NULL,
-                            DAQC_ROS_SUPERVISOR_TASK_PRIORITY, NULL, 0);
-    xTaskCreatePinnedToCore(IoTask, "daqc_io", 4096U, NULL, 9U, NULL, 1);
+    if (xTaskCreatePinnedToCore(RosSupervisorTask, "daqc_ros_supervisor", DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE, NULL,
+                                DAQC_ROS_SUPERVISOR_TASK_PRIORITY, NULL, 0) != pdPASS) return;
+    if (xTaskCreatePinnedToCore(IoTask, "daqc_io", 4096U, NULL, 9U, NULL, 1) != pdPASS) return;
 }

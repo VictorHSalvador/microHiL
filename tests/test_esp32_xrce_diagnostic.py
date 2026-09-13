@@ -6,6 +6,7 @@ import pathlib
 import unittest
 
 MODULE_PATH = pathlib.Path(__file__).parents[1] / "tools" / "esp32_xrce_diagnostic.py"
+MAIN_PATH = pathlib.Path(__file__).parents[1] / "firmware" / "daqc_esp32" / "main" / "main.c"
 SPEC = importlib.util.spec_from_file_location("esp32_xrce_diagnostic", MODULE_PATH)
 DIAGNOSTIC = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DIAGNOSTIC)
@@ -50,6 +51,14 @@ class FrameExtractionTests(unittest.TestCase):
         self.assertEqual(DIAGNOSTIC.encode_disable(), b"\x59\x72\x01\x01")
         self.assertTrue(DIAGNOSTIC.is_disable_confirmation((0x01, b"\x01\x01")))
         self.assertFalse(DIAGNOSTIC.is_disable_confirmation((0x01, b"\x01")))
+
+    def test_ros_start_runs_only_from_the_supervisor_stack(self):
+        source = MAIN_PATH.read_text(encoding="utf-8")
+        app_main = source.index("void app_main(void)")
+        self.assertNotIn("DaqcRosStart", source[app_main:])
+        self.assertIn("#define DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE 8192U", source)
+        self.assertIn("if (DaqcControlState(&g_control) != DAQC_COMMAND_STREAMING) (void)DaqcRosStart(&g_control);", source)
+        self.assertIn("xTaskCreatePinnedToCore(RosSupervisorTask", source[app_main:])
 
 
 if __name__ == "__main__":
