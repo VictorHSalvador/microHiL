@@ -127,6 +127,8 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
     if(MICROHIL_WITH_ROS2_CONTROL)
         target_compile_definitions(fmu_rt_runner PRIVATE MICROHIL_WITH_ROS2_CONTROL=1)
         target_link_libraries(fmu_rt_runner PRIVATE microhil_ros_control)
+        # File capabilities suppress LD_LIBRARY_PATH, so retain the Humble library path in the build artifact.
+        set_property(TARGET fmu_rt_runner APPEND PROPERTY BUILD_RPATH "/opt/ros/humble/lib")
     endif()
     endif()
 endif()
