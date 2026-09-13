@@ -1,8 +1,8 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.11**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.12**, de 13.09.2026.
 
-Status da versão: **componentes HOST e firmware em avanço incremental; o ciclo completo de transição de estados (DISABLE→ENABLE→STREAMING→DISABLE), aquisição periódica a ~96,4 Hz e confirmação cumulativa READ_ACK foram comprovados fisicamente na placa ESP32; validação com coordenador C permanece pendente**.
+Status da versão: **componentes HOST e firmware em avanço incremental; o ciclo completo de transição de estados (DISABLE→ENABLE→STREAMING→DISABLE), aquisição periódica a ~96,4 Hz e confirmação cumulativa READ_ACK foram comprovados fisicamente na placa ESP32; tensão/duty cycle de saída não foram medidos e a validação com coordenador C permanece pendente**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
@@ -107,6 +107,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.9 | 13.09.2026 | PATCH | Harness abre a CH340 antes de ajustar DTR/RTS e usa timeout de leitura de 20 ms; evidência registra ponte MID 04 em DISABLE | harness, testes, README, decisões, plano, matriz, evidência, sdd-versions e teste documental | [esp32-xrce-bridge-smoke-2026-09-13](evidence/esp32-xrce-bridge-smoke-2026-09-13.md): CONFIG, 468 frames DAQC→Agent, 285 Agent→DAQC e nó/tópicos ROS; sem STREAMING, DATA, I/O ou HIL | alterações locais; registrar commit quando criado |
 | 0.26.10 | 13.09.2026 | PATCH | Harness acumula cada chunk RX antes de executar o parser de confirmação CONFIG | harness, testes, README, decisões, plano, matriz, evidência, sdd-versions e teste documental | [esp32-harness-rx-fix-2026-09-13](evidence/esp32-harness-rx-fix-2026-09-13.md): testes HOST normal e fragmentado; sem novo ensaio físico desta alteração | alterações locais; registrar commit quando criado |
 | 0.26.11 | 13.09.2026 | PATCH | Validação física de transição para STREAMING, aquisição periódica de 33 bytes a ~96,4 Hz e confirmação READ_ACK com firmware 0.26.7 | harness, testes, README, plano, matriz, evidência, sdd-versions e teste documental | [esp32-streaming-smoke-2026-09-13](evidence/esp32-streaming-smoke-2026-09-13.md): 289 frames DATA e READ_ACK em 3 s; sem atuação de produto ou HIL | alterações locais; registrar commit quando criado |
+| 0.26.12 | 13.09.2026 | PATCH | Auditoria da evidência STREAMING: rastreabilidade atualizada e limites da medição elétrica explicitados | README, plano, matriz, evidência, sdd-versions e teste documental | [esp32-streaming-smoke-2026-09-13](evidence/esp32-streaming-smoke-2026-09-13.md): estado/DATA/ACK físicos observados; sem medição de saída elétrica, atuação ou HIL | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
