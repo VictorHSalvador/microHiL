@@ -115,6 +115,17 @@ def send_and_wait_config(port, buffer, target_cmd, timeout=2.0, attempts=3):
     return False, None
 
 
+def request_safe_disable(port, buffer):
+    """Request DISABLE during cleanup and keep resource cleanup reachable on link failure."""
+    try:
+        ok, state = send_and_wait_config(port, buffer, CMD_DISABLE, timeout=2.0)
+    except OSError as error:
+        print(f"WARNING: DISABLE cleanup failed: {error}")
+        return False
+    print(f"DAQC DISABLE cleanup confirmed={ok} state={state}")
+    return ok and state == CMD_DISABLE
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", default="/dev/ttyUSB0")
@@ -225,45 +236,47 @@ def main():
     last_time = None
     stream_end = time.monotonic() + args.streaming_duration
 
-    while time.monotonic() < stream_end:
-        for key, _ in selector.select(timeout=0.05):
-            if key.data == "serial":
-                buffer.extend(port.read(256))
-                for mid, payload in extract_frames(buffer):
-                    if mid == MID_DATA:
-                        now = time.monotonic()
-                        if first_time is None:
-                            first_time = now
-                        last_time = now
-                        data_count += 1
-                        parsed = parse_data_frame(payload)
-                        if parsed:
-                            seq = parsed["sequence"]
-                            last_seq = seq
-                            # Immediately send READ_ACK
-                            ack_bytes = encode_read_ack(seq)
-                            port.write(ack_bytes)
-                            port.flush()
-                            if data_count <= 5 or data_count % 20 == 0:
-                                print(f"DATA #{data_count:03d} seq={seq:05d} DI={parsed['di']} AI={parsed['ai']} V -> ACK sent")
-                    elif mid == MID_XRCE:
-                        udp.send(payload[2:])
-            else:
-                payload = udp.recv(129)
-                if len(payload) <= XRCE_MTU:
-                    port.write(SYNC + bytes([MID_XRCE]) + len(payload).to_bytes(2, "little") + payload)
-                    port.flush()
+    try:
+        while time.monotonic() < stream_end:
+            for key, _ in selector.select(timeout=0.05):
+                if key.data == "serial":
+                    buffer.extend(port.read(256))
+                    for mid, payload in extract_frames(buffer):
+                        if mid == MID_DATA:
+                            now = time.monotonic()
+                            if first_time is None:
+                                first_time = now
+                            last_time = now
+                            data_count += 1
+                            parsed = parse_data_frame(payload)
+                            if parsed:
+                                seq = parsed["sequence"]
+                                last_seq = seq
+                                # Immediately send READ_ACK
+                                ack_bytes = encode_read_ack(seq)
+                                port.write(ack_bytes)
+                                port.flush()
+                                if data_count <= 5 or data_count % 20 == 0:
+                                    print(f"DATA #{data_count:03d} seq={seq:05d} DI={parsed['di']} AI={parsed['ai']} V -> ACK sent")
+                        elif mid == MID_XRCE:
+                            udp.send(payload[2:])
+                else:
+                    payload = udp.recv(129)
+                    if len(payload) <= XRCE_MTU:
+                        port.write(SYNC + bytes([MID_XRCE]) + len(payload).to_bytes(2, "little") + payload)
+                        port.flush()
 
-    duration = (last_time - first_time) if (first_time and last_time and last_time > first_time) else 0.0
-    freq = (data_count / duration) if duration > 0 else 0.0
-    print(f"\nCollected {data_count} DATA frames in {duration:.2f}s (~{freq:.1f} Hz)")
-
-    print("\n=== Step 6: Transition STREAMING -> DISABLE (Safe Stop) ===")
-    ok, state = send_and_wait_config(port, buffer, CMD_DISABLE, timeout=2.0)
-    print(f"OK: DAQC returned to DISABLE state (confirmed state={state})")
-    udp.close()
-    port.close()
-    return 0
+        duration = (last_time - first_time) if (first_time and last_time and last_time > first_time) else 0.0
+        freq = (data_count / duration) if duration > 0 else 0.0
+        print(f"\nCollected {data_count} DATA frames in {duration:.2f}s (~{freq:.1f} Hz)")
+        return 0
+    finally:
+        print("\n=== Step 6: Transition STREAMING -> DISABLE (Safe Stop) ===")
+        try:
+            request_safe_disable(port, buffer)
+        finally:
+            udp.close()
+            port.close()
 
 
 if __name__ == "__main__":

@@ -51,6 +51,29 @@ class StreamingSmokeTests(unittest.TestCase):
         self.assertEqual(frames[2], (SMOKE.MID_READ_ACK, b"\x2A\x00"))
         self.assertEqual(buffer, bytearray())
 
+    def test_request_safe_disable_requires_disable_confirmation(self):
+        original = SMOKE.send_and_wait_config
+        calls = []
+
+        def fake_send(port, buffer, command, timeout=2.0, attempts=3):
+            calls.append((port, buffer, command, timeout, attempts))
+            return True, SMOKE.CMD_DISABLE
+
+        SMOKE.send_and_wait_config = fake_send
+        try:
+            self.assertTrue(SMOKE.request_safe_disable("port", bytearray()))
+        finally:
+            SMOKE.send_and_wait_config = original
+        self.assertEqual(calls, [("port", calls[0][1], SMOKE.CMD_DISABLE, 2.0, 3)])
+
+    def test_request_safe_disable_rejects_other_state(self):
+        original = SMOKE.send_and_wait_config
+        SMOKE.send_and_wait_config = lambda *args, **kwargs: (True, SMOKE.CMD_ENABLE)
+        try:
+            self.assertFalse(SMOKE.request_safe_disable("port", bytearray()))
+        finally:
+            SMOKE.send_and_wait_config = original
+
 
 if __name__ == "__main__":
     unittest.main()
