@@ -16,6 +16,10 @@ static volatile uint16_t g_read_ack;
 static volatile int64_t g_read_ack_time_us;
 static volatile uint16_t g_sequence;
 static volatile bool g_read_ack_seen;
+/* A one-slot mailbox coalesces UART DATA before the core 1 I/O activation. */
+static portMUX_TYPE g_actuation_lock = portMUX_INITIALIZER_UNLOCKED;
+static uint8_t g_actuation_payload[DAQC_ACTUATION_SIZE];
+static volatile bool g_actuation_pending;
 
 #define DAQC_ROS_SUPERVISOR_TASK_PRIORITY 3U
 #define DAQC_ROS_SUPERVISOR_TASK_STACK_SIZE 8192U
@@ -38,6 +42,31 @@ static bool IsNewerSequence(uint16_t sequence, uint16_t previous) {
     return distance != 0U && distance < 0x8000U;
 }
 
+static void StoreActuationSnapshot(const uint8_t payload[DAQC_ACTUATION_SIZE]) {
+    portENTER_CRITICAL(&g_actuation_lock);
+    memcpy(g_actuation_payload, payload, sizeof(g_actuation_payload));
+    g_actuation_pending = true;
+    portEXIT_CRITICAL(&g_actuation_lock);
+}
+
+static bool TakeActuationSnapshot(uint8_t payload[DAQC_ACTUATION_SIZE]) {
+    bool available;
+    portENTER_CRITICAL(&g_actuation_lock);
+    available = g_actuation_pending;
+    if (available) {
+        memcpy(payload, g_actuation_payload, sizeof(g_actuation_payload));
+        g_actuation_pending = false;
+    }
+    portEXIT_CRITICAL(&g_actuation_lock);
+    return available;
+}
+
+static void ClearActuationSnapshot(void) {
+    portENTER_CRITICAL(&g_actuation_lock);
+    g_actuation_pending = false;
+    portEXIT_CRITICAL(&g_actuation_lock);
+}
+
 static bool ProcessFrame(const daqc_frame_t *frame, void *context) {
     (void)context;
     if (frame->mid == DAQC_MID_CONFIG) {
@@ -45,12 +74,17 @@ static bool ProcessFrame(const daqc_frame_t *frame, void *context) {
             if (DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING) {
                 g_read_ack_seen = false;
                 g_read_ack_time_us = esp_timer_get_time();
+            } else {
+                ClearActuationSnapshot();
             }
             DaqcRosRequestStatePublication();
         }
         return SendConfigState(frame->command);
     }
-    if (frame->mid == DAQC_MID_DATA && DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING) return DaqcProfileApplyActuation(frame->payload);
+    if (frame->mid == DAQC_MID_DATA && DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING) {
+        StoreActuationSnapshot(frame->payload);
+        return true;
+    }
     if (frame->mid == DAQC_MID_READ_ACK && DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING) {
         if (!g_read_ack_seen || IsNewerSequence(frame->sequence, g_read_ack)) {
             g_read_ack = frame->sequence;
@@ -94,9 +128,13 @@ static void CommunicationTask(void *argument) {
 static void IoTask(void *argument) {
     (void)argument;
     uint8_t payload[28];
+    uint8_t actuation_payload[DAQC_ACTUATION_SIZE];
     int64_t next_acquisition_us = esp_timer_get_time();
     while (true) {
         if (DaqcControlState(&g_control) == DAQC_COMMAND_STREAMING) {
+            if (TakeActuationSnapshot(actuation_payload) && !DaqcProfileApplyActuation(actuation_payload)) {
+                DaqcRosRequestInvalidDataError();
+            }
             const int64_t now_us = esp_timer_get_time();
             if (now_us >= next_acquisition_us) {
                 const uint32_t period_us = DaqcProfileAcquisitionPeriodUs();

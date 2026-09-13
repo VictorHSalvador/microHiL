@@ -160,14 +160,17 @@ bool DaqcProfileApplyActuation(const uint8_t payload[DAQC_ACTUATION_SIZE]) {
 
     const uint8_t do_values[5] = {payload[0], payload[1], payload[10], payload[11], payload[12]};
     for (size_t index = 0U; index < 5U; ++index) if (gpio_set_level(g_do_pins[index], do_values[index]) != ESP_OK) return false;
+    bool applied = true;
     for (size_t index = 0U; index < 2U; ++index) {
         const uint32_t max_duty = (1UL << g_configuration.pwm_resolution_bits[index]) - 1UL;
         const uint32_t duty = (uint32_t)lroundf(pwm_values[index] * (float)max_duty);
         const uint8_t dac_code = (uint8_t)lroundf(analog_values[index] * 255.0F / DAQC_ANALOG_REFERENCE_VOLTS);
-        if (ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE, (ledc_channel_t)index, duty, 0U) != ESP_OK ||
-            dac_oneshot_output_voltage(g_dac_channels[index], dac_code) != ESP_OK) return false;
+        /* DAC update remains observable even if a PWM channel reports a driver failure. */
+        if (ledc_set_duty(LEDC_LOW_SPEED_MODE, (ledc_channel_t)index, duty) != ESP_OK ||
+            ledc_update_duty(LEDC_LOW_SPEED_MODE, (ledc_channel_t)index) != ESP_OK) applied = false;
+        if (dac_oneshot_output_voltage(g_dac_channels[index], dac_code) != ESP_OK) applied = false;
     }
-    return true;
+    return applied;
 }
 
 bool DaqcProfileAcquire(uint8_t payload[DAQC_ACQUISITION_SIZE]) {

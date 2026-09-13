@@ -35,6 +35,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/esp32-streaming-smoke-2026-09-13.md](evidence/esp32-streaming-smoke-2026-09-13.md) | Ensaio físico de transição para STREAMING, aquisição periódica a ~96,4 Hz e confirmação READ_ACK |
 | [evidence/esp32-streaming-harness-safe-stop-2026-09-13.md](evidence/esp32-streaming-harness-safe-stop-2026-09-13.md) | `finally` do harness solicita DISABLE depois de STREAMING, inclusive em falha de coleta |
 | [evidence/esp32-watchdog-no-ack-2026-09-13.md](evidence/esp32-watchdog-no-ack-2026-09-13.md) | Ensaio físico do watchdog após 60 s sem avanço de READ_ACK |
+| [evidence/esp32-actuation-loopback-2026-09-13.md](evidence/esp32-actuation-loopback-2026-09-13.md) | Ensaio físico DATA host→DAQC com loopbacks DO, DAC e PWM em nível alto |
 
 ## Fontes e precedência
 
@@ -69,6 +70,8 @@ Revisão 0.26.12: a auditoria corrigiu a rastreabilidade do ensaio 0.26.11 e del
 Revisão 0.26.13: o harness de STREAMING passou a solicitar DISABLE em `finally` após a aceitação de STREAMING, inclusive se a coleta falhar. A mudança é verificada no HOST e não substitui ensaio elétrico.
 
 Revisão 0.26.14: o ensaio físico sem READ_ACK observou 5.983 frames DATA em 59,98 s. O último frame chegou a 60,00 s após o corte do ACK; não houve novo DATA nos 5 s restantes da observação, antes do cleanup confirmar DISABLE. Isso confirma o watchdog de progresso de leitura nesta placa e firmware, sem comprovar atuação física nem HIL.
+
+Revisão 0.26.15: o ensaio físico de DATA host→DAQC confirmou, por jumpers locais, DO GPIO16 em DI GPIO4, DAC GPIO25 em AI GPIO32 (1,6715 V mediano) e PWM GPIO18 em AI GPIO33 com duty 1,0 (3,118 V mediano). A aplicação de atuação passou da tarefa de comunicação para a tarefa de I/O no núcleo 1. O ensaio não caracteriza duty intermediário, precisão, carga, coordenador C ou HIL.
 
 Revisões 0.4–0.6 corrigiram direção, retenção no host, proteção por 100 passos, zero físico no encerramento, grade fixa e reuso arquitetural do RaspDAQ. O código de produção permanece preservado.
 

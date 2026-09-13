@@ -31,6 +31,7 @@ typedef struct {
     rclc_executor_t executor;
     microhil_interfaces__msg__DaqcSetup setup_message;
     atomic_bool state_publication_pending;
+    atomic_bool invalid_data_error_pending;
     bool support_initialized;
     bool node_initialized;
     bool setup_subscription_initialized;
@@ -55,7 +56,7 @@ static void ResetRos(void) {
 }
 
 static void PublishErrors(uint8_t ros_error, uint8_t communication_error, uint8_t profile_error,
-                          uint8_t adc_configuration_error, uint8_t pwm_configuration_error) {
+                          uint8_t adc_configuration_error, uint8_t pwm_configuration_error, uint8_t invalid_data_error) {
     if (!g_ros.started) return;
     const microhil_interfaces__msg__DaqcErrors message = {
         .source_is_daqc = 1U,
@@ -66,7 +67,7 @@ static void PublishErrors(uint8_t ros_error, uint8_t communication_error, uint8_
         .adc_configuration_error = adc_configuration_error,
         .pwm_configuration_error = pwm_configuration_error,
         .timeout_error = 0U,
-        .invalid_data_error = 0U,
+        .invalid_data_error = invalid_data_error,
     };
     const rcl_ret_t publish_status = rcl_publish(&g_ros.errors_publisher, &message, NULL);
     (void)publish_status;
@@ -80,15 +81,19 @@ static void PublishState(void) {
         .profile_applied = DaqcControlProfileApplied(g_ros.control) ? 1U : 0U,
         .configuration_applied = DaqcControlConfigurationApplied(g_ros.control) ? 1U : 0U,
     };
-    if (rcl_publish(&g_ros.state_publisher, &message, NULL) != RCL_RET_OK) PublishErrors(1U, 0U, 0U, 0U, 0U);
+    if (rcl_publish(&g_ros.state_publisher, &message, NULL) != RCL_RET_OK) PublishErrors(1U, 0U, 0U, 0U, 0U, 0U);
 }
 
 void DaqcRosRequestStatePublication(void) {
     if (g_ros.started) atomic_store_explicit(&g_ros.state_publication_pending, true, memory_order_release);
 }
 
+void DaqcRosRequestInvalidDataError(void) {
+    if (g_ros.started) atomic_store_explicit(&g_ros.invalid_data_error_pending, true, memory_order_release);
+}
+
 void DaqcRosPublishCommunicationError(void) {
-    PublishErrors(0U, 1U, 0U, 0U, 0U);
+    PublishErrors(0U, 1U, 0U, 0U, 0U, 0U);
 }
 
 static bool IsAdcConfigurationValid(const microhil_interfaces__msg__DaqcSetup *setup) {
@@ -107,13 +112,13 @@ static bool IsPwmConfigurationValid(const microhil_interfaces__msg__DaqcSetup *s
 static void SetupCallback(const void *message) {
     const microhil_interfaces__msg__DaqcSetup *setup = message;
     if (!setup || setup->apply_configuration > 1U) {
-        PublishErrors(0U, 1U, 0U, 0U, 0U);
+        PublishErrors(0U, 1U, 0U, 0U, 0U, 0U);
         return;
     }
     const bool adc_valid = IsAdcConfigurationValid(setup);
     const bool pwm_valid = IsPwmConfigurationValid(setup);
     if (setup->apply_configuration && (!adc_valid || !pwm_valid)) {
-        PublishErrors(0U, 0U, 0U, adc_valid ? 0U : 1U, pwm_valid ? 0U : 1U);
+        PublishErrors(0U, 0U, 0U, adc_valid ? 0U : 1U, pwm_valid ? 0U : 1U, 0U);
         return;
     }
     const daqc_configuration_t configuration = {
@@ -129,19 +134,20 @@ static void SetupCallback(const void *message) {
     if (status == DAQC_CONTROL_OK) {
         PublishState();
     } else if (status == DAQC_CONTROL_PROFILE) {
-        PublishErrors(0U, 0U, 1U, 0U, 0U);
+        PublishErrors(0U, 0U, 1U, 0U, 0U, 0U);
     } else if (status == DAQC_CONTROL_CONFIGURATION) {
-        PublishErrors(0U, 0U, 1U, 0U, 0U);
+        PublishErrors(0U, 0U, 1U, 0U, 0U, 0U);
     } else {
-        PublishErrors(0U, 1U, 0U, 0U, 0U);
+        PublishErrors(0U, 1U, 0U, 0U, 0U, 0U);
     }
 }
 
 static void RosTask(void *argument) {
     (void)argument;
     while (true) {
-        if (rclc_executor_spin_some(&g_ros.executor, RCL_MS_TO_NS(10U)) != RCL_RET_OK) PublishErrors(1U, 0U, 0U, 0U, 0U);
+        if (rclc_executor_spin_some(&g_ros.executor, RCL_MS_TO_NS(10U)) != RCL_RET_OK) PublishErrors(1U, 0U, 0U, 0U, 0U, 0U);
         if (atomic_exchange_explicit(&g_ros.state_publication_pending, false, memory_order_acq_rel)) PublishState();
+        if (atomic_exchange_explicit(&g_ros.invalid_data_error_pending, false, memory_order_acq_rel)) PublishErrors(0U, 0U, 0U, 0U, 0U, 1U);
         vTaskDelay(pdMS_TO_TICKS(1U));
     }
 }
@@ -166,6 +172,7 @@ bool DaqcRosStart(daqc_control_t *control) {
                           .state_publisher = rcl_get_zero_initialized_publisher(), .errors_publisher = rcl_get_zero_initialized_publisher(),
                           .executor = rclc_executor_get_zero_initialized_executor()};
     atomic_init(&g_ros.state_publication_pending, false);
+    atomic_init(&g_ros.invalid_data_error_pending, false);
     const rcl_ret_t support_status = rclc_support_init_with_options(&g_ros.support, 0, NULL, &init_options, &allocator);
     const rcl_ret_t finalize_status = rcl_init_options_fini(&init_options);
     if (support_status != RCL_RET_OK || finalize_status != RCL_RET_OK) return false;

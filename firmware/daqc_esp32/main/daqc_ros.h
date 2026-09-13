@@ -10,5 +10,6 @@
 bool DaqcRosStart(daqc_control_t *control);
 void DaqcRosRequestStatePublication(void);
 void DaqcRosPublishCommunicationError(void);
+void DaqcRosRequestInvalidDataError(void);
 
 #endif
