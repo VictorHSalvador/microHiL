@@ -70,7 +70,7 @@ RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
   const version_files = fs.readdirSync(path.join(ROOT, 'docs')).filter((name) => /^sdd-versions\.md$/.test(name));
   assert.deepEqual(version_files, ['sdd-versions.md']);
   assert.match(index, /\[sdd-versions\.md\]\(sdd-versions\.md\)/);
-  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.29\.1\*\*, de 14\.09\.2026/);
+  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.29\.2\*\*, de 14\.09\.2026/);
   assert.match(versioning, /Status da versão:/);
 });
 
@@ -84,11 +84,13 @@ RegisterTest('AC-002: O estado separa especificação, implementação e verific
 
 RegisterTest('AC-003: Cada revisão possui metadados mínimos @spec:AC-003', () => {
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
-  assert.equal(rows.length, 90);
+  assert.equal(rows.length, 91);
   for (const row of rows) {
     assert.equal(row.length, 7);
     assert.ok(row.every((cell) => cell.length > 0));
   }
+  assert.equal(rows.at(-1)[0], '0.29.2');
+  rows.pop();
   assert.equal(rows.at(-1)[0], '0.29.1');
   rows.pop();
   assert.equal(rows.at(-1)[0], '0.29.0');
