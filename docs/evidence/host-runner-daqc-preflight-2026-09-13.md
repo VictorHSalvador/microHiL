@@ -7,8 +7,8 @@
 
 Com o timeout CONFIG configurado em 100 ms, a etapa CONFIG DISABLE→ENABLE foi concluída: o preflight avançou até aguardar a confirmação `DaqcState`. A espera de estabilização ROS/XRCE foi 6.000 ms e o prazo de confirmação ROS foi ampliado somente para diagnóstico a 5.000 ms. Ainda assim, o `DaqcState` aplicado não chegou.
 
-A instrumentação de preflight registrou 93.216 bytes RX seriais, 5.176 frames XRCE DAQC→Agent e zero datagramas Agent→DAQC, sem rejeição da ponte, coalescência ou falha serial. Uma verificação local por `pgrep` não encontrou processo `micro_ros_agent` ativo; a consulta a sockets foi limitada pelo ambiente de execução.
+A instrumentação de preflight registrou 93.184 bytes RX seriais, 5.174 frames XRCE DAQC→Agent e zero datagramas Agent→DAQC, sem rejeição da ponte, coalescência ou falha serial. Depois do ensaio, foi confirmado o Agent correto em UDP 8888 (PID 22691) e o harness Python repetiu o ciclo completo com essa mesma instância: ENABLE, setup, STREAMING, 70 DATA em 1,01 s e DISABLE. Portanto, a ausência de resposta é limitada à ponte C atual, não à disponibilidade do Agent ou da DAQC.
 
 ## Limite
 
-O resultado identifica que o Agent local não estava ativo durante este ensaio. Ele não demonstra falha do protocolo, do firmware, do coordenador ou do controle ROS. Repetir o mesmo ensaio somente depois de iniciar o Agent pelo procedimento validado. O valor inicial de CONFIG continua 10 ms e o valor inicial da confirmação ROS continua 100 ms; os valores maiores foram usados apenas para localizar a etapa da falha.
+O resultado não identifica a causa interna da incompatibilidade da ponte C. A comparação demonstra somente que o caminho Python conhecido recebe respostas do Agent, enquanto o caminho C atual não as recebe. Não alterar o protocolo, a fila XRCE ou os prazos com base apenas neste resultado. O valor inicial de CONFIG continua 10 ms e o valor inicial da confirmação ROS continua 100 ms; os valores maiores foram usados apenas para localizar a etapa da falha.
