@@ -9,6 +9,8 @@ Com o timeout CONFIG configurado em 100 ms, a etapa CONFIG DISABLE→ENABLE foi 
 
 A instrumentação de preflight registrou 93.184 bytes RX seriais, 5.174 frames XRCE DAQC→Agent e zero datagramas Agent→DAQC, sem rejeição da ponte, coalescência ou falha serial. Depois do ensaio, foi confirmado o Agent correto em UDP 8888 (PID 22691) e o harness Python repetiu o ciclo completo com essa mesma instância: ENABLE, setup, STREAMING, 70 DATA em 1,01 s e DISABLE. Portanto, a ausência de resposta é limitada à ponte C atual, não à disponibilidade do Agent ou da DAQC.
 
+Uma variante temporária do runner registrou como primeiro payload DAQC→Agent da ponte C `81 00 00 00 0b 01 05 00 0d 00 0d 00 80`. Em contraste, o traço do harness funcional mostrou que seu primeiro payload DAQC→Agent foi `80 00 00 00 00 01 10 00 58 52 43 45 01 00 01 0f 4d 48 49 4c 81 00 7c 00`, seguido de uma resposta do Agent iniciada por `81`. A diferença de ponto de entrada é observada; a hipótese de bytes UART anteriores não é confirmação de causa.
+
 ## Limite
 
 O resultado não identifica a causa interna da incompatibilidade da ponte C. A comparação demonstra somente que o caminho Python conhecido recebe respostas do Agent, enquanto o caminho C atual não as recebe. Não alterar o protocolo, a fila XRCE ou os prazos com base apenas neste resultado. O valor inicial de CONFIG continua 10 ms e o valor inicial da confirmação ROS continua 100 ms; os valores maiores foram usados apenas para localizar a etapa da falha.
