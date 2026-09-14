@@ -14,12 +14,14 @@
 #include "plotter.h"
 #include "sample_queue.h"
 #include <ctype.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <time.h>
 #include <unistd.h>
 
 #define MAX_CANDIDATE_OUTPUTS 512
@@ -28,6 +30,19 @@
 static _Atomic bool *g_stop_requested = NULL;
 
 #ifdef MICROHIL_WITH_ROS2_CONTROL
+static int WaitDaqcRosStartup(uint32_t delay_ms) {
+    struct timespec remaining = {
+        .tv_sec = (time_t)(delay_ms / 1000U),
+        .tv_nsec = (long)(delay_ms % 1000U) * 1000000L,
+    };
+
+    /* The known Agent/DAQC startup sequence needs this preflight settling period. */
+    while (nanosleep(&remaining, &remaining) != 0) {
+        if (errno != EINTR) return -1;
+    }
+    return 0;
+}
+
 typedef struct {
     daq_coordinator_t coordinator;
     daq_xrce_udp_bridge_t xrce_bridge;
@@ -39,6 +54,24 @@ typedef struct {
     bool serial_service_started;
     bool ros_control_initialized;
 } daqc_runtime_t;
+
+static void ReportDaqcPreflightDiagnostics(const daqc_runtime_t *runtime) {
+    if (!runtime) return;
+    daq_serial_service_stats_t serial_stats = {0};
+    if (runtime->serial_service_started && DaqSerialServiceGetStats(&runtime->serial_service, &serial_stats)) {
+        fprintf(stderr, "DAQC preflight serial: rx=%llu tx=%llu timeouts=%llu failures=%llu.\n", (unsigned long long)serial_stats.received_bytes,
+                (unsigned long long)serial_stats.transmitted_frames, (unsigned long long)serial_stats.read_timeouts,
+                (unsigned long long)serial_stats.io_failures);
+    }
+    if (runtime->xrce_bridge_started) {
+        fprintf(stderr, "DAQC preflight XRCE: daqc_to_agent=%llu agent_to_daqc=%llu rejected=%llu received=%llu coalesced=%llu rejected_frames=%llu.\n",
+                (unsigned long long)atomic_load_explicit(&runtime->xrce_bridge.forwarded_to_agent, memory_order_relaxed),
+                (unsigned long long)atomic_load_explicit(&runtime->xrce_bridge.forwarded_to_daqc, memory_order_relaxed),
+                (unsigned long long)atomic_load_explicit(&runtime->xrce_bridge.rejected_datagrams, memory_order_relaxed),
+                (unsigned long long)runtime->coordinator.xrce_frames, (unsigned long long)runtime->coordinator.xrce_coalesced,
+                (unsigned long long)runtime->coordinator.rejected_frames);
+    }
+}
 
 static void StopDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config) {
     if (!runtime) return;
@@ -57,6 +90,7 @@ static void StopDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config) {
 
 static int StartDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config, RtSimulationContext *simulation) {
     if (!runtime || !config || !simulation || !simulation->input_state_ready || !config->profile_loaded || !config->daqc_device_path[0]) return -1;
+    const char *failure_stage = "initialization";
     *runtime = (daqc_runtime_t){0};
     const daq_coordinator_config_t coordinator_config = {
         .acquisition_schema = &config->acquisition_schema,
@@ -65,9 +99,11 @@ static int StartDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config, Rt
         .xrce_receive = DaqXrceUdpBridgeReceiveFromDaqc,
         .xrce_context = &runtime->xrce_bridge,
     };
+    failure_stage = "coordinator initialization";
     if (DaqCoordinatorInit(&runtime->coordinator, &coordinator_config) != DAQ_COORDINATOR_OK) goto fail;
     runtime->coordinator_initialized = true;
     const daq_xrce_udp_bridge_config_t bridge_config = {.coordinator = &runtime->coordinator, .agent_port = config->daqc_agent_port};
+    failure_stage = "XRCE UDP bridge startup";
     if (DaqXrceUdpBridgeStart(&runtime->xrce_bridge, &bridge_config) != DAQ_XRCE_UDP_BRIDGE_OK) goto fail;
     runtime->xrce_bridge_started = true;
     const daq_serial_service_config_t serial_config = {
@@ -75,21 +111,31 @@ static int StartDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config, Rt
         .device_path = config->daqc_device_path,
         .baud_rate = config->daqc_baud_rate,
     };
+    failure_stage = "DAQC serial service startup";
     if (DaqSerialServiceStart(&runtime->serial_service, &serial_config) != DAQ_SERIAL_SERVICE_OK) goto fail;
     runtime->serial_service_started = true;
+    failure_stage = "ROS control initialization";
     if (DaqcRosControlInit(&runtime->ros_control) != DAQC_ROS_CONTROL_OK) goto fail;
     runtime->ros_control_initialized = true;
+    failure_stage = "ROS control startup";
     if (DaqcRosControlStart(&runtime->ros_control) != DAQC_ROS_CONTROL_OK) goto fail;
-    if (DaqStateControlTransition(&runtime->coordinator, DAQ_LINK_DISABLED, DAQ_PROTOCOL_COMMAND_ENABLE, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK ||
-        DaqcRosControlPublishSetup(&runtime->ros_control, DAQ_PROTOCOL_COMMAND_ENABLE, &config->profile, true) != DAQC_ROS_CONTROL_OK ||
-        DaqcRosControlWaitConfiguration(&runtime->ros_control, DAQ_PROTOCOL_COMMAND_ENABLE, config->profile.profile_id, config->daqc_ros_timeout_ms) != DAQC_ROS_CONTROL_OK ||
-        DaqOutputBridgeInit(&runtime->output_bridge, &config->actuation_schema, &runtime->coordinator) != DAQ_OUTPUT_BRIDGE_OK ||
-        DaqStateControlPlay(&runtime->coordinator, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK) {
-        goto fail;
-    }
+    failure_stage = "CONFIG DISABLE to ENABLE";
+    if (DaqStateControlTransition(&runtime->coordinator, DAQ_LINK_DISABLED, DAQ_PROTOCOL_COMMAND_ENABLE, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK) goto fail;
+    failure_stage = "ROS/XRCE startup delay";
+    if (WaitDaqcRosStartup(config->daqc_ros_startup_delay_ms) != 0) goto fail;
+    failure_stage = "DaqcSetup publication";
+    if (DaqcRosControlPublishSetup(&runtime->ros_control, DAQ_PROTOCOL_COMMAND_ENABLE, &config->profile, true) != DAQC_ROS_CONTROL_OK) goto fail;
+    failure_stage = "DaqcState configuration confirmation";
+    if (DaqcRosControlWaitConfiguration(&runtime->ros_control, DAQ_PROTOCOL_COMMAND_ENABLE, config->profile.profile_id, config->daqc_ros_timeout_ms) != DAQC_ROS_CONTROL_OK) goto fail;
+    failure_stage = "DAQC output bridge initialization";
+    if (DaqOutputBridgeInit(&runtime->output_bridge, &config->actuation_schema, &runtime->coordinator) != DAQ_OUTPUT_BRIDGE_OK) goto fail;
+    failure_stage = "CONFIG ENABLE to STREAMING";
+    if (DaqStateControlPlay(&runtime->coordinator, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK) goto fail;
     return 0;
 
 fail:
+    fprintf(stderr, "DAQC preflight failed at %s.\n", failure_stage);
+    ReportDaqcPreflightDiagnostics(runtime);
     StopDaqcRuntime(runtime, config);
     return -1;
 }
@@ -326,6 +372,12 @@ static void configure_daqc_timeout(AppConfig *config) {
         return;
     }
     config->daqc_config_timeout_ms = (uint32_t)timeout_ms;
+    const int startup_delay_ms = read_int("DAQC ROS startup delay before setup in milliseconds: ", (int)config->daqc_ros_startup_delay_ms);
+    if (startup_delay_ms < 0) {
+        printf("DAQC ROS startup delay must be zero or positive.\n");
+        return;
+    }
+    config->daqc_ros_startup_delay_ms = (uint32_t)startup_delay_ms;
     const int ros_timeout_ms = read_int("DAQC ROS setup confirmation timeout in milliseconds: ", (int)config->daqc_ros_timeout_ms);
     if (ros_timeout_ms <= 0) {
         printf("DAQC ROS setup confirmation timeout must be positive.\n");

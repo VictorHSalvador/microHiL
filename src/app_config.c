@@ -18,6 +18,7 @@ void app_config_set_defaults(AppConfig *config) {
     config->plot_refresh_s = 0.10;
     config->stop_on_invalid_input_limit = true;
     config->daqc_config_timeout_ms = 10U;
+    config->daqc_ros_startup_delay_ms = 6000U;
     config->daqc_ros_timeout_ms = 100U;
     config->daqc_baud_rate = 152000U;
     config->daqc_agent_port = 8888U;
@@ -49,6 +50,7 @@ void app_config_print(const AppConfig *config) {
     }
     printf("Invalid input stop:  %s\n", config->stop_on_invalid_input_limit ? "enabled at 100 steps" : "disabled");
     printf("DAQC CONFIG timeout: %u ms\n", config->daqc_config_timeout_ms);
+    printf("DAQC ROS start delay:%u ms\n", config->daqc_ros_startup_delay_ms);
     printf("DAQC ROS timeout:    %u ms\n", config->daqc_ros_timeout_ms);
     printf("DAQC integration:    %s\n", config->daqc_enabled ? "enabled" : "disabled");
     if (config->daqc_enabled) {

@@ -130,7 +130,7 @@ Em 10.09.2026, o usuário aprovou substituir a premissa de transporte customizad
 
 O usuário confirmou que o próprio `fmu_rt_runner` será um nó ROS 2 em C, usando `rcl`. O componente ROS executa em thread de controle separada: publica `DaqcSetup`, recebe `DaqcState` e `DaqcErrors`, armazena confirmações e acorda somente o controlador de Play/Stop. Ele não chama FMI, não acessa a TTY/CH340 e não espera dentro da thread de simulação. O controlador prepara a FMU, solicita ENABLE por CONFIG, publica o setup correspondente e aguarda `profile_applied` e `configuration_applied`; só então solicita STREAMING e cria a thread de simulação. A prioridade, latência e comportamento sob carga exigem medição HOST/HIL.
 
-`daqc_config_timeout_ms` inicia em 10 ms e rege a confirmação CONFIG no enlace crítico. O prazo separado `daqc_ros_timeout_ms` inicia em **100 ms** e é configurável pelo operador. Ele acomoda transferência XRCE, Agent e processamento ROS antes de liberar Play, sem entrar na thread de simulação. Esse prazo é aplicado uma vez por Play, antes de STREAMING; não compõe o orçamento de nenhum passo FMI.
+`daqc_config_timeout_ms` inicia em 10 ms e rege a confirmação CONFIG no enlace crítico. Após CONFIG ENABLE e antes de publicar `DaqcSetup`, `daqc_ros_startup_delay_ms` inicia em **6.000 ms** e é configurável pelo operador. Ele é uma espera de estabilização do Agent/XRCE reproduzida do procedimento físico validado; não confirma configuração. O prazo separado `daqc_ros_timeout_ms` inicia em **100 ms** e limita a espera por `DaqcState` com perfil/configuração aplicados depois da publicação. Ambos ocorrem uma vez por Play, antes de STREAMING, e não compõem o orçamento de nenhum passo FMI.
 
 ## Perfil compilado e XRCE HOST — 0.14.0
 
