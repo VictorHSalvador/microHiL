@@ -13,6 +13,8 @@
 
 typedef bool (*daq_xrce_receive_callback_t)(const uint8_t *payload, size_t payload_size, void *context);
 
+#define DAQ_COORDINATOR_XRCE_QUEUE_DEPTH 64U
+
 typedef struct {
     const daq_schema_t *acquisition_schema;
     input_state_t *input_state;
@@ -45,10 +47,12 @@ typedef struct {
     pthread_mutex_t transmit_mutex;
     daq_protocol_command_t pending_command;
     bool command_pending;
-    uint8_t xrce_mailbox[DAQ_PROTOCOL_XRCE_MTU];
-    size_t xrce_mailbox_size;
-    bool xrce_pending;
-    uint64_t xrce_coalesced;
+    uint8_t xrce_queue[DAQ_COORDINATOR_XRCE_QUEUE_DEPTH][DAQ_PROTOCOL_XRCE_MTU];
+    size_t xrce_queue_sizes[DAQ_COORDINATOR_XRCE_QUEUE_DEPTH];
+    size_t xrce_queue_head;
+    size_t xrce_queue_tail;
+    size_t xrce_queue_count;
+    uint64_t xrce_queue_overflows;
     uint64_t rejected_frames;
     uint64_t xrce_frames;
     atomic_uint_fast64_t config_confirmations;

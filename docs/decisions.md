@@ -128,7 +128,7 @@ Em 10.09.2026, o usuário aprovou substituir a premissa de transporte customizad
 
 ## Nó ROS 2 no runner — 0.22.0
 
-O preflight do runner C deve reproduzir o baseline físico validado: depois de abrir a TTY como dono exclusivo, descarta apenas RX pendente e exige uma confirmação CONFIG DISABLE nova antes de ENABLE. Isso ocorre fora da simulação e não altera DATA, XRCE, o relógio FMI ou o estado físico além do DISABLE seguro. A primeira execução física desse baseline não resolveu a ausência de resposta Agent→DAQC; a evidência limita o resultado.
+O preflight do runner C reproduz o baseline físico validado: abre a TTY como dono exclusivo com DTR/RTS inativos e permite reset configurável da DAQC por RTS ativo durante 100 ms, seguido de 1.000 ms de estabilização. Depois descarta apenas RX pendente e exige uma confirmação CONFIG DISABLE nova antes de ENABLE. Isso ocorre fora da simulação e não altera DATA, o relógio FMI ou o estado físico além do DISABLE seguro. O valor inicial do reset é habilitado. A execução física de 14.09.2026 completou a sessão Agent→DAQC e a simulação curta após a correção da fila XRCE.
 
 O usuário confirmou que o próprio `fmu_rt_runner` será um nó ROS 2 em C, usando `rcl`. O componente ROS executa em thread de controle separada: publica `DaqcSetup`, recebe `DaqcState` e `DaqcErrors`, armazena confirmações e acorda somente o controlador de Play/Stop. Ele não chama FMI, não acessa a TTY/CH340 e não espera dentro da thread de simulação. O controlador prepara a FMU, solicita ENABLE por CONFIG, publica o setup correspondente e aguarda `profile_applied` e `configuration_applied`; só então solicita STREAMING e cria a thread de simulação. A prioridade, latência e comportamento sob carga exigem medição HOST/HIL.
 
@@ -138,7 +138,7 @@ O usuário confirmou que o próprio `fmu_rt_runner` será um nó ROS 2 em C, usa
 
 `DaqcSetup.profile_id` seleciona um perfil compilado na DAQC. A configuração HOST associa a FMU ao perfil selecionado e valida a compatibilidade antes do Play. O mapa de GPIOs e descritores permanecem compilados, mas `DaqcSetup` transfere a configuração limitada de ADC/PWM aprovada para aplicação em DISABLE ou ENABLE. `DaqcState` confirma o identificador, o perfil e a configuração aplicados.
 
-O coordenador HOST mantém uma única mensagem XRCE pendente de até 128 bytes. A mensagem mais nova substitui a anterior e é enviada somente depois de CONFIG, READ_ACK e DATA pendentes. Confirmações CONFIG limpam esse mailbox, impedindo transportar controle XRCE de uma transição anterior. Isso implementa o multiplexador local; a ponte UDP do Agent e o cliente micro-ROS continuam pendentes de integração completa.
+O coordenador HOST mantém uma FIFO de 64 mensagens XRCE, cada uma com até 128 bytes. Elas são enviadas em ordem somente depois de CONFIG, READ_ACK e DATA pendentes. Quando a FIFO está cheia, a mensagem nova é rejeitada e o overflow é contabilizado; mensagens já aceitas não são substituídas. Confirmações CONFIG não limpam a FIFO porque o transporte XRCE e a máquina de estados CONFIG são independentes. Essa correção foi exigida por teste que reproduziu a perda Agent→DAQC e precedeu o ciclo físico integrado de 14.09.2026.
 
 ## Mapa funcional ESP32 — 0.15.0
 

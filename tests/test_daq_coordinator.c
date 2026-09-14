@@ -7,7 +7,7 @@
 
 typedef struct {
     size_t count;
-    uint8_t first_byte;
+    uint8_t first_bytes[4];
 } xrce_capture_t;
 
 static void Require(bool condition, const char *message) {
@@ -19,8 +19,8 @@ static void Require(bool condition, const char *message) {
 
 static bool CaptureXrce(const uint8_t *payload, size_t payload_size, void *context) {
     xrce_capture_t *capture = context;
+    if (capture->count < sizeof(capture->first_bytes)) capture->first_bytes[capture->count] = payload_size > 0U ? payload[0] : 0U;
     ++capture->count;
-    capture->first_byte = payload_size > 0U ? payload[0] : 0U;
     return true;
 }
 
@@ -35,6 +35,7 @@ int main(void) {
     const uint8_t acquisition_payload[] = {0U, 0U, 0x20U, 0x40U};
     const uint8_t xrce_payload[] = {0xa5U, 0x11U};
     const uint8_t outbound_xrce_payload[] = {0x42U, 0x24U};
+    const uint8_t outbound_xrce_followup[] = {0x43U, 0x25U};
     const uint8_t output_payload[] = {7U, 8U};
     uint8_t incoming[64];
     uint8_t outgoing[DAQ_PROTOCOL_DATA_PREFIX_SIZE + DAQ_PROTOCOL_MAX_DATA_PAYLOAD];
@@ -76,9 +77,11 @@ int main(void) {
     Require(DaqCoordinatorReceive(&coordinator, incoming, incoming_size) == DAQ_COORDINATOR_OK, "valid inbound frames were rejected");
     Require(InputStatePrepareStep(&input_state, &step) == INPUT_STATE_STATUS_OK && fabs(step.values[0].real_value - 2.5) < 1e-12,
             "inbound DATA did not reach the FMU input snapshot");
-    Require(capture.count == 1U && capture.first_byte == 0xa5U, "XRCE payload was not demultiplexed");
+    Require(capture.count == 1U && capture.first_bytes[0] == 0xa5U, "XRCE payload was not demultiplexed");
     Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_payload, sizeof(outbound_xrce_payload)) == DAQ_COORDINATOR_OK,
             "could not queue outbound XRCE");
+    Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_followup, sizeof(outbound_xrce_followup)) == DAQ_COORDINATOR_OK,
+            "could not queue consecutive outbound XRCE datagram");
     Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
             frame.kind == DAQ_TRANSMIT_READ_ACK && frame.size == 5U && outgoing[2] == DAQ_PROTOCOL_MID_READ_ACK && outgoing[3] == 9U,
             "READ_ACK was not prioritized after a consumed DATA frame");
@@ -94,13 +97,24 @@ int main(void) {
             "DATA did not take priority over pending XRCE");
     Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
             frame.kind == DAQ_TRANSMIT_XRCE && frame.size == 7U && outgoing[2] == DAQ_PROTOCOL_MID_XRCE && outgoing[5] == 0x42U,
-            "outbound XRCE was not transmitted after critical traffic");
+            "first outbound XRCE datagram was not transmitted after critical traffic");
+    Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
+            frame.kind == DAQ_TRANSMIT_XRCE && frame.size == 7U && outgoing[2] == DAQ_PROTOCOL_MID_XRCE && outgoing[5] == 0x43U,
+            "second outbound XRCE datagram was not preserved in FIFO order");
     Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_payload, sizeof(outbound_xrce_payload)) == DAQ_COORDINATOR_OK,
             "could not queue XRCE before a state change");
     Require(DaqProtocolEncodeConfig(incoming, sizeof(incoming), DAQ_PROTOCOL_COMMAND_DISABLE, true, DAQ_PROTOCOL_COMMAND_DISABLE) == 5U &&
             DaqCoordinatorReceive(&coordinator, incoming, 5U) == DAQ_COORDINATOR_OK, "DISABLE confirmation was rejected");
     Require(DaqCoordinatorTakeTransmit(&coordinator, outgoing, sizeof(outgoing), &frame) == DAQ_COORDINATOR_OK &&
-            frame.kind == DAQ_TRANSMIT_NONE, "DISABLE confirmation did not discard pending DATA and XRCE");
+            frame.kind == DAQ_TRANSMIT_XRCE && outgoing[5] == 0x42U,
+            "CONFIG confirmation discarded an XRCE datagram that belongs to the independent Agent session");
+    for (size_t index = 0U; index < DAQ_COORDINATOR_XRCE_QUEUE_DEPTH; ++index) {
+        Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_payload, sizeof(outbound_xrce_payload)) == DAQ_COORDINATOR_OK,
+                "XRCE FIFO rejected a datagram before reaching its documented capacity");
+    }
+    Require(DaqCoordinatorQueueXrce(&coordinator, outbound_xrce_payload, sizeof(outbound_xrce_payload)) == DAQ_COORDINATOR_BUSY &&
+            coordinator.xrce_queue_overflows == 1U,
+            "XRCE FIFO saturation was not rejected and counted");
     DaqCoordinatorDestroy(&coordinator);
     InputStateDestroy(&input_state);
     return EXIT_SUCCESS;

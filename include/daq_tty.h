@@ -24,6 +24,7 @@ typedef struct {
 daq_tty_status_t DaqTtyOpen(daq_tty_t *tty, const char *path, unsigned int baud_rate);
 void DaqTtyClose(daq_tty_t *tty);
 daq_tty_status_t DaqTtyFlushInput(daq_tty_t *tty);
+daq_tty_status_t DaqTtyResetDaqc(daq_tty_t *tty);
 daq_tty_status_t DaqTtyRead(daq_tty_t *tty, uint8_t *buffer, size_t capacity, uint32_t timeout_ms, size_t *received);
 daq_tty_status_t DaqTtyWrite(daq_tty_t *tty, const uint8_t *buffer, size_t size, uint32_t timeout_ms, size_t *written);
 

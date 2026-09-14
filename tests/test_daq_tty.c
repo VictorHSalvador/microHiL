@@ -50,6 +50,7 @@ int main(void) {
     const char stale[] = "stale";
     Require(write(master, stale, sizeof(stale)) == (ssize_t)sizeof(stale), "could not place stale bytes in pseudo-terminal");
     Require(DaqTtyFlushInput(&tty) == DAQ_TTY_STATUS_OK, "could not flush pseudo-terminal input");
+    Require(DaqTtyResetDaqc(&tty) == DAQ_TTY_STATUS_OK, "pseudo-terminal reset sequence was rejected");
     uint8_t received[8];
     size_t received_size = 0U;
     Require(DaqTtyRead(&tty, received, sizeof(received), 1U, &received_size) == DAQ_TTY_STATUS_TIMEOUT && received_size == 0U,

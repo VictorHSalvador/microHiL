@@ -15,6 +15,7 @@ typedef struct {
     daq_coordinator_t *coordinator;
     const char *device_path;
     unsigned int baud_rate;
+    bool reset_daqc_before_start;
 } daq_serial_service_config_t;
 
 typedef struct {

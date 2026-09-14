@@ -20,6 +20,7 @@ void app_config_set_defaults(AppConfig *config) {
     config->daqc_config_timeout_ms = 10U;
     config->daqc_ros_startup_delay_ms = 6000U;
     config->daqc_ros_timeout_ms = 100U;
+    config->daqc_reset_before_start = true;
     config->daqc_baud_rate = 152000U;
     config->daqc_agent_port = 8888U;
 }
@@ -53,6 +54,7 @@ void app_config_print(const AppConfig *config) {
     printf("DAQC ROS start delay:%u ms\n", config->daqc_ros_startup_delay_ms);
     printf("DAQC ROS timeout:    %u ms\n", config->daqc_ros_timeout_ms);
     printf("DAQC integration:    %s\n", config->daqc_enabled ? "enabled" : "disabled");
+    printf("DAQC reset/start:    %s\n", config->daqc_reset_before_start ? "enabled" : "disabled");
     if (config->daqc_enabled) {
         printf("DAQC TTY:            %s\n", config->daqc_device_path[0] ? config->daqc_device_path : "<not configured>");
         printf("DAQC baud rate:      %u bit/s\n", config->daqc_baud_rate);

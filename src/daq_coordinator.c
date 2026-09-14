@@ -9,14 +9,8 @@ static bool ProcessFrame(const daq_protocol_frame_t *frame, void *context) {
     if (frame->mid == DAQ_PROTOCOL_MID_CONFIG) {
         if (!frame->has_status || DaqLinkStateConfirm(&coordinator->link_state, (daq_protocol_command_t)frame->command, frame->status) != DAQ_LINK_OK) {
             ++coordinator->rejected_frames;
-        } else if (pthread_mutex_lock(&coordinator->transmit_mutex) != 0) {
-            ++coordinator->rejected_frames;
         } else {
             atomic_fetch_add_explicit(&coordinator->config_confirmations, 1U, memory_order_release);
-            coordinator->xrce_pending = false;
-            if (pthread_mutex_unlock(&coordinator->transmit_mutex) != 0) {
-                ++coordinator->rejected_frames;
-            }
         }
         return true;
     }
@@ -141,14 +135,15 @@ daq_coordinator_status_t DaqCoordinatorQueueXrce(daq_coordinator_t *coordinator,
     if (pthread_mutex_lock(&coordinator->transmit_mutex) != 0) {
         return DAQ_COORDINATOR_MUTEX;
     }
-    if (coordinator->xrce_pending) {
-        ++coordinator->xrce_coalesced;
+    if (coordinator->xrce_queue_count == DAQ_COORDINATOR_XRCE_QUEUE_DEPTH) {
+        ++coordinator->xrce_queue_overflows;
+        (void)pthread_mutex_unlock(&coordinator->transmit_mutex);
+        return DAQ_COORDINATOR_BUSY;
     }
-    if (payload_size > 0U) {
-        memcpy(coordinator->xrce_mailbox, payload, payload_size);
-    }
-    coordinator->xrce_mailbox_size = payload_size;
-    coordinator->xrce_pending = true;
+    if (payload_size > 0U) memcpy(coordinator->xrce_queue[coordinator->xrce_queue_tail], payload, payload_size);
+    coordinator->xrce_queue_sizes[coordinator->xrce_queue_tail] = payload_size;
+    coordinator->xrce_queue_tail = (coordinator->xrce_queue_tail + 1U) % DAQ_COORDINATOR_XRCE_QUEUE_DEPTH;
+    ++coordinator->xrce_queue_count;
     return pthread_mutex_unlock(&coordinator->transmit_mutex) == 0 ? DAQ_COORDINATOR_OK : DAQ_COORDINATOR_MUTEX;
 }
 
@@ -196,11 +191,13 @@ daq_coordinator_status_t DaqCoordinatorTakeTransmit(daq_coordinator_t *coordinat
         if (pthread_mutex_lock(&coordinator->transmit_mutex) != 0) {
             return DAQ_COORDINATOR_MUTEX;
         }
-        if (coordinator->xrce_pending) {
-            frame->size = DaqProtocolEncodeXrce(destination, capacity, coordinator->xrce_mailbox, coordinator->xrce_mailbox_size);
+        if (coordinator->xrce_queue_count > 0U) {
+            const size_t queue_head = coordinator->xrce_queue_head;
+            frame->size = DaqProtocolEncodeXrce(destination, capacity, coordinator->xrce_queue[queue_head], coordinator->xrce_queue_sizes[queue_head]);
             frame->kind = DAQ_TRANSMIT_XRCE;
             if (frame->size > 0U) {
-                coordinator->xrce_pending = false;
+                coordinator->xrce_queue_head = (queue_head + 1U) % DAQ_COORDINATOR_XRCE_QUEUE_DEPTH;
+                --coordinator->xrce_queue_count;
             }
         }
         if (pthread_mutex_unlock(&coordinator->transmit_mutex) != 0) {

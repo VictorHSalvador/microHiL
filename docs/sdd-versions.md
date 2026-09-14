@@ -1,18 +1,18 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.28.0**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.29.0**, de 14.09.2026.
 
-Status da versão: **componentes HOST e firmware em avanço incremental; estados, aquisição, READ_ACK, watchdog e três caminhos de atuação foram comprovados fisicamente na placa ESP32; duty intermediário, precisão/carga elétrica e a validação com coordenador C permanecem pendentes**.
+Status da versão: **o runner C completou uma execução física curta com Agent, DAQC e FMU; estados, aquisição, READ_ACK, watchdog e atuação básica também possuem evidências físicas; correspondência numérica do loopback, duty intermediário, precisão/carga, Raspberry Pi e qualificação temporal permanecem pendentes**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.28.0 | Evidência/limite |
+| Eixo | Estado em 0.29.0 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
-| Implementação | Componentes HOST, runner ROS e firmware ESP32 evoluíram de forma incremental; requisitos de produto seguem parciais ou pendentes | Build independente, runner ROS e firmware compilados; não inferir conformidade integral |
-| Verificação | CTest ROS 48/48 no HOST; firmware gravado em ESP32; setup ROS, STREAMING, DATA, READ_ACK, watchdog e loopbacks DO/DAC/PWM observados pela CH340 | Não executa coordenador C, duty intermediário/precisão/carga, Raspberry Pi, malha HIL ou qualificação temporal |
+| Implementação | Componentes HOST, runner ROS e firmware ESP32 evoluíram de forma incremental; a ponte Agent→DAQC preserva XRCE em FIFO limitada e o preflight possui reset RTS configurável | Build independente, runner ROS e firmware compilados; requisitos de produto seguem parciais ou pendentes |
+| Verificação | CTest ROS 49/49, Python 20/20 e ciclo físico runner C–Agent–DAQC–FMU com 20 passos, SCHED_FIFO e encerramento DISABLE | Não registra valores do loopback por canal; não qualifica duty intermediário/precisão/carga, Raspberry Pi, duração, jitter ou hard real-time |
 
 ## Esquema de versão
 
@@ -118,6 +118,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.27.1 | 13.09.2026 | PATCH | Correção da evidência: Agent e DAQC foram confirmados pelo harness Python; a falha permanece limitada à recepção XRCE da ponte C | evidência, plano, README, sdd-versions e teste documental | Comparação física do harness e da ponte C; causa interna não inferida | 2670115 |
 | 0.27.2 | 13.09.2026 | PATCH | Evidência registra os primeiros payloads XRCE divergentes da ponte C e do harness funcional, sem atribuir causa | evidência, plano, README, sdd-versions e teste documental | Traço Python e variante temporária C; decisão de partida pendente | b63fc56 |
 | 0.28.0 | 13.09.2026 | MINOR | Runner C descarta RX pendente e exige CONFIG DISABLE confirmado antes de ENABLE, seguindo o baseline do harness | TTY, coordenador, estado, runner, testes, arquitetura, ICD, decisões, plano, evidência, README e SDD | HOST coberto por testes; ensaio físico confirma baseline, mas ponte C ainda não recebe Agent→DAQC | alterações locais; registrar commit quando criado |
+| 0.29.0 | 14.09.2026 | MINOR | Ponte Agent→DAQC preserva XRCE em FIFO limitada independente de CONFIG; reset RTS configurável permite o preflight e o runner C completa uma execução física curta | TTY, configuração, serviço serial, coordenador, testes, arquitetura, ICD, decisões, plano, matriz, evidência, README e SDD | [host-runner-daqc-fmu-2026-09-14](evidence/host-runner-daqc-fmu-2026-09-14.md): sessão ROS/XRCE, STREAMING, 20 passos FMI e DISABLE; sem valores elétricos por canal ou qualificação temporal | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

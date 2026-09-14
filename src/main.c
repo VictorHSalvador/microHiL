@@ -64,11 +64,11 @@ static void ReportDaqcPreflightDiagnostics(const daqc_runtime_t *runtime) {
                 (unsigned long long)serial_stats.io_failures);
     }
     if (runtime->xrce_bridge_started) {
-        fprintf(stderr, "DAQC preflight XRCE: daqc_to_agent=%llu agent_to_daqc=%llu rejected=%llu received=%llu coalesced=%llu rejected_frames=%llu.\n",
+        fprintf(stderr, "DAQC preflight XRCE: daqc_to_agent=%llu agent_to_daqc=%llu rejected=%llu received=%llu queue_overflows=%llu rejected_frames=%llu.\n",
                 (unsigned long long)atomic_load_explicit(&runtime->xrce_bridge.forwarded_to_agent, memory_order_relaxed),
                 (unsigned long long)atomic_load_explicit(&runtime->xrce_bridge.forwarded_to_daqc, memory_order_relaxed),
                 (unsigned long long)atomic_load_explicit(&runtime->xrce_bridge.rejected_datagrams, memory_order_relaxed),
-                (unsigned long long)runtime->coordinator.xrce_frames, (unsigned long long)runtime->coordinator.xrce_coalesced,
+                (unsigned long long)runtime->coordinator.xrce_frames, (unsigned long long)runtime->coordinator.xrce_queue_overflows,
                 (unsigned long long)runtime->coordinator.rejected_frames);
     }
 }
@@ -110,6 +110,7 @@ static int StartDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config, Rt
         .coordinator = &runtime->coordinator,
         .device_path = config->daqc_device_path,
         .baud_rate = config->daqc_baud_rate,
+        .reset_daqc_before_start = config->daqc_reset_before_start,
     };
     failure_stage = "DAQC serial service startup";
     if (DaqSerialServiceStart(&runtime->serial_service, &serial_config) != DAQ_SERIAL_SERVICE_OK) goto fail;
@@ -391,6 +392,7 @@ static void configure_daqc_timeout(AppConfig *config) {
 static void ConfigureDaqcLink(AppConfig *config) {
     config->daqc_enabled = read_bool("Enable DAQC integration? [y/n]: ", config->daqc_enabled);
     if (!config->daqc_enabled) return;
+    config->daqc_reset_before_start = read_bool("Reset DAQC through RTS before preflight? [y/n]: ", config->daqc_reset_before_start);
     char device_path[PATH_LEN];
     read_line("DAQC TTY path [Enter keeps current]: ", device_path, sizeof(device_path));
     if (device_path[0]) snprintf(config->daqc_device_path, sizeof(config->daqc_device_path), "%s", device_path);

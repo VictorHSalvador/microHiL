@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/ioctl.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <asm/ioctls.h>
@@ -43,6 +44,27 @@ static daq_tty_status_t ConfigurePort(int file_descriptor, unsigned int baud_rat
     return DAQ_TTY_STATUS_OK;
 }
 
+static daq_tty_status_t DisableModemControlLines(int file_descriptor) {
+    int modem_bits = TIOCM_DTR | TIOCM_RTS;
+    if (ioctl(file_descriptor, TIOCMBIC, &modem_bits) == 0) return DAQ_TTY_STATUS_OK;
+    // Pseudo-terminals do not implement modem-control signals; USB UARTs do.
+    if (errno == ENOTTY) return DAQ_TTY_STATUS_OK;
+    return DAQ_TTY_STATUS_CONFIGURE_FAILED;
+}
+
+static daq_tty_status_t SetModemControlLines(int file_descriptor, unsigned long request, int modem_bits) {
+    if (ioctl(file_descriptor, request, &modem_bits) == 0 || errno == ENOTTY) return DAQ_TTY_STATUS_OK;
+    return DAQ_TTY_STATUS_CONFIGURE_FAILED;
+}
+
+static daq_tty_status_t SleepMilliseconds(uint32_t delay_ms) {
+    struct timespec remaining = {.tv_sec = (time_t)(delay_ms / 1000U), .tv_nsec = (long)(delay_ms % 1000U) * 1000000L};
+    while (nanosleep(&remaining, &remaining) != 0) {
+        if (errno != EINTR) return DAQ_TTY_STATUS_IO_FAILED;
+    }
+    return DAQ_TTY_STATUS_OK;
+}
+
 static daq_tty_status_t WaitForEvent(int file_descriptor, short events, uint32_t timeout_ms) {
     if (timeout_ms > 5U) return DAQ_TTY_STATUS_INVALID_ARGUMENT;
     struct pollfd descriptor = {.fd = file_descriptor, .events = events};
@@ -64,6 +86,10 @@ daq_tty_status_t DaqTtyOpen(daq_tty_t *tty, const char *path, unsigned int baud_
         (void)close(file_descriptor);
         return DAQ_TTY_STATUS_CONFIGURE_FAILED;
     }
+    if (DisableModemControlLines(file_descriptor) != DAQ_TTY_STATUS_OK) {
+        (void)close(file_descriptor);
+        return DAQ_TTY_STATUS_CONFIGURE_FAILED;
+    }
     *tty = (daq_tty_t){.file_descriptor = file_descriptor, .baud_rate = baud_rate};
     return DAQ_TTY_STATUS_OK;
 }
@@ -77,6 +103,17 @@ void DaqTtyClose(daq_tty_t *tty) {
 daq_tty_status_t DaqTtyFlushInput(daq_tty_t *tty) {
     if (!tty || tty->file_descriptor < 0) return DAQ_TTY_STATUS_INVALID_ARGUMENT;
     return ioctl(tty->file_descriptor, TCFLSH, TCIFLUSH) == 0 ? DAQ_TTY_STATUS_OK : DAQ_TTY_STATUS_IO_FAILED;
+}
+
+daq_tty_status_t DaqTtyResetDaqc(daq_tty_t *tty) {
+    if (!tty || tty->file_descriptor < 0) return DAQ_TTY_STATUS_INVALID_ARGUMENT;
+    if (SetModemControlLines(tty->file_descriptor, TIOCMBIC, TIOCM_DTR) != DAQ_TTY_STATUS_OK ||
+        SetModemControlLines(tty->file_descriptor, TIOCMBIS, TIOCM_RTS) != DAQ_TTY_STATUS_OK ||
+        SleepMilliseconds(100U) != DAQ_TTY_STATUS_OK ||
+        SetModemControlLines(tty->file_descriptor, TIOCMBIC, TIOCM_RTS) != DAQ_TTY_STATUS_OK) {
+        return DAQ_TTY_STATUS_CONFIGURE_FAILED;
+    }
+    return SleepMilliseconds(1000U);
 }
 
 daq_tty_status_t DaqTtyRead(daq_tty_t *tty, uint8_t *buffer, size_t capacity, uint32_t timeout_ms, size_t *received) {

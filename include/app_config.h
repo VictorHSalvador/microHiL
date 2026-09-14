@@ -30,6 +30,7 @@ typedef struct {
     uint32_t daqc_ros_startup_delay_ms;
     uint32_t daqc_ros_timeout_ms;
     bool daqc_enabled;
+    bool daqc_reset_before_start;
     char daqc_device_path[PATH_LEN];
     unsigned int daqc_baud_rate;
     uint16_t daqc_agent_port;
