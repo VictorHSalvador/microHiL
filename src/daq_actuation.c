@@ -5,8 +5,19 @@
 #include <math.h>
 #include <string.h>
 
+#define DAQ_AO_MIN_VOLTS 0.0
+#define DAQ_AO_MAX_VOLTS 3.3
+#define DAQ_PWM_MIN_DUTY 0.0
+#define DAQ_PWM_MAX_DUTY 1.0
+
 static bool IsActuationFunction(daq_channel_function_t function) {
     return function == DAQ_CHANNEL_AO || function == DAQ_CHANNEL_DO || function == DAQ_CHANNEL_PWM;
+}
+
+static bool IsPhysicalRangeValid(daq_channel_function_t function, double raw_value) {
+    if (function == DAQ_CHANNEL_AO) return raw_value >= DAQ_AO_MIN_VOLTS && raw_value <= DAQ_AO_MAX_VOLTS;
+    if (function == DAQ_CHANNEL_PWM) return raw_value >= DAQ_PWM_MIN_DUTY && raw_value <= DAQ_PWM_MAX_DUTY;
+    return true;
 }
 
 static void WriteLe32(uint8_t *bytes, uint32_t value) {
@@ -24,7 +35,9 @@ static daq_actuation_status_t EncodeField(const daq_field_t *field, const log_va
     }
     if (field->wire_type != DAQ_WIRE_FLOAT32 || !isfinite(value->real_value)) return DAQ_ACTUATION_OUTPUT_INVALID;
     const double raw_value = (value->real_value - field->offset_value) / field->scale;
-    if (!isfinite(raw_value) || raw_value < -(double)FLT_MAX || raw_value > (double)FLT_MAX) return DAQ_ACTUATION_OUTPUT_RANGE;
+    if (!isfinite(raw_value) || raw_value < -(double)FLT_MAX || raw_value > (double)FLT_MAX || !IsPhysicalRangeValid(field->function, raw_value)) {
+        return DAQ_ACTUATION_OUTPUT_RANGE;
+    }
     const float raw_float = (float)raw_value;
     uint32_t raw_bits = 0U;
     memcpy(&raw_bits, &raw_float, sizeof(raw_bits));

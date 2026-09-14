@@ -70,7 +70,7 @@ RegisterTest('AC-001: A versão vigente é identificável @spec:AC-001', () => {
   const version_files = fs.readdirSync(path.join(ROOT, 'docs')).filter((name) => /^sdd-versions\.md$/.test(name));
   assert.deepEqual(version_files, ['sdd-versions.md']);
   assert.match(index, /\[sdd-versions\.md\]\(sdd-versions\.md\)/);
-  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.29\.0\*\*, de 14\.09\.2026/);
+  assert.match(versioning, /Versão vigente: \*\*SDD-MICROHIL 0\.29\.1\*\*, de 14\.09\.2026/);
   assert.match(versioning, /Status da versão:/);
 });
 
@@ -79,16 +79,18 @@ RegisterTest('AC-002: O estado separa especificação, implementação e verific
   assert.match(versioning, /\| Especificação \|/);
   assert.match(versioning, /\| Implementação \|/);
   assert.match(versioning, /\| Verificação \|/);
-  assert.match(versioning, /Não registra valores do loopback por canal; não qualifica duty intermediário\/precisão\/carga, Raspberry Pi, duração, jitter ou hard real-time/i);
+  assert.match(versioning, /Não captura o input diretamente nem qualifica duty intermediário\/precisão\/carga, Raspberry Pi, duração, jitter ou hard real-time/i);
 });
 
 RegisterTest('AC-003: Cada revisão possui metadados mínimos @spec:AC-003', () => {
   const rows = HistoryRows(Read('docs/sdd-versions.md'));
-  assert.equal(rows.length, 89);
+  assert.equal(rows.length, 90);
   for (const row of rows) {
     assert.equal(row.length, 7);
     assert.ok(row.every((cell) => cell.length > 0));
   }
+  assert.equal(rows.at(-1)[0], '0.29.1');
+  rows.pop();
   assert.equal(rows.at(-1)[0], '0.29.0');
   rows.pop();
   assert.equal(rows.at(-1)[0], '0.28.0');
@@ -163,7 +165,7 @@ RegisterTest('P-002: Existe uma única especificação normativa do produto @pri
 
 RegisterTest('P-003: Estado documental não é estado de implementação @principle:P-003', () => {
   const versioning = Read('docs/sdd-versions.md');
-  assert.match(versioning, /o runner C completou uma execução física curta com Agent, DAQC e FMU; estados, aquisição, READ_ACK, watchdog e atuação básica também possuem evidências físicas; correspondência numérica do loopback, duty intermediário, precisão\/carga, Raspberry Pi e qualificação temporal permanecem pendentes/);
+  assert.match(versioning, /o runner C completou 200 passos com Agent, DAQC e FMU e o log mostrou a evolução do loopback GPIO25→GPIO32; estados, aquisição, READ_ACK, watchdog e atuação básica possuem evidências físicas; precisão\/carga, duty intermediário, Raspberry Pi e qualificação temporal permanecem pendentes/);
   assert.match(versioning, /Aprovação documental não significa implementação/);
 });
 
