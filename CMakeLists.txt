@@ -62,7 +62,7 @@ if(MICROHIL_WITH_ROS2_CONTROL)
     find_package(rcl REQUIRED)
     find_package(microhil_interfaces REQUIRED)
 
-    add_library(microhil_ros_control STATIC src/daqc_ros_control.c)
+    add_library(microhil_ros_control STATIC src/daqc_ros_control.c src/daqc_runtime.c)
     target_include_directories(microhil_ros_control PUBLIC include)
     target_link_libraries(microhil_ros_control PUBLIC
         microhil_project_warnings
@@ -99,13 +99,22 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
     add_library(microhil_execution_session STATIC src/execution_session.c)
     target_include_directories(microhil_execution_session PUBLIC include)
     target_link_libraries(microhil_execution_session PUBLIC microhil_project_warnings microhil_host_components microhil_fmu_wrapper microhil_rt_simulation)
+    if(MICROHIL_WITH_ROS2_CONTROL)
+        target_compile_definitions(microhil_execution_session PUBLIC MICROHIL_WITH_ROS2_CONTROL=1)
+        target_link_libraries(microhil_execution_session PUBLIC microhil_ros_control)
+    endif()
 
     if(MICROHIL_BUILD_GUI)
-        find_package(Qt6 6.2 REQUIRED COMPONENTS Quick QuickControls2)
+        find_package(Qt6 6.2 REQUIRED COMPONENTS Concurrent Quick QuickControls2)
         qt_add_executable(microhil_gui gui/main.cpp gui/gui_controller.cpp)
         set_target_properties(microhil_gui PROPERTIES AUTOMOC ON)
         qt_add_resources(microhil_gui "microhil_gui_resources" PREFIX "/" FILES gui/Main.qml gui/OutputGraphWindow.qml)
-        target_link_libraries(microhil_gui PRIVATE Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
+        target_link_libraries(microhil_gui PRIVATE Qt6::Concurrent Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
+        if(MICROHIL_WITH_ROS2_CONTROL)
+            # File capabilities suppress LD_LIBRARY_PATH; DT_RPATH also resolves transitive ROS dependencies.
+            set_property(TARGET microhil_gui APPEND PROPERTY BUILD_RPATH "/opt/ros/humble/lib")
+            target_link_options(microhil_gui PRIVATE "-Wl,--disable-new-dtags")
+        endif()
     endif()
 
     if(MICROHIL_BUILD_RUNNER)

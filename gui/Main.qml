@@ -28,7 +28,8 @@ ApplicationWindow {
 
     function emptyRunResult() {
         return { available: false, state: "", stage: "", message: "", completedSteps: 0, deadlineMisses: 0, unusedReleases: 0,
-                 maxComputationMs: 0, maxLatenessMs: 0, hasClosedLog: false, binaryLogPath: "" }
+                 maxComputationMs: 0, maxLatenessMs: 0, hasClosedLog: false, binaryLogPath: "", daqcStatsAvailable: false,
+                 daqcRxBytes: 0, daqcTxFrames: 0, daqcReadTimeouts: 0, daqcIoFailures: 0 }
     }
 
     function refreshOutputs() {
@@ -253,9 +254,25 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            Button {
+                                text: "Play HiL"
+                                enabled: window.simulationState !== "Running" && guiController.profilePath.length > 0
+                                onClicked: {
+                                    if (guiController.StartHilSimulation(Number(stepSizeField.text), Number(stopTimeField.text), window.loggingEnabled,
+                                                                         window.plotEnabled, daqcDeviceField.text)) {
+                                        window.clearGraphSamples()
+                                        window.runResult = window.emptyRunResult()
+                                        window.simulationState = "Running"
+                                    }
+                                }
+                            }
                             Button { text: "Stop"; enabled: window.simulationState === "Running"; onClicked: guiController.StopSimulation() }
                         }
-                        Label { text: "Play debug executa a FMU sem DAQC. O Play HiL, com ENABLE→STREAMING e atuação física, depende da integração do enlace."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        RowLayout {
+                            Label { text: "Porta DAQC" }
+                            TextField { id: daqcDeviceField; text: "/dev/ttyUSB0"; Layout.preferredWidth: 180 }
+                        }
+                        Label { text: "Play debug executa somente a FMU. Play HiL usa o perfil YAML, exige SCHED_FIFO e executa ENABLE→STREAMING→DISABLE no mesmo processo."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                         Button { text: "Exportar CSV"; enabled: window.runResult.hasClosedLog === true; onClicked: saveCsvDialog.open() }
                     }
                 }
@@ -281,6 +298,10 @@ ApplicationWindow {
                         Label { text: Number(window.runResult.maxComputationMs).toFixed(3) }
                         Label { text: "Pior atraso (ms)" }
                         Label { text: Number(window.runResult.maxLatenessMs).toFixed(3) }
+                        Label { visible: window.runResult.daqcStatsAvailable === true; text: "DAQC RX / TX" }
+                        Label { visible: window.runResult.daqcStatsAvailable === true; text: window.runResult.daqcRxBytes + " bytes / " + window.runResult.daqcTxFrames + " frames" }
+                        Label { visible: window.runResult.daqcStatsAvailable === true; text: "Timeouts / falhas DAQC" }
+                        Label { visible: window.runResult.daqcStatsAvailable === true; text: window.runResult.daqcReadTimeouts + " / " + window.runResult.daqcIoFailures }
                     }
                     Label { visible: window.runResult.hasClosedLog === true; text: "Log binário fechado: " + window.runResult.binaryLogPath; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 }

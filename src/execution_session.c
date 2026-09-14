@@ -13,10 +13,15 @@ static void ClearRunState(execution_session_t *session) {
     atomic_store_explicit(&session->stop_requested, false, memory_order_relaxed);
     atomic_store_explicit(&session->producer_done, false, memory_order_relaxed);
     atomic_store_explicit(&session->gui_plot_enabled, false, memory_order_relaxed);
+    atomic_store_explicit(&session->hil_run_active, false, memory_order_relaxed);
     session->prepared = false;
     session->logging_started = false;
     session->run_started = false;
     session->result_available = false;
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    session->daqc_stats = (daq_serial_service_stats_t){0};
+    session->daqc_stats_available = false;
+#endif
 }
 
 void ExecutionSessionInit(execution_session_t *session) {
@@ -252,6 +257,14 @@ bool ExecutionSessionStopOnInvalidInputLimit(const execution_session_t *session)
 }
 
 execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled) {
+    if (!session || !session->initialized) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    session->result = (run_result_t){0};
+    session->result_available = false;
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    session->config.daqc_enabled = false;
+    session->daqc_stats = (daq_serial_service_stats_t){0};
+    session->daqc_stats_available = false;
+#endif
     execution_session_status_t status = ExecutionSessionSetTiming(session, step_size_s, stop_time_s);
     if (status != EXECUTION_SESSION_OK) return status;
     session->config.binary_log_enabled = logging_enabled;
@@ -273,7 +286,90 @@ execution_session_status_t ExecutionSessionStartGui(execution_session_t *session
     return EXECUTION_SESSION_OK;
 }
 
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+static bool ProfileOutputsAreSelected(const execution_session_t *session) {
+    for (size_t mapping_index = 0U; mapping_index < session->config.profile.mapping_count; ++mapping_index) {
+        const profile_mapping_t *mapping = &session->config.profile.mappings[mapping_index];
+        if (mapping->is_input) continue;
+        bool selected = false;
+        for (size_t output_index = 0U; output_index < session->config.output_count; ++output_index) {
+            const OutputVariable *output = &session->config.outputs[output_index];
+            if (output->fmu_index == mapping->fmu_index && output->value_reference == mapping->value_reference && output->type == mapping->type) {
+                selected = true;
+                break;
+            }
+        }
+        if (!selected) return false;
+    }
+    return true;
+}
+#endif
+
+execution_session_status_t ExecutionSessionRunGuiHil(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled,
+                                                      bool plot_enabled, const char *device_path) {
+#ifndef MICROHIL_WITH_ROS2_CONTROL
+    (void)session;
+    (void)step_size_s;
+    (void)stop_time_s;
+    (void)logging_enabled;
+    (void)plot_enabled;
+    (void)device_path;
+    return EXECUTION_SESSION_NOT_SUPPORTED;
+#else
+    if (!session || !session->initialized || !device_path || !device_path[0]) return EXECUTION_SESSION_INVALID_ARGUMENT;
+    session->result = (run_result_t){0};
+    session->result_available = false;
+    if (!session->config.profile_loaded || !ProfileOutputsAreSelected(session)) return EXECUTION_SESSION_PROFILE;
+    execution_session_status_t status = ExecutionSessionSetTiming(session, step_size_s, stop_time_s);
+    if (status != EXECUTION_SESSION_OK) return status;
+    session->config.binary_log_enabled = logging_enabled;
+    session->config.plot_enabled = true;
+    session->config.daqc_enabled = true;
+    snprintf(session->config.daqc_device_path, sizeof(session->config.daqc_device_path), "%s", device_path);
+    session->daqc_stats = (daq_serial_service_stats_t){0};
+    session->daqc_stats_available = false;
+    atomic_store_explicit(&session->gui_plot_enabled, plot_enabled, memory_order_relaxed);
+    atomic_store_explicit(&session->hil_run_active, true, memory_order_release);
+    char realtime_message[160];
+    if (RtSimulationCheckHilRealtime(&session->config, realtime_message, sizeof(realtime_message)) != 0) {
+        atomic_store_explicit(&session->hil_run_active, false, memory_order_release);
+        return EXECUTION_SESSION_REALTIME;
+    }
+    if ((status = ExecutionSessionPrepare(session)) != EXECUTION_SESSION_OK) goto finish;
+    if (DaqcRuntimeStart(&session->daqc_runtime, &session->config, &session->simulation.input_state) != 0) {
+        status = EXECUTION_SESSION_DAQC;
+        DaqcRuntimeStop(&session->daqc_runtime, &session->config);
+        ExecutionSessionAbort(session);
+        goto finish;
+    }
+    if ((status = ExecutionSessionStartLogging(session)) != EXECUTION_SESSION_OK) {
+        ExecutionSessionAbort(session);
+        goto stop_daqc;
+    }
+    sample_queue_init(&session->gui_plot_queue);
+    if (RtSimulationStart(&session->simulation, session->logging_started ? &session->logging : NULL, &session->gui_plot_queue,
+                          &session->daqc_runtime.output_bridge, &session->stop_requested, &session->producer_done, &session->gui_plot_enabled) != 0) {
+        status = EXECUTION_SESSION_START;
+        ExecutionSessionAbort(session);
+        goto stop_daqc;
+    }
+    session->run_started = true;
+    status = ExecutionSessionJoin(session);
+
+stop_daqc:
+    session->daqc_stats_available = DaqcRuntimeGetSerialStats(&session->daqc_runtime, &session->daqc_stats);
+    DaqcRuntimeStop(&session->daqc_runtime, &session->config);
+finish:
+    atomic_store_explicit(&session->hil_run_active, false, memory_order_release);
+    return status;
+#endif
+}
+
 execution_session_status_t ExecutionSessionStopGui(execution_session_t *session) {
+    if (session && atomic_load_explicit(&session->hil_run_active, memory_order_acquire)) {
+        atomic_store_explicit(&session->stop_requested, true, memory_order_relaxed);
+        return EXECUTION_SESSION_OK;
+    }
     return ExecutionSessionRequestStop(session);
 }
 
@@ -333,6 +429,51 @@ double ExecutionSessionMaxLateness(const execution_session_t *session) {
 
 bool ExecutionSessionSchedFifoActive(const execution_session_t *session) {
     return ExecutionSessionHasResult(session) && session->result.simulation.stats.sched_fifo_active;
+}
+
+bool ExecutionSessionDaqcStatsAvailable(const execution_session_t *session) {
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    return session && session->daqc_stats_available;
+#else
+    (void)session;
+    return false;
+#endif
+}
+
+uint64_t ExecutionSessionDaqcRxBytes(const execution_session_t *session) {
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    return ExecutionSessionDaqcStatsAvailable(session) ? session->daqc_stats.received_bytes : 0U;
+#else
+    (void)session;
+    return 0U;
+#endif
+}
+
+uint64_t ExecutionSessionDaqcTxFrames(const execution_session_t *session) {
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    return ExecutionSessionDaqcStatsAvailable(session) ? session->daqc_stats.transmitted_frames : 0U;
+#else
+    (void)session;
+    return 0U;
+#endif
+}
+
+uint64_t ExecutionSessionDaqcReadTimeouts(const execution_session_t *session) {
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    return ExecutionSessionDaqcStatsAvailable(session) ? session->daqc_stats.read_timeouts : 0U;
+#else
+    (void)session;
+    return 0U;
+#endif
+}
+
+uint64_t ExecutionSessionDaqcIoFailures(const execution_session_t *session) {
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    return ExecutionSessionDaqcStatsAvailable(session) ? session->daqc_stats.io_failures : 0U;
+#else
+    (void)session;
+    return 0U;
+#endif
 }
 
 bool ExecutionSessionHasClosedBinaryLog(const execution_session_t *session) {
@@ -490,6 +631,9 @@ const char *ExecutionSessionStatusString(execution_session_status_t status) {
         case EXECUTION_SESSION_INPUT_PHYSICAL: return "the FMU input is mapped to the physical DAQC";
         case EXECUTION_SESSION_INPUT_VALUE: return "the virtual input value is invalid";
         case EXECUTION_SESSION_CSV: return "could not export the binary log to CSV";
+        case EXECUTION_SESSION_REALTIME: return "SCHED_FIFO is unavailable for Play HiL";
+        case EXECUTION_SESSION_DAQC: return "could not prepare or stop the DAQC lifecycle";
+        case EXECUTION_SESSION_NOT_SUPPORTED: return "this build does not include ROS 2 DAQC support";
         default: return "unknown execution session status";
     }
 }

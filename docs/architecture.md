@@ -85,6 +85,8 @@ Perfil ESP32 tem mapa funcional confirmado: AI em GPIO32/33/34/35/36/39, DI em G
 
 Qt 6/C++ confirmado, desacoplado do núcleo; terminal debug é alternativa operacional. Importar FMU e carregar configuração usam botões/diálogos separados. Uma configuração incompatível informa variável/tipo/perfil/parâmetro divergente e não é aplicada parcialmente. GUI solicita comandos, não acessa instância FMI nem bloqueia thread crítica.
 
+O lifecycle DAQC é um módulo C compartilhado pelo terminal e pela sessão usada na GUI. Play HiL o executa em uma tarefa `QtConcurrent` do mesmo processo, deixando a thread de eventos livre; o coordenador continua sendo o único dono da TTY. A thread FMI permanece separada e recebe apenas snapshots de input e a bridge de atuação. Stop publica a solicitação atômica também durante o preflight; as esperas prévias continuam limitadas pelos parâmetros vigentes.
+
 Direção visual confirmada: Linux Mint. Proposta de paleta inicial (design, não cores oficiais exigidas): superfícies claras cinza, texto grafite e verde para seleção/ação primária; alertas em âmbar/vermelho com texto/ícone, sem depender só de cor. Estilo próprio C++ foi registrado na constituição preservando APIs Qt.
 
 | Controle/comportamento | Contrato confirmado |

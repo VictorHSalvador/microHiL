@@ -64,9 +64,14 @@ int main(int argc, char **argv) {
         Require(ExecutionSessionSetOutputSelected(&session, output_index, true) == EXECUTION_SESSION_OK, "could not select all FMU outputs");
     }
     snprintf(session.config.binary_log_path, sizeof(session.config.binary_log_path), "%s", binary_log_path);
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    session.daqc_stats_available = true;
+#endif
     for (unsigned int run_index = 0U; run_index < 2U; ++run_index) {
         Require(ExecutionSessionStartGui(&session, 0.01, 0.04, true, false) == EXECUTION_SESSION_OK,
                 "could not start the GUI simulation");
+        Require(!ExecutionSessionHasResult(&session), "GUI simulation retained the preceding run result while starting");
+        Require(!ExecutionSessionDaqcStatsAvailable(&session), "debug execution retained DAQC statistics from a preceding run");
         if (run_index == 1U) {
             usleep(20000U);
             Require(ExecutionSessionSetGuiPlotEnabled(&session, true) == EXECUTION_SESSION_OK,
@@ -91,6 +96,14 @@ int main(int argc, char **argv) {
     bool partial = false;
     Require(ExecutionSessionExportGuiCsv(&session, csv_path, &exported_records, &partial) == EXECUTION_SESSION_OK && !partial && exported_records == 4U,
             "session did not convert the closed binary log to CSV");
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    Require(ExecutionSessionRunGuiHil(&session, 0.01, 0.04, false, false, "") == EXECUTION_SESSION_INVALID_ARGUMENT,
+            "HiL GUI path accepted an empty DAQC device");
+#else
+    Require(ExecutionSessionRunGuiHil(&session, 0.01, 0.04, false, false, "") == EXECUTION_SESSION_NOT_SUPPORTED,
+            "non-ROS build did not reject GUI HiL execution explicitly");
+#endif
+    Require(!ExecutionSessionDaqcStatsAvailable(&session), "debug execution reported DAQC statistics");
     ExecutionSessionDestroy(&session);
     unlink(binary_log_path);
     unlink(csv_path);

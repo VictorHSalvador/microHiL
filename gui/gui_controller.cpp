@@ -2,12 +2,17 @@
 #include "gui_controller.h"
 
 #include <QFile>
+#include <QtConcurrent>
 #include <QSaveFile>
 #include <QTemporaryFile>
 #include <QTextStream>
 
 GuiController::GuiController(QObject *parent) : QObject(parent), session_(ExecutionSessionCreate()) {}
-GuiController::~GuiController() { ExecutionSessionDelete(session_); }
+GuiController::~GuiController() {
+    if (gui_run_started_) (void)ExecutionSessionStopGui(session_);
+    if (hil_future_.isRunning()) hil_future_.waitForFinished();
+    ExecutionSessionDelete(session_);
+}
 QString GuiController::FmuPath() const { return QString::fromUtf8(ExecutionSessionFmuPath(session_)); }
 QString GuiController::ModelName() const { return QString::fromUtf8(ExecutionSessionModelName(session_)); }
 int GuiController::InputCount() const { return static_cast<int>(ExecutionSessionInputCount(session_)); }
@@ -207,9 +212,27 @@ bool GuiController::SetStopOnInvalidInputLimit(bool enabled) {
 bool GuiController::StartSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled) {
     const execution_session_status_t status = ExecutionSessionStartGui(session_, stepSizeSeconds, stopTimeSeconds, loggingEnabled, plotEnabled);
     gui_run_started_ = status == EXECUTION_SESSION_OK;
+    hil_run_started_ = false;
     error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
     emit ErrorChanged();
     return gui_run_started_;
+}
+
+bool GuiController::StartHilSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled, const QString &devicePath) {
+    if (!session_ || gui_run_started_ || devicePath.isEmpty()) {
+        error_message_ = QStringLiteral("invalid or active HiL execution session");
+        emit ErrorChanged();
+        return false;
+    }
+    const QByteArray native_path = devicePath.toLocal8Bit();
+    gui_run_started_ = true;
+    hil_run_started_ = true;
+    error_message_.clear();
+    emit ErrorChanged();
+    hil_future_ = QtConcurrent::run([this, stepSizeSeconds, stopTimeSeconds, loggingEnabled, plotEnabled, native_path]() {
+        return static_cast<int>(ExecutionSessionRunGuiHil(session_, stepSizeSeconds, stopTimeSeconds, loggingEnabled, plotEnabled, native_path.constData()));
+    });
+    return true;
 }
 
 bool GuiController::StopSimulation() {
@@ -240,7 +263,15 @@ QVariantList GuiController::PollSamples() {
         item.insert(QStringLiteral("values"), values);
         samples.append(item);
     }
-    if (gui_run_started_ && !ExecutionSessionGuiRunning(session_)) {
+    if (gui_run_started_ && hil_run_started_ && hil_future_.isFinished()) {
+        const execution_session_status_t status = static_cast<execution_session_status_t>(hil_future_.result());
+        gui_run_started_ = false;
+        hil_run_started_ = false;
+        if (status != EXECUTION_SESSION_OK) {
+            error_message_ = QString::fromUtf8(ExecutionSessionStatusString(status));
+            emit ErrorChanged();
+        }
+    } else if (gui_run_started_ && !hil_run_started_ && !ExecutionSessionGuiRunning(session_)) {
         const execution_session_status_t status = ExecutionSessionJoinGui(session_);
         gui_run_started_ = false;
         if (status != EXECUTION_SESSION_OK) {
@@ -251,7 +282,7 @@ QVariantList GuiController::PollSamples() {
     return samples;
 }
 
-bool GuiController::SimulationRunning() const { return ExecutionSessionGuiRunning(session_); }
+bool GuiController::SimulationRunning() const { return gui_run_started_; }
 
 QVariantMap GuiController::Result() const {
     QVariantMap result;
@@ -268,6 +299,11 @@ QVariantMap GuiController::Result() const {
     result.insert(QStringLiteral("maxComputationMs"), ExecutionSessionMaxComputation(session_) * 1000.0);
     result.insert(QStringLiteral("maxLatenessMs"), ExecutionSessionMaxLateness(session_) * 1000.0);
     result.insert(QStringLiteral("schedFifoActive"), ExecutionSessionSchedFifoActive(session_));
+    result.insert(QStringLiteral("daqcStatsAvailable"), ExecutionSessionDaqcStatsAvailable(session_));
+    result.insert(QStringLiteral("daqcRxBytes"), static_cast<qulonglong>(ExecutionSessionDaqcRxBytes(session_)));
+    result.insert(QStringLiteral("daqcTxFrames"), static_cast<qulonglong>(ExecutionSessionDaqcTxFrames(session_)));
+    result.insert(QStringLiteral("daqcReadTimeouts"), static_cast<qulonglong>(ExecutionSessionDaqcReadTimeouts(session_)));
+    result.insert(QStringLiteral("daqcIoFailures"), static_cast<qulonglong>(ExecutionSessionDaqcIoFailures(session_)));
     result.insert(QStringLiteral("hasClosedLog"), ExecutionSessionHasClosedBinaryLog(session_));
     result.insert(QStringLiteral("binaryLogPath"), QString::fromUtf8(ExecutionSessionBinaryLogPath(session_)));
     return result;

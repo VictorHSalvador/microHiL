@@ -4,6 +4,7 @@
 /* Contrato público do módulo gui controller. */
 
 #include <QObject>
+#include <QFuture>
 #include <QVariantList>
 extern "C" {
 #include "execution_session.h"
@@ -41,6 +42,7 @@ public:
     Q_INVOKABLE bool SetVirtualInput(int index, const QString &value);
     Q_INVOKABLE bool SetStopOnInvalidInputLimit(bool enabled);
     Q_INVOKABLE bool StartSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled);
+    Q_INVOKABLE bool StartHilSimulation(double stepSizeSeconds, double stopTimeSeconds, bool loggingEnabled, bool plotEnabled, const QString &devicePath);
     Q_INVOKABLE bool StopSimulation();
     Q_INVOKABLE bool SetPlotEnabled(bool enabled);
     Q_INVOKABLE QVariantList PollSamples();
@@ -55,6 +57,8 @@ private:
     execution_session_t *session_ = nullptr;
     QString error_message_;
     bool gui_run_started_ = false;
+    bool hil_run_started_ = false;
+    QFuture<int> hil_future_;
     static QString NumericTypeName(int type);
     static QString QuoteYaml(const QString &value);
 };

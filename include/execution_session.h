@@ -16,6 +16,9 @@ extern "C" {
 #include "rt_simulation.h"
 #include "run_result.h"
 #include "sample_queue.h"
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+#include "daqc_runtime.h"
+#endif
 
 typedef struct execution_session {
     FmuModel model;
@@ -26,6 +29,7 @@ typedef struct execution_session {
     _Atomic bool stop_requested;
     _Atomic bool producer_done;
     _Atomic bool gui_plot_enabled;
+    _Atomic bool hil_run_active;
     bool initialized;
     bool prepared;
     bool logging_started;
@@ -34,6 +38,11 @@ typedef struct execution_session {
     input_value_t virtual_input_values[INPUT_STATE_MAX_CHANNELS];
     bool virtual_input_set[INPUT_STATE_MAX_CHANNELS];
     SampleQueue gui_plot_queue;
+#ifdef MICROHIL_WITH_ROS2_CONTROL
+    daqc_runtime_t daqc_runtime;
+    daq_serial_service_stats_t daqc_stats;
+    bool daqc_stats_available;
+#endif
 } execution_session_t;
 #else
 typedef struct execution_session execution_session_t;
@@ -53,7 +62,10 @@ typedef enum {
     EXECUTION_SESSION_PROFILE,
     EXECUTION_SESSION_INPUT_PHYSICAL,
     EXECUTION_SESSION_INPUT_VALUE,
-    EXECUTION_SESSION_CSV
+    EXECUTION_SESSION_CSV,
+    EXECUTION_SESSION_REALTIME,
+    EXECUTION_SESSION_DAQC,
+    EXECUTION_SESSION_NOT_SUPPORTED
 } execution_session_status_t;
 
 execution_session_t *ExecutionSessionCreate(void);
@@ -92,6 +104,8 @@ execution_session_status_t ExecutionSessionSetVirtualInput(execution_session_t *
 execution_session_status_t ExecutionSessionSetStopOnInvalidInputLimit(execution_session_t *session, bool enabled);
 bool ExecutionSessionStopOnInvalidInputLimit(const execution_session_t *session);
 execution_session_status_t ExecutionSessionStartGui(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled, bool plot_enabled);
+execution_session_status_t ExecutionSessionRunGuiHil(execution_session_t *session, double step_size_s, double stop_time_s, bool logging_enabled,
+                                                      bool plot_enabled, const char *device_path);
 execution_session_status_t ExecutionSessionStopGui(execution_session_t *session);
 execution_session_status_t ExecutionSessionSetGuiPlotEnabled(execution_session_t *session, bool enabled);
 execution_session_status_t ExecutionSessionJoinGui(execution_session_t *session);
@@ -107,6 +121,11 @@ uint64_t ExecutionSessionUnusedReleases(const execution_session_t *session);
 double ExecutionSessionMaxComputation(const execution_session_t *session);
 double ExecutionSessionMaxLateness(const execution_session_t *session);
 bool ExecutionSessionSchedFifoActive(const execution_session_t *session);
+bool ExecutionSessionDaqcStatsAvailable(const execution_session_t *session);
+uint64_t ExecutionSessionDaqcRxBytes(const execution_session_t *session);
+uint64_t ExecutionSessionDaqcTxFrames(const execution_session_t *session);
+uint64_t ExecutionSessionDaqcReadTimeouts(const execution_session_t *session);
+uint64_t ExecutionSessionDaqcIoFailures(const execution_session_t *session);
 bool ExecutionSessionHasClosedBinaryLog(const execution_session_t *session);
 const char *ExecutionSessionBinaryLogPath(const execution_session_t *session);
 execution_session_status_t ExecutionSessionExportGuiCsv(execution_session_t *session, const char *csv_path, uint64_t *exported_records, bool *partial);

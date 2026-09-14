@@ -1,18 +1,18 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.29.2**, de 14.09.2026.
+Versão vigente: **SDD-MICROHIL 0.29.3**, de 14.09.2026.
 
-Status da versão: **o runner C completou 200 passos com Agent, DAQC e FMU e o log mostrou a evolução do loopback GPIO25→GPIO32; estados, aquisição, READ_ACK, watchdog e atuação básica possuem evidências físicas; precisão/carga, duty intermediário, Raspberry Pi e qualificação temporal permanecem pendentes**.
+Status da versão: **o runner C completou 200 passos físicos com Agent, DAQC e FMU; a GUI possui Play HiL ligado ao mesmo lifecycle C, compilado e iniciado no HOST, mas seu botão ainda aguarda ensaio físico; precisão/carga, duty intermediário, Raspberry Pi e qualificação temporal permanecem pendentes**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.29.2 | Evidência/limite |
+| Eixo | Estado em 0.29.3 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
-| Implementação | Componentes HOST, runner ROS e firmware ESP32 evoluíram de forma incremental; a ponte Agent→DAQC preserva XRCE em FIFO limitada e o preflight possui reset RTS configurável | Build independente, runner ROS e firmware compilados; requisitos de produto seguem parciais ou pendentes |
-| Verificação | CTest ROS 49/49, Python 20/20, ciclo físico completo e 200 outputs que mostram a evolução do loopback analógico | Não captura o input diretamente nem qualifica duty intermediário/precisão/carga, Raspberry Pi, duração, jitter ou hard real-time |
+| Implementação | Componentes HOST, runner ROS, GUI Play HiL e firmware ESP32 evoluíram de forma incremental; terminal e GUI usam o mesmo lifecycle DAQC C | GUI ROS e runner compilados; o botão Play HiL ainda não foi acionado no hardware e requisitos de produto seguem parciais ou pendentes |
+| Verificação | CTest ROS 49/49, Python 20/20, GUI ROS iniciada offscreen, ciclo físico pelo runner e 200 outputs que mostram a evolução do loopback analógico | Não valida Play HiL físico pela GUI nem captura diretamente o input; duty intermediário/precisão/carga, Raspberry Pi, duração, jitter e hard real-time pendem |
 
 ## Esquema de versão
 
@@ -120,7 +120,8 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.28.0 | 13.09.2026 | MINOR | Runner C descarta RX pendente e exige CONFIG DISABLE confirmado antes de ENABLE, seguindo o baseline do harness | TTY, coordenador, estado, runner, testes, arquitetura, ICD, decisões, plano, evidência, README e SDD | HOST coberto por testes; ensaio físico confirma baseline, mas ponte C ainda não recebe Agent→DAQC | alterações locais; registrar commit quando criado |
 | 0.29.0 | 14.09.2026 | MINOR | Ponte Agent→DAQC preserva XRCE em FIFO limitada independente de CONFIG; reset RTS configurável permite o preflight e o runner C completa uma execução física curta | TTY, configuração, serviço serial, coordenador, testes, arquitetura, ICD, decisões, plano, matriz, evidência, README e SDD | [host-runner-daqc-fmu-2026-09-14](evidence/host-runner-daqc-fmu-2026-09-14.md): sessão ROS/XRCE, STREAMING, 20 passos FMI e DISABLE; sem valores elétricos por canal ou qualificação temporal | 66b23f3 |
 | 0.29.1 | 14.09.2026 | PATCH | Ensaio de 200 passos evidencia o loopback analógico e o host passa a reter o último AO/PWM dentro da faixa física | codificador de atuação, testes, ICD, plano, matriz, evidência, README e SDD | [physical-fmu-loopback-2026-09-14](evidence/physical-fmu-loopback-2026-09-14.md): evolução 0,284→0,788→1,734→3,484 e 200/200 registros; sem instrumento ou qualificação temporal | 3ec3619 |
-| 0.29.2 | 14.09.2026 | PATCH | Revalidação física da malha após proteção de faixa, com assinante tipado de erros ativo | plano, matriz, evidência, README e SDD | [physical-fmu-loopback-range-guard-2026-09-14](evidence/physical-fmu-loopback-range-guard-2026-09-14.md): 200 passos, SCHED_FIFO, zero deadline e nenhuma mensagem de erro observada; sem captura direta ou qualificação temporal | alterações locais; registrar commit quando criado |
+| 0.29.2 | 14.09.2026 | PATCH | Revalidação física da malha após proteção de faixa, com assinante tipado de erros ativo | plano, matriz, evidência, README e SDD | [physical-fmu-loopback-range-guard-2026-09-14](evidence/physical-fmu-loopback-range-guard-2026-09-14.md): 200 passos, SCHED_FIFO, zero deadline e nenhuma mensagem de erro observada; sem captura direta ou qualificação temporal | 954af02 |
+| 0.29.3 | 14.09.2026 | PATCH | Play HiL da GUI passa a usar o lifecycle DAQC C compartilhado em tarefa Qt concorrente | runtime DAQC, sessão, GUI, build, arquitetura, plano, matriz, evidência, README e SDD | [host-gui-hil-integration-2026-09-14](evidence/host-gui-hil-integration-2026-09-14.md): build ROS, 49 CTests e inicialização offscreen; ensaio físico do botão pendente | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 

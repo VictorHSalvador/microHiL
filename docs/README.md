@@ -41,6 +41,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/host-runner-daqc-fmu-2026-09-14.md](evidence/host-runner-daqc-fmu-2026-09-14.md) | Ciclo físico do runner C com Agent, DAQC, STREAMING, 20 passos FMI e DISABLE; valores elétricos por canal não registrados |
 | [evidence/physical-fmu-loopback-2026-09-14.md](evidence/physical-fmu-loopback-2026-09-14.md) | Loopback GPIO25→GPIO32 pelo runner C durante 200 passos e retenção das faixas AO/PWM no host |
 | [evidence/physical-fmu-loopback-range-guard-2026-09-14.md](evidence/physical-fmu-loopback-range-guard-2026-09-14.md) | Revalidação do loopback após proteção de faixa, com observação tipada de `/daqc_errors` |
+| [evidence/host-gui-hil-integration-2026-09-14.md](evidence/host-gui-hil-integration-2026-09-14.md) | Build da GUI ROS com Play HiL no mesmo processo e limites do ensaio HOST |
 
 ## Fontes e precedência
 
@@ -54,9 +55,9 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.29.2**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.29.3**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
-Revisão 0.29.2: a malha física de 200 passos foi repetida depois da proteção HOST de faixa, com `SCHED_FIFO`, zero deadline perdido e assinante tipado de `/daqc_errors` ativo. Nenhuma mensagem foi observada nesse tópico durante o ensaio; isso não substitui a propagação dos erros assíncronos ao resultado da aplicação nem qualificação elétrica ou temporal.
+Revisão 0.29.2: a malha física de 200 passos foi repetida depois da proteção HOST de faixa, com `SCHED_FIFO`, zero deadline perdido e assinante tipado de `/daqc_errors` ativo. Nenhuma mensagem foi observada nesse tópico durante o ensaio; isso não substitui a propagação dos erros assíncronos ao resultado da aplicação nem qualificação elétrica ou temporal. Revisão 0.29.3: o lifecycle DAQC tornou-se um módulo C compartilhado e a GUI o chama por tarefa Qt concorrente no mesmo processo. Build ROS e inicialização offscreen passaram, mas o botão ainda requer ensaio físico.
 
 Revisões 0.26.0–0.26.4: a configuração YAML aceita `acquisition.frequency_hz`; novos perfis GUI iniciam em 100 Hz e o limite vigente é 1…100 Hz, compatível com o tick FreeRTOS de 10 ms configurado. A frequência configura a tarefa de aquisição da DAQC fora do ciclo FMI e não altera o passo da FMU. A [evidência HOST](evidence/host-configurable-acquisition-2026-09-12.md) cobre a geração da interface ROS e 48 testes; a [evidência ESP-IDF](evidence/esp32-acquisition-build-2026-09-12.md) confirma a regeneração do firmware atual; a [evidência física](evidence/esp32-acquisition-config-smoke-2026-09-12.md) confirma a gravação e CONFIG DISABLE. O ensaio da frequência, Agent e I/O continuam pendentes. A revisão 0.26.2 também corrigiu o contexto que ainda chamava essa configuração persistida de binária.
 
