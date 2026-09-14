@@ -1,6 +1,6 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.26.17**, de 13.09.2026.
+Versão vigente: **SDD-MICROHIL 0.26.18**, de 13.09.2026.
 
 Status da versão: **componentes HOST e firmware em avanço incremental; estados, aquisição, READ_ACK, watchdog e três caminhos de atuação foram comprovados fisicamente na placa ESP32; duty intermediário, precisão/carga elétrica e a validação com coordenador C permanecem pendentes**.
 
@@ -8,7 +8,7 @@ Este arquivo é o registro único de versões do conjunto SDD. Ele não substitu
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.26.15 | Evidência/limite |
+| Eixo | Estado em 0.26.18 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
 | Implementação | Componentes HOST, runner ROS e firmware ESP32 evoluíram de forma incremental; requisitos de produto seguem parciais ou pendentes | Build independente, runner ROS e firmware compilados; não inferir conformidade integral |
@@ -113,6 +113,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.26.15 | 13.09.2026 | PATCH | Atuação DATA host→DAQC passou a ser aplicada pela tarefa de I/O no núcleo 1; loopbacks físicos confirmam DO GPIO16, DAC GPIO25 e PWM GPIO18 em nível alto | firmware, harness, testes, arquitetura, plano, matriz, README, evidência e sdd-versions | [esp32-actuation-loopback-2026-09-13](evidence/esp32-actuation-loopback-2026-09-13.md): DI alto, DAC 1,6715 V e PWM alto 3,118 V; sem duty intermediário, carga, coordenador C ou HIL | alterações locais; registrar commit quando criado |
 | 0.26.16 | 13.09.2026 | PATCH | Runner terminal encerra normalmente quando stdin fecha, sem repetir menu em loop | src/main.c, plano, sdd-versions e teste documental | Build ROS do runner e execução com stdin fechado; sem DAQC ou HIL nesta correção | alterações locais; registrar commit quando criado |
 | 0.26.17 | 13.09.2026 | PATCH | Runner ROS mantém RPATH Humble no artefato, permitindo carregar bibliotecas com CAP_SYS_NICE ativa | CMake, sdd-versions e teste documental | `getcap` confirma a capacidade e o runner inicia sem `LD_LIBRARY_PATH`; preflight DAQC pendente | alterações locais; registrar commit quando criado |
+| 0.26.18 | 13.09.2026 | PATCH | Runner ROS usa DT_RPATH transitivo para bibliotecas Humble quando CAP_SYS_NICE ativa o carregador seguro | CMake, sdd-versions, README, plano e testes | Falha de `librcl_yaml_param_parser.so` reproduzida com capability; revalidação do binário e preflight DAQC pendentes | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
