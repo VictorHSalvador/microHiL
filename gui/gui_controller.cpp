@@ -163,6 +163,23 @@ QVariantList GuiController::Inputs() const {
     return inputs;
 }
 
+QVariantList GuiController::ProfileMappings() const {
+    QVariantList mappings;
+    const size_t count = ExecutionSessionProfileMappingCount(session_);
+    for (size_t index = 0U; index < count; ++index) {
+        profile_mapping_t mapping;
+        if (!ExecutionSessionProfileMappingAt(session_, index, &mapping)) continue;
+        QVariantMap item;
+        item.insert(QStringLiteral("variable"), QString::fromUtf8(mapping.variable));
+        item.insert(QStringLiteral("channel"), QString::fromUtf8(mapping.channel));
+        item.insert(QStringLiteral("direction"), mapping.is_input ? QStringLiteral("input") : QStringLiteral("output"));
+        item.insert(QStringLiteral("scale"), mapping.scale);
+        item.insert(QStringLiteral("offset"), mapping.offset);
+        mappings.append(item);
+    }
+    return mappings;
+}
+
 QVariantList GuiController::DaqcChannels(int numericType, bool inputDirection) const {
     static const char *const realInputs[] = {"GPIO32_AI", "GPIO33_AI", "GPIO34_AI", "GPIO35_AI", "GPIO36_AI", "GPIO39_AI"};
     static const char *const booleanInputs[] = {"GPIO4_DI", "GPIO13_DI", "GPIO14_DI", "GPIO27_DI"};

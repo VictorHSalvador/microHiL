@@ -43,6 +43,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/physical-fmu-loopback-range-guard-2026-09-14.md](evidence/physical-fmu-loopback-range-guard-2026-09-14.md) | Revalidação do loopback após proteção de faixa, com observação tipada de `/daqc_errors` |
 | [evidence/host-gui-hil-integration-2026-09-14.md](evidence/host-gui-hil-integration-2026-09-14.md) | Build da GUI ROS com Play HiL no mesmo processo e limites do ensaio HOST |
 | [evidence/gui-three-loopback-2026-09-14.md](evidence/gui-three-loopback-2026-09-14.md) | Play HiL físico de 500 passos pela GUI com loopbacks digital, DAC/ADC e observação PWM/ADC |
+| [evidence/host-gui-profile-mapping-reflection-2026-09-14.md](evidence/host-gui-profile-mapping-reflection-2026-09-14.md) | Correção HOST que reflete na GUI os canais, escalas e offsets do YAML carregado |
 
 ## Fontes e precedência
 
@@ -56,7 +57,7 @@ A [conversão Markdown do DOCX de origem](references/MICROHIL-REQ-001-A.md) est�
 
 ## Atualização desta revisão
 
-Baseline vigente: **SDD-MICROHIL 0.29.4**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
+Baseline vigente: **SDD-MICROHIL 0.29.5**. O histórico central está em [sdd-versions.md](sdd-versions.md); revisões internas preservadas nos documentos continuam úteis, mas não substituem esse registro. A verificação estrututal reproduzível está em [sdd-versioning.json](../.spec/verification/sdd-versioning.json).
 
 Revisão 0.29.2: a malha física de 200 passos foi repetida depois da proteção HOST de faixa, com `SCHED_FIFO`, zero deadline perdido e assinante tipado de `/daqc_errors` ativo. Nenhuma mensagem foi observada nesse tópico durante o ensaio; isso não substitui a propagação dos erros assíncronos ao resultado da aplicação nem qualificação elétrica ou temporal. Revisão 0.29.3: o lifecycle DAQC tornou-se um módulo C compartilhado e a GUI o chama por tarefa Qt concorrente no mesmo processo. Revisão 0.29.4: a GUI completou 500 passos físicos com FMU de três loopbacks e confirmou digital, DAC/ADC e observação PWM/ADC; duty PWM intermediário continua pendente de filtro RC.
 

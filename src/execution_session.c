@@ -522,6 +522,12 @@ size_t ExecutionSessionProfileMappingCount(const execution_session_t *session) {
     return session && session->initialized && session->config.profile_loaded ? session->config.profile.mapping_count : 0U;
 }
 
+bool ExecutionSessionProfileMappingAt(const execution_session_t *session, size_t index, profile_mapping_t *mapping) {
+    if (!session || !session->initialized || !session->config.profile_loaded || !mapping || index >= session->config.profile.mapping_count) return false;
+    *mapping = session->config.profile.mappings[index];
+    return true;
+}
+
 double ExecutionSessionStepSize(const execution_session_t *session) {
     return session && session->initialized ? session->config.step_size_s : 0.0;
 }

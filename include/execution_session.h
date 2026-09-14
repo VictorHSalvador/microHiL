@@ -134,6 +134,7 @@ const char *ExecutionSessionSelectedOutputName(const execution_session_t *sessio
 const char *ExecutionSessionProfilePath(const execution_session_t *session);
 unsigned int ExecutionSessionProfileId(const execution_session_t *session);
 size_t ExecutionSessionProfileMappingCount(const execution_session_t *session);
+bool ExecutionSessionProfileMappingAt(const execution_session_t *session, size_t index, profile_mapping_t *mapping);
 double ExecutionSessionStepSize(const execution_session_t *session);
 double ExecutionSessionStopTime(const execution_session_t *session);
 const char *ExecutionSessionStatusString(execution_session_status_t status);

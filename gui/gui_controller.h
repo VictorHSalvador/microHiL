@@ -37,6 +37,7 @@ public:
                                  const QVariantList &adcAttenuations, const QVariantList &pwmConfigurations, const QVariantList &mappings);
     Q_INVOKABLE QVariantList Inputs() const;
     Q_INVOKABLE QVariantList Outputs() const;
+    Q_INVOKABLE QVariantList ProfileMappings() const;
     Q_INVOKABLE QVariantList DaqcChannels(int numericType, bool inputDirection) const;
     Q_INVOKABLE bool SetOutputSelected(int index, bool selected);
     Q_INVOKABLE bool SetVirtualInput(int index, const QString &value);

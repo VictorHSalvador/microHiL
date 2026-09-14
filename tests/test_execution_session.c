@@ -50,6 +50,10 @@ int main(int argc, char **argv) {
     Require(ExecutionSessionSetVirtualInput(&session, boolean_input, 2.0) == EXECUTION_SESSION_INPUT_VALUE, "session accepted an invalid Boolean virtual input");
     Require(ExecutionSessionLoadProfile(&session, argv[2]) == EXECUTION_SESSION_OK, "could not load the compatible YAML profile into the session");
     Require(session.config.profile_loaded && session.config.profile.mapping_count == 3U, "session did not retain the resolved YAML profile");
+    profile_mapping_t first_mapping;
+    Require(ExecutionSessionProfileMappingAt(&session, 0U, &first_mapping) && strcmp(first_mapping.channel, "GPIO32_AI") == 0 && first_mapping.is_input,
+            "session did not expose the resolved profile mapping to the GUI");
+    Require(!ExecutionSessionProfileMappingAt(&session, session.config.profile.mapping_count, &first_mapping), "session exposed an out-of-range profile mapping");
     Require(ExecutionSessionInputHasPhysicalMapping(&session, real_input), "session did not identify the physical input mapping");
     Require(ExecutionSessionSetVirtualInput(&session, real_input, 2.0) == EXECUTION_SESSION_INPUT_PHYSICAL, "session allowed virtual input over a physical mapping");
     const size_t output_count = ExecutionSessionListOutputs(&session, outputs, MAX_OUTPUTS);

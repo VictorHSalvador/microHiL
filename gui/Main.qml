@@ -38,14 +38,24 @@ ApplicationWindow {
 
     function refreshMappings() {
         inputItems = guiController.Inputs()
+        var loadedMappings = guiController.ProfileMappings()
+        var byVariableAndDirection = ({})
+        for (var mappingIndex = 0; mappingIndex < loadedMappings.length; ++mappingIndex) {
+            var mapping = loadedMappings[mappingIndex]
+            byVariableAndDirection[mapping.direction + "\u0000" + mapping.variable] = mapping
+        }
         var rows = []
         for (var inputIndex = 0; inputIndex < inputItems.length; ++inputIndex) {
             var input = inputItems[inputIndex]
-            rows.push({ variable: input.name, type: input.type, typeCode: input.typeCode, direction: "input", channel: "", scale: "", offset: "" })
+            var inputMapping = byVariableAndDirection["input\u0000" + input.name]
+            rows.push({ variable: input.name, type: input.type, typeCode: input.typeCode, direction: "input", channel: inputMapping ? inputMapping.channel : "",
+                        scale: inputMapping ? String(inputMapping.scale) : "", offset: inputMapping ? String(inputMapping.offset) : "" })
         }
         for (var outputIndex = 0; outputIndex < outputItems.length; ++outputIndex) {
             var output = outputItems[outputIndex]
-            rows.push({ variable: output.name, type: output.type, typeCode: output.typeCode, direction: "output", channel: "", scale: "", offset: "" })
+            var outputMapping = byVariableAndDirection["output\u0000" + output.name]
+            rows.push({ variable: output.name, type: output.type, typeCode: output.typeCode, direction: "output", channel: outputMapping ? outputMapping.channel : "",
+                        scale: outputMapping ? String(outputMapping.scale) : "", offset: outputMapping ? String(outputMapping.offset) : "" })
         }
         mappingRows = rows
     }
