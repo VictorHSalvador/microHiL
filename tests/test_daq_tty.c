@@ -47,6 +47,13 @@ int main(void) {
     Require(ioctl(tty.file_descriptor, TCGETS2, &settings) == 0, "could not inspect pseudo-terminal settings");
     Require(settings.c_ispeed == 152000U && settings.c_ospeed == 152000U, "pseudo-terminal did not retain 152000 baud rate");
     Require((settings.c_cflag & CRTSCTS) == 0U, "hardware flow control was enabled");
+    const char stale[] = "stale";
+    Require(write(master, stale, sizeof(stale)) == (ssize_t)sizeof(stale), "could not place stale bytes in pseudo-terminal");
+    Require(DaqTtyFlushInput(&tty) == DAQ_TTY_STATUS_OK, "could not flush pseudo-terminal input");
+    uint8_t received[8];
+    size_t received_size = 0U;
+    Require(DaqTtyRead(&tty, received, sizeof(received), 1U, &received_size) == DAQ_TTY_STATUS_TIMEOUT && received_size == 0U,
+            "input flush retained stale bytes");
 
     DaqTtyClose(&tty);
     Require(close(master) == 0, "could not close pseudo-terminal master");

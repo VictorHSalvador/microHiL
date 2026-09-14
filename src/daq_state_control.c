@@ -50,6 +50,26 @@ daq_state_control_status_t DaqStateControlTransition(daq_coordinator_t *coordina
     }
 }
 
+daq_state_control_status_t DaqStateControlConfirmDisable(daq_coordinator_t *coordinator, uint32_t timeout_ms) {
+    if (!coordinator || timeout_ms == 0U) return DAQ_STATE_CONTROL_INVALID_ARGUMENT;
+    const uint64_t confirmation_count = DaqCoordinatorConfigConfirmationCount(coordinator);
+    const uint64_t deadline_ms = MonotonicMilliseconds() + timeout_ms;
+    uint64_t next_attempt_ms = MonotonicMilliseconds();
+    while (true) {
+        daq_link_mode_t mode;
+        const uint64_t now_ms = MonotonicMilliseconds();
+        if (DaqCoordinatorGetMode(coordinator, &mode) != DAQ_COORDINATOR_OK) return DAQ_STATE_CONTROL_COORDINATOR;
+        if (DaqCoordinatorConfigConfirmationCount(coordinator) > confirmation_count && mode == DAQ_LINK_DISABLED) return DAQ_STATE_CONTROL_OK;
+        if (now_ms >= deadline_ms) return DAQ_STATE_CONTROL_TIMEOUT;
+        if (now_ms >= next_attempt_ms) {
+            const daq_coordinator_status_t queue_status = DaqCoordinatorQueueCommand(coordinator, DAQ_PROTOCOL_COMMAND_DISABLE);
+            if (queue_status != DAQ_COORDINATOR_OK && queue_status != DAQ_COORDINATOR_BUSY) return DAQ_STATE_CONTROL_COORDINATOR;
+            next_attempt_ms = now_ms + DAQ_STATE_CONTROL_RETRY_MS;
+        }
+        WaitOneMillisecond();
+    }
+}
+
 daq_state_control_status_t DaqStateControlPlay(daq_coordinator_t *coordinator, uint32_t timeout_ms) {
     return DaqStateControlTransition(coordinator, DAQ_LINK_ENABLED, DAQ_PROTOCOL_COMMAND_STREAMING, timeout_ms);
 }

@@ -17,6 +17,7 @@ typedef enum {
 
 daq_state_control_status_t DaqStateControlTransition(daq_coordinator_t *coordinator, daq_link_mode_t expected_mode,
                                                       daq_protocol_command_t target_command, uint32_t timeout_ms);
+daq_state_control_status_t DaqStateControlConfirmDisable(daq_coordinator_t *coordinator, uint32_t timeout_ms);
 daq_state_control_status_t DaqStateControlPlay(daq_coordinator_t *coordinator, uint32_t timeout_ms);
 daq_state_control_status_t DaqStateControlStop(daq_coordinator_t *coordinator, uint32_t timeout_ms);
 const char *DaqStateControlStatusString(daq_state_control_status_t status);

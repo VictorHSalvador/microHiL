@@ -55,6 +55,11 @@ daq_serial_service_status_t DaqSerialServiceStart(daq_serial_service_t *service,
     if (DaqTtyOpen(&service->tty, config->device_path, config->baud_rate) != DAQ_TTY_STATUS_OK) {
         return DAQ_SERIAL_SERVICE_TTY;
     }
+    /* Discard UART bytes produced before this service became the sole owner. */
+    if (DaqTtyFlushInput(&service->tty) != DAQ_TTY_STATUS_OK) {
+        DaqTtyClose(&service->tty);
+        return DAQ_SERIAL_SERVICE_TTY;
+    }
     service->coordinator = config->coordinator;
     atomic_init(&service->running, true);
     atomic_init(&service->received_bytes, 0U);

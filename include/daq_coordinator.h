@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdatomic.h>
 #include <stdint.h>
 
 #include "daq_acquisition.h"
@@ -50,6 +51,7 @@ typedef struct {
     uint64_t xrce_coalesced;
     uint64_t rejected_frames;
     uint64_t xrce_frames;
+    atomic_uint_fast64_t config_confirmations;
     bool initialized;
 } daq_coordinator_t;
 
@@ -67,6 +69,7 @@ daq_coordinator_status_t DaqCoordinatorInit(daq_coordinator_t *coordinator, cons
 void DaqCoordinatorDestroy(daq_coordinator_t *coordinator);
 daq_coordinator_status_t DaqCoordinatorReceive(daq_coordinator_t *coordinator, const uint8_t *bytes, size_t byte_count);
 daq_coordinator_status_t DaqCoordinatorGetMode(daq_coordinator_t *coordinator, daq_link_mode_t *mode);
+uint64_t DaqCoordinatorConfigConfirmationCount(const daq_coordinator_t *coordinator);
 daq_coordinator_status_t DaqCoordinatorQueueCommand(daq_coordinator_t *coordinator, daq_protocol_command_t command);
 daq_coordinator_status_t DaqCoordinatorPublishOutput(daq_coordinator_t *coordinator, uint16_t sequence, const uint8_t *payload, size_t payload_size);
 daq_coordinator_status_t DaqCoordinatorQueueXrce(daq_coordinator_t *coordinator, const uint8_t *payload, size_t payload_size);

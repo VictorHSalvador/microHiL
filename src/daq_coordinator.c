@@ -12,6 +12,7 @@ static bool ProcessFrame(const daq_protocol_frame_t *frame, void *context) {
         } else if (pthread_mutex_lock(&coordinator->transmit_mutex) != 0) {
             ++coordinator->rejected_frames;
         } else {
+            atomic_fetch_add_explicit(&coordinator->config_confirmations, 1U, memory_order_release);
             coordinator->xrce_pending = false;
             if (pthread_mutex_unlock(&coordinator->transmit_mutex) != 0) {
                 ++coordinator->rejected_frames;
@@ -73,6 +74,7 @@ daq_coordinator_status_t DaqCoordinatorInit(daq_coordinator_t *coordinator, cons
     }
     coordinator->xrce_receive = config->xrce_receive;
     coordinator->xrce_context = config->xrce_context;
+    atomic_init(&coordinator->config_confirmations, 0U);
     coordinator->initialized = true;
     return DAQ_COORDINATOR_OK;
 }
@@ -98,6 +100,11 @@ daq_coordinator_status_t DaqCoordinatorReceive(daq_coordinator_t *coordinator, c
 daq_coordinator_status_t DaqCoordinatorGetMode(daq_coordinator_t *coordinator, daq_link_mode_t *mode) {
     if (!coordinator || !coordinator->initialized || !mode) return DAQ_COORDINATOR_INVALID_ARGUMENT;
     return DaqLinkStateGetMode(&coordinator->link_state, mode) == DAQ_LINK_OK ? DAQ_COORDINATOR_OK : DAQ_COORDINATOR_STATE;
+}
+
+uint64_t DaqCoordinatorConfigConfirmationCount(const daq_coordinator_t *coordinator) {
+    if (!coordinator || !coordinator->initialized) return 0U;
+    return atomic_load_explicit(&coordinator->config_confirmations, memory_order_acquire);
 }
 
 daq_coordinator_status_t DaqCoordinatorQueueCommand(daq_coordinator_t *coordinator, daq_protocol_command_t command) {

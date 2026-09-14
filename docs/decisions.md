@@ -128,6 +128,8 @@ Em 10.09.2026, o usuário aprovou substituir a premissa de transporte customizad
 
 ## Nó ROS 2 no runner — 0.22.0
 
+O preflight do runner C deve reproduzir o baseline físico validado: depois de abrir a TTY como dono exclusivo, descarta apenas RX pendente e exige uma confirmação CONFIG DISABLE nova antes de ENABLE. Isso ocorre fora da simulação e não altera DATA, XRCE, o relógio FMI ou o estado físico além do DISABLE seguro. A primeira execução física desse baseline não resolveu a ausência de resposta Agent→DAQC; a evidência limita o resultado.
+
 O usuário confirmou que o próprio `fmu_rt_runner` será um nó ROS 2 em C, usando `rcl`. O componente ROS executa em thread de controle separada: publica `DaqcSetup`, recebe `DaqcState` e `DaqcErrors`, armazena confirmações e acorda somente o controlador de Play/Stop. Ele não chama FMI, não acessa a TTY/CH340 e não espera dentro da thread de simulação. O controlador prepara a FMU, solicita ENABLE por CONFIG, publica o setup correspondente e aguarda `profile_applied` e `configuration_applied`; só então solicita STREAMING e cria a thread de simulação. A prioridade, latência e comportamento sob carga exigem medição HOST/HIL.
 
 `daqc_config_timeout_ms` inicia em 10 ms e rege a confirmação CONFIG no enlace crítico. Após CONFIG ENABLE e antes de publicar `DaqcSetup`, `daqc_ros_startup_delay_ms` inicia em **6.000 ms** e é configurável pelo operador. Ele é uma espera de estabilização do Agent/XRCE reproduzida do procedimento físico validado; não confirma configuração. O prazo separado `daqc_ros_timeout_ms` inicia em **100 ms** e limita a espera por `DaqcState` com perfil/configuração aplicados depois da publicação. Ambos ocorrem uma vez por Play, antes de STREAMING, e não compõem o orçamento de nenhum passo FMI.

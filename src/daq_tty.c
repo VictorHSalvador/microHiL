@@ -74,6 +74,11 @@ void DaqTtyClose(daq_tty_t *tty) {
     *tty = (daq_tty_t){.file_descriptor = -1};
 }
 
+daq_tty_status_t DaqTtyFlushInput(daq_tty_t *tty) {
+    if (!tty || tty->file_descriptor < 0) return DAQ_TTY_STATUS_INVALID_ARGUMENT;
+    return ioctl(tty->file_descriptor, TCFLSH, TCIFLUSH) == 0 ? DAQ_TTY_STATUS_OK : DAQ_TTY_STATUS_IO_FAILED;
+}
+
 daq_tty_status_t DaqTtyRead(daq_tty_t *tty, uint8_t *buffer, size_t capacity, uint32_t timeout_ms, size_t *received) {
     if (!tty || tty->file_descriptor < 0 || !buffer || capacity == 0U || !received) return DAQ_TTY_STATUS_INVALID_ARGUMENT;
     *received = 0U;

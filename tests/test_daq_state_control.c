@@ -20,7 +20,7 @@ static void Require(bool condition, const char *message) {
 
 static void *ConfirmState(void *argument) {
     confirmation_thread_t *thread = argument;
-    const struct timespec interval = {.tv_sec = 0, .tv_nsec = 1000000L};
+    const struct timespec interval = {.tv_sec = 0, .tv_nsec = 10000000L};
     (void)nanosleep(&interval, NULL);
     uint8_t frame[5];
     Require(DaqProtocolEncodeConfig(frame, sizeof(frame), thread->command, true, (uint8_t)thread->command) == sizeof(frame),
@@ -50,15 +50,20 @@ int main(void) {
     Require(DaqSchemaBuild(&schema, fields, 1U) == DAQ_SCHEMA_OK, "could not build acquisition schema");
     Require(InputStateInit(&input_state, inputs, 1U, false) == INPUT_STATE_STATUS_OK, "could not initialize input state");
     Require(DaqCoordinatorInit(&coordinator, &config) == DAQ_COORDINATOR_OK, "could not initialize coordinator");
+    confirmation.command = DAQ_PROTOCOL_COMMAND_DISABLE;
+    Require(pthread_create(&thread, NULL, ConfirmState, &confirmation) == 0, "could not create baseline disable confirmation thread");
+    Require(DaqStateControlConfirmDisable(&coordinator, 100U) == DAQ_STATE_CONTROL_OK, "baseline DISABLE was not confirmed");
+    Require(pthread_join(thread, NULL) == 0, "could not join baseline disable confirmation thread");
     Require(DaqLinkStateConfirm(&coordinator.link_state, DAQ_PROTOCOL_COMMAND_ENABLE, DAQ_PROTOCOL_COMMAND_ENABLE) == DAQ_LINK_OK,
             "could not establish ENABLE state");
+    confirmation.command = DAQ_PROTOCOL_COMMAND_STREAMING;
     Require(pthread_create(&thread, NULL, ConfirmState, &confirmation) == 0, "could not create streaming confirmation thread");
-    Require(DaqStateControlPlay(&coordinator, 20U) == DAQ_STATE_CONTROL_OK, "Play did not await ENABLE to STREAMING confirmation");
+    Require(DaqStateControlPlay(&coordinator, 100U) == DAQ_STATE_CONTROL_OK, "Play did not await ENABLE to STREAMING confirmation");
     Require(pthread_join(thread, NULL) == 0, "could not join streaming confirmation thread");
 
     confirmation.command = DAQ_PROTOCOL_COMMAND_DISABLE;
     Require(pthread_create(&thread, NULL, ConfirmState, &confirmation) == 0, "could not create disable confirmation thread");
-    Require(DaqStateControlStop(&coordinator, 20U) == DAQ_STATE_CONTROL_OK, "Stop did not await STREAMING to DISABLE confirmation");
+    Require(DaqStateControlStop(&coordinator, 100U) == DAQ_STATE_CONTROL_OK, "Stop did not await STREAMING to DISABLE confirmation");
     Require(pthread_join(thread, NULL) == 0, "could not join disable confirmation thread");
     Require(DaqStateControlPlay(&coordinator, 1U) == DAQ_STATE_CONTROL_UNEXPECTED_STATE,
             "Play was accepted outside ENABLE");

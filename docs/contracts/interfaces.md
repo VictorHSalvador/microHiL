@@ -129,7 +129,7 @@ Invalidade numérica é por canal no host, separada de corrupção do quadro. Na
 
 | Evento | Efeito MICROHIL |
 |---|---|
-| Inicialização do serviço/firmware | DISABLE, sem DATA; recepção CONFIG permanece ativa |
+| Inicialização do serviço/firmware | Host descarta RX anterior, confirma CONFIG DISABLE novo, permanece sem DATA e mantém recepção CONFIG ativa |
 | ENABLE válido | Entra em ENABLE/IDLE, sem DATA; não reinicia a FMU por iniciativa do firmware |
 | Play | Requer DAQC em ENABLE; host valida perfil/schema, limpa mailboxes/sequências, inicializa FMU e prepara outputs iniciais válidos; solicita ENABLE→STREAMING e só inicia a thread de simulação/publica atuação após confirmação |
 | Primeiro output da execução | Escrito após STREAMING a partir da FMU inicializada; não copiar cache de execução anterior |

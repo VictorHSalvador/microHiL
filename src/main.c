@@ -114,6 +114,8 @@ static int StartDaqcRuntime(daqc_runtime_t *runtime, const AppConfig *config, Rt
     failure_stage = "DAQC serial service startup";
     if (DaqSerialServiceStart(&runtime->serial_service, &serial_config) != DAQ_SERIAL_SERVICE_OK) goto fail;
     runtime->serial_service_started = true;
+    failure_stage = "baseline CONFIG DISABLE confirmation";
+    if (DaqStateControlConfirmDisable(&runtime->coordinator, config->daqc_config_timeout_ms) != DAQ_STATE_CONTROL_OK) goto fail;
     failure_stage = "ROS control initialization";
     if (DaqcRosControlInit(&runtime->ros_control) != DAQC_ROS_CONTROL_OK) goto fail;
     runtime->ros_control_initialized = true;
