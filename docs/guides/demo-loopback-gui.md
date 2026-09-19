@@ -17,10 +17,11 @@ sudo apt install build-essential cmake git libyaml-dev libcap2-bin python3-colco
   qml6-module-qtquick-templates qml6-module-qtquick-window
 ```
 
-Todos os comandos seguintes partem da raiz do repositório:
+Defina o caminho absoluto do seu clone uma vez em cada terminal. Substitua `/caminho/para/microHiL` pelo diretório real no seu computador:
 
 ```bash
-cd /home/linuxvh/Projects/microHiL
+export MICROHIL_DIR="/caminho/para/microHiL"
+cd "$MICROHIL_DIR"
 ```
 
 ## 2. Ligação física
@@ -52,7 +53,7 @@ git clone --branch humble --single-branch https://github.com/micro-ROS/micro_ros
 cd .local/microhil-agent-ws
 source /opt/ros/humble/setup.bash
 colcon build --packages-select micro_ros_msgs micro_ros_agent
-cd /home/linuxvh/Projects/microHiL
+cd "$MICROHIL_DIR"
 ```
 
 O procedimento validado e os commits observados estão em [micro-ros-agent-persistent-2026-09-19](../evidence/micro-ros-agent-persistent-2026-09-19.md).
@@ -70,7 +71,7 @@ Configure e compile a GUI com ROS 2, FMILibrary e testes:
 
 ```bash
 source /opt/ros/humble/setup.bash
-source /home/linuxvh/Projects/microHiL/install-ros2/setup.bash
+source "$MICROHIL_DIR/install-ros2/setup.bash"
 cmake -S . -B .local/microhil-gui-ros \
   -DMICROHIL_BUILD_GUI=ON \
   -DMICROHIL_BUILD_RUNNER=ON \
@@ -83,8 +84,8 @@ cmake --build .local/microhil-gui-ros --parallel 2
 Play HiL exige `SCHED_FIFO`. Reaplique a capability depois de cada recompilação, pois o novo executável perde a capability do arquivo anterior:
 
 ```bash
-sudo setcap cap_sys_nice=ep /home/linuxvh/Projects/microHiL/.local/microhil-gui-ros/microhil_gui
-getcap /home/linuxvh/Projects/microHiL/.local/microhil-gui-ros/microhil_gui
+sudo setcap cap_sys_nice=ep "$MICROHIL_DIR/.local/microhil-gui-ros/microhil_gui"
+getcap "$MICROHIL_DIR/.local/microhil-gui-ros/microhil_gui"
 ```
 
 O último comando deve mostrar `cap_sys_nice=ep`.
@@ -94,9 +95,10 @@ O último comando deve mostrar `cap_sys_nice=ep`.
 Use dois terminais. No terminal 1, mantenha o Agent aberto:
 
 ```bash
-cd /home/linuxvh/Projects/microHiL
+export MICROHIL_DIR="/caminho/para/microHiL"
+cd "$MICROHIL_DIR"
 source /opt/ros/humble/setup.bash
-source /home/linuxvh/Projects/microHiL/.local/microhil-agent-ws/install/setup.bash
+source "$MICROHIL_DIR/.local/microhil-agent-ws/install/setup.bash"
 ros2 run micro_ros_agent micro_ros_agent udp4 -p 8888
 ```
 
@@ -105,10 +107,11 @@ Se aparecer `bind error` com `errno: 98`, a porta 8888 já está ocupada. Confir
 No terminal 2, abra a GUI como usuário normal:
 
 ```bash
-cd /home/linuxvh/Projects/microHiL
+export MICROHIL_DIR="/caminho/para/microHiL"
+cd "$MICROHIL_DIR"
 source /opt/ros/humble/setup.bash
-source /home/linuxvh/Projects/microHiL/install-ros2/setup.bash
-/home/linuxvh/Projects/microHiL/.local/microhil-gui-ros/microhil_gui
+source "$MICROHIL_DIR/install-ros2/setup.bash"
+"$MICROHIL_DIR/.local/microhil-gui-ros/microhil_gui"
 ```
 
 Não execute a GUI inteira com `sudo`.
@@ -117,8 +120,8 @@ Não execute a GUI inteira com `sudo`.
 
 Na seção **Modelo e perfil**:
 
-1. Clique em **Importar FMU** e abra `/home/linuxvh/Projects/microHiL/tests/fixtures/MicroHiL_LoopbackTest.fmu`.
-2. Clique em **Carregar perfil YAML** e abra `/home/linuxvh/Projects/microHiL/tests/fixtures/MicroHiL_LoopbackTest_profile.yaml`.
+1. Clique em **Importar FMU** e, dentro do seu clone, abra `tests/fixtures/MicroHiL_LoopbackTest.fmu`.
+2. Clique em **Carregar perfil YAML** e, dentro do mesmo clone, abra `tests/fixtures/MicroHiL_LoopbackTest_profile.yaml`.
 3. Confirme que a interface mostra seis mapeamentos e preenche:
    - `ao_feedback` → `GPIO32_AI`;
    - `pwm_feedback` → `GPIO33_AI`;
@@ -127,35 +130,40 @@ Na seção **Modelo e perfil**:
    - `pwm_command` → `GPIO18_PWM`;
    - `do_command` → `GPIO16_DO`.
 
-Na seção **Execução**, use passo `0.01 s` e duração `5 s`. Mantenha **Registrar saídas** e **Atualizar gráficos** marcados. Na seção **Controle**, mantenha `/dev/ttyUSB0` como porta DAQC.
+Na seção **Execução**, confirme o passo `0.01 s` e a duração `60 s` carregados do YAML. Mantenha **Registrar saídas** e **Atualizar gráficos** marcados. Na seção **Controle**, mantenha `/dev/ttyUSB0` como porta DAQC.
 
 ## 7. Configuração dos gráficos
 
 Em **Saídas selecionadas para log e atuação**, marque as seis saídas. As três saídas de comando são necessárias para a atuação física; as três saídas com sufixo `_graph` permitem verificar o retorno.
 
-Defina **Janela temporal comum** como `5`. Para cada saída de retorno, clique primeiro em **Configurar gráfico** e depois em **Abrir gráfico**:
+Defina **Janela temporal comum** como `60`. Para cada saída, clique primeiro em **Configurar gráfico** e depois em **Abrir gráfico**:
 
 | Saída | Mínimo Y | Máximo Y | Resolução Y |
 |---|---:|---:|---:|
+| `ao_command_v` | 0 | 3.3 | 0.5 |
+| `pwm_command` | 0 | 1 | 0.1 |
+| `do_command` | 0 | 1 | 1 |
 | `ao_feedback_graph` | 0 | 3.3 | 0.5 |
 | `pwm_feedback_graph` | 0 | 3.3 | 0.5 |
 | `do_feedback_graph` | 0 | 1 | 1 |
 
-Abra as três janelas antes de iniciar a simulação. Cada janela guarda amostras somente enquanto estiver aberta e a GUI atualiza os gráficos em até 10 Hz.
+As três primeiras janelas mostram os sinais originais produzidos pela FMU e enviados à DAQC. As três janelas com sufixo `_graph` mostram os sinais adquiridos nos pinos de retorno. Abra as seis janelas antes de iniciar a simulação. Cada janela guarda amostras somente enquanto estiver aberta e a GUI atualiza os gráficos em até 10 Hz.
 
 ## 8. Execução e resultado esperado
 
 Clique em **Play HiL**. O preflight configura a DAQC e aguarda o estabelecimento ROS/XRCE antes de iniciar o relógio da FMU, portanto a simulação pode demorar alguns segundos para começar.
 
-Ao final de 5 s, o resultado esperado é:
+Ao final de 60 s, o resultado nominal esperado é:
 
 - estado `Finished — complete`;
-- 500 passos concluídos;
+- 6.000 passos concluídos;
 - DAQC encerrada em DISABLE;
 - log binário fechado;
 - `do_feedback_graph` alternando entre 0 e 1;
 - `ao_feedback_graph` acompanhando, com as limitações do ADC/DAC, o comando analógico;
 - `pwm_feedback_graph` mostrando amostras do sinal ligado diretamente ao ADC, sem interpretação quantitativa de duty.
+
+Os 60 s e 6.000 passos configuram esta repetição da demonstração; somente a tela de resultado da execução confirma quantos passos foram efetivamente concluídos.
 
 Deadlines, timeouts de leitura e valores elétricos devem ser lidos como resultados da execução atual. Os números históricos do ensaio de referência não são critérios universais de aprovação.
 
