@@ -25,6 +25,7 @@ Esta é a entrada da documentação de trabalho. Os Markdown orientam a retomada
 | [evidence/host-build-foundation-2026-09-07.md](evidence/host-build-foundation-2026-09-07.md) | Ambiente, comandos, resultados e limites executados da TASK-001 |
 | [evidence/host-run-logging-2026-09-08.md](evidence/host-run-logging-2026-09-08.md) | Ambiente, comandos, resultados e limites executados da TASK-002 |
 | [evidence/micro-ros-host-baseline-2026-09-09.md](evidence/micro-ros-host-baseline-2026-09-09.md) | Build HOST do setup/Agent Humble e incompatibilidade observada com a baseline ESP-IDF 4.4.8 |
+| [evidence/micro-ros-agent-persistent-2026-09-19.md](evidence/micro-ros-agent-persistent-2026-09-19.md) | Reconstrução persistente do Agent e escuta UDP 8888 após reinicialização |
 | [evidence/host-ros-setup-config-2026-09-10.md](evidence/host-ros-setup-config-2026-09-10.md) | Build HOST das interfaces ROS ampliadas para configuração ADC/PWM |
 | [evidence/esp32-ch340-config-smoke-2026-09-11.md](evidence/esp32-ch340-config-smoke-2026-09-11.md) | Gravação física ESP32 e ensaio seguro CONFIG ENABLE→DISABLE pela CH340 |
 | [evidence/esp32-xrce-agent-smoke-2026-09-11.md](evidence/esp32-xrce-agent-smoke-2026-09-11.md) | Ensaio físico XRCE/Agent e limitação atual da sessão |
