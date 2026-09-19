@@ -1,8 +1,10 @@
 /* Implementação do módulo profile config. */
+#define _GNU_SOURCE
 #include "profile_config.h"
 
 #include <errno.h>
 #include <limits.h>
+#include <locale.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,8 +67,11 @@ static bool ParseDouble(yaml_node_t *node, double *value) {
     const char *text = Scalar(node);
     char *end = NULL;
     if (!text || !value) return false;
+    locale_t c_locale = newlocale(LC_NUMERIC_MASK, "C", (locale_t)0);
+    if (!c_locale) return false;
     errno = 0;
-    *value = strtod(text, &end);
+    *value = strtod_l(text, &end, c_locale);
+    freelocale(c_locale);
     return !errno && end && *end == '\0' && isfinite(*value);
 }
 

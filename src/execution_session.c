@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 
 static void ClearRunState(execution_session_t *session) {
     session->simulation = (RtSimulationContext){0};
@@ -78,9 +79,31 @@ static execution_session_status_t LoadProfileCandidate(execution_session_t *sess
     if (!session || !session->initialized || !path || !path[0]) return EXECUTION_SESSION_INVALID_ARGUMENT;
     if (!session->model.fmu) return EXECUTION_SESSION_NOT_READY;
     if (session->prepared || session->run_started) return EXECUTION_SESSION_RUNNING;
-    if (ProfileConfigLoadYaml(path, candidate) != PROFILE_CONFIG_OK || fmu_model_resolve_profile_mappings(&session->model, candidate) != 0 ||
-        ProfileConfigBuildAcquisitionSchema(candidate, acquisition_schema) != PROFILE_CONFIG_OK ||
-        ProfileConfigBuildActuationSchema(candidate, actuation_schema) != PROFILE_CONFIG_OK) return EXECUTION_SESSION_PROFILE;
+    session->profile_diagnostic[0] = '\0';
+    const profile_config_status_t profile_status = ProfileConfigLoadYaml(path, candidate);
+    if (profile_status != PROFILE_CONFIG_OK) {
+        snprintf(session->profile_diagnostic, sizeof(session->profile_diagnostic), "YAML: %s", ProfileConfigStatusString(profile_status));
+        return EXECUTION_SESSION_PROFILE;
+    }
+    if (fmu_model_resolve_profile_mappings(&session->model, candidate) != 0) {
+        for (size_t index = 0U; index < candidate->mapping_count; ++index) {
+            const profile_mapping_t *mapping = &candidate->mappings[index];
+            if (mapping->value_reference == UINT_MAX && mapping->fmu_index == UINT16_MAX) {
+                snprintf(session->profile_diagnostic, sizeof(session->profile_diagnostic), "FMU mapping: %.80s -> %.80s", mapping->channel, mapping->variable);
+                return EXECUTION_SESSION_PROFILE;
+            }
+        }
+        snprintf(session->profile_diagnostic, sizeof(session->profile_diagnostic), "FMU mapping resolution failed");
+        return EXECUTION_SESSION_PROFILE;
+    }
+    if (ProfileConfigBuildAcquisitionSchema(candidate, acquisition_schema) != PROFILE_CONFIG_OK) {
+        snprintf(session->profile_diagnostic, sizeof(session->profile_diagnostic), "ESP32 acquisition schema rejected");
+        return EXECUTION_SESSION_PROFILE;
+    }
+    if (ProfileConfigBuildActuationSchema(candidate, actuation_schema) != PROFILE_CONFIG_OK) {
+        snprintf(session->profile_diagnostic, sizeof(session->profile_diagnostic), "ESP32 actuation schema rejected");
+        return EXECUTION_SESSION_PROFILE;
+    }
     return EXECUTION_SESSION_OK;
 }
 
@@ -106,6 +129,10 @@ execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *sess
     session->config.profile_loaded = true;
     snprintf(session->config.profile_path, sizeof(session->config.profile_path), "%s", path);
     return EXECUTION_SESSION_OK;
+}
+
+const char *ExecutionSessionProfileDiagnostic(const execution_session_t *session) {
+    return session ? session->profile_diagnostic : "";
 }
 
 execution_session_status_t ExecutionSessionSetTiming(execution_session_t *session, double step_size_s, double stop_time_s) {

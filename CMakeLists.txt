@@ -122,7 +122,9 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
             target_link_libraries(test_gui_controller PRIVATE Qt6::Concurrent Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
             add_test(NAME gui_controller_local_file_urls COMMAND test_gui_controller
                      "${CMAKE_SOURCE_DIR}/tests/fixtures/MicroHiL_LoopbackTest.fmu"
-                     "${CMAKE_SOURCE_DIR}/tests/fixtures/microhil_loopback_profile.yaml")
+                     "${CMAKE_SOURCE_DIR}/tests/fixtures/MicroHiL_LoopbackTest_profile.yaml"
+                     "${CMAKE_SOURCE_DIR}/tests/fixtures/esp32_profile.yaml")
+            set_tests_properties(gui_controller_local_file_urls PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;LC_ALL=pt_BR.UTF-8")
         endif()
     endif()
 

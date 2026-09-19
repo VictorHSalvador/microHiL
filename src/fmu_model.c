@@ -1,5 +1,6 @@
 /* Implementação do módulo fmu model. */
 #include "fmu_model.h"
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -203,6 +204,8 @@ int fmu_model_resolve_profile_mappings(FmuModel *model, profile_config_t *config
     const size_t output_count = fmu_model_list_numeric_outputs(model, outputs, MAX_OUTPUTS);
     for (size_t index = 0U; index < config->mapping_count; ++index) {
         profile_mapping_t *mapping = &config->mappings[index];
+        mapping->value_reference = UINT_MAX;
+        mapping->fmu_index = UINT16_MAX;
         mapping->is_input = strstr(mapping->channel, "_AI") != NULL || strstr(mapping->channel, "_DI") != NULL;
         bool found = false;
         if (mapping->is_input) {

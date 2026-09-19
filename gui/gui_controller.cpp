@@ -2,6 +2,7 @@
 #include "gui_controller.h"
 
 #include <QFile>
+#include <QLocale>
 #include <QtConcurrent>
 #include <QSaveFile>
 #include <QTemporaryFile>
@@ -54,7 +55,8 @@ bool GuiController::LoadProfile(const QString &path) {
         return false;
     }
     const execution_session_status_t status = ExecutionSessionLoadProfile(session_, native_path.constData());
-    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QStringLiteral("%1: %2").arg(QString::fromUtf8(ExecutionSessionStatusString(status)), local_path);
+    const QString diagnostic = QString::fromUtf8(ExecutionSessionProfileDiagnostic(session_));
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QStringLiteral("%1: %2 (%3)").arg(QString::fromUtf8(ExecutionSessionStatusString(status)), local_path, diagnostic);
     emit ErrorChanged();
     if (status == EXECUTION_SESSION_OK) emit ProfileChanged();
     return status == EXECUTION_SESSION_OK;
@@ -77,6 +79,7 @@ bool GuiController::SaveProfile(const QString &path, double stepSizeSeconds, dou
 
     QString document;
     QTextStream stream(&document);
+    stream.setLocale(QLocale::c());
     stream.setRealNumberNotation(QTextStream::SmartNotation);
     stream.setRealNumberPrecision(17);
     stream << "version: 1\nprofile:\n  id: 1\nexecution:\n  step_size_s: " << stepSizeSeconds << "\n  stop_time_s: " << stopTimeSeconds;

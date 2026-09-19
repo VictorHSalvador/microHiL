@@ -35,6 +35,7 @@ typedef struct execution_session {
     bool logging_started;
     bool run_started;
     bool result_available;
+    char profile_diagnostic[OUTPUT_NAME_LEN];
     input_value_t virtual_input_values[INPUT_STATE_MAX_CHANNELS];
     bool virtual_input_set[INPUT_STATE_MAX_CHANNELS];
     SampleQueue gui_plot_queue;
@@ -75,6 +76,7 @@ void ExecutionSessionDelete(execution_session_t *session);
 execution_session_status_t ExecutionSessionLoadFmu(execution_session_t *session, const char *path);
 execution_session_status_t ExecutionSessionValidateProfile(execution_session_t *session, const char *path);
 execution_session_status_t ExecutionSessionLoadProfile(execution_session_t *session, const char *path);
+const char *ExecutionSessionProfileDiagnostic(const execution_session_t *session);
 execution_session_status_t ExecutionSessionSetTiming(execution_session_t *session, double step_size_s, double stop_time_s);
 size_t ExecutionSessionListOutputs(execution_session_t *session, OutputVariable *outputs, size_t capacity);
 size_t ExecutionSessionOutputCount(const execution_session_t *session);
