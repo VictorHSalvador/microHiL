@@ -1,8 +1,30 @@
 # MICROHIL
 
-O projeto é desenvolvido por especificação. A baseline vigente é a SDD-MICROHIL 0.29.7. O HOST já inclui executor FMI, sessão de execução compartilhada pela CLI e pela base Qt, logging binário, perfil YAML e comunicação host. O firmware ESP32 teve estados, aquisição, READ_ACK, watchdog e loopbacks de atuação verificados fisicamente. O Play HiL da GUI completou 500 passos com Agent, DAQC e FMU de três loopbacks, e o YAML carregado é refletido na tela; o seletor Qt normaliza URLs locais e os números YAML são lidos e gravados independentemente da localidade do sistema. Precisão elétrica, duty PWM intermediário, qualificação temporal e Raspberry Pi permanecem pendentes. Comece pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
+O projeto é desenvolvido por especificação. A baseline vigente é a SDD-MICROHIL 0.29.8. O HOST já inclui executor FMI, sessão de execução compartilhada pela CLI e pela base Qt, logging binário, perfil YAML e comunicação host. O firmware ESP32 teve estados, aquisição, READ_ACK, watchdog e loopbacks de atuação verificados fisicamente. O Play HiL da GUI completou 500 passos com Agent, DAQC e FMU de três loopbacks, e o YAML carregado é refletido na tela; o seletor Qt normaliza URLs locais e os números YAML são lidos e gravados independentemente da localidade do sistema. Precisão elétrica, duty PWM intermediário, qualificação temporal e Raspberry Pi permanecem pendentes. Comece pelo [tutorial da demonstração](docs/guides/demo-loopback-gui.md), pelo [índice dos documentos](docs/README.md), pela [especificação de trabalho](docs/spec.md) e pelas [decisões](docs/decisions.md). As regras vigentes para comentários, nomenclatura e formatação estão em [AGENTS.md](AGENTS.md) e na [constituição](docs/constitution.md).
 
 O código atual inclui terminal de debug, logging binário, gnuplot transitório e uma interface Qt Quick/QML que também encaminha Play HiL ao lifecycle C compartilhado. O suporte ROS 2/micro-ROS e os ensaios físicos estão registrados nas [evidências ESP32](docs/evidence/esp32-streaming-smoke-2026-09-13.md), [watchdog](docs/evidence/esp32-watchdog-no-ack-2026-09-13.md), [atuação](docs/evidence/esp32-actuation-loopback-2026-09-13.md) e [runner C integrado](docs/evidence/host-runner-daqc-fmu-2026-09-14.md). A [auditoria inicial](docs/avaliacao-sdd-2026-09-06.md) registra limitações históricas. Não reutilize o diretório `build/` preexistente: os comandos abaixo usam diretórios limpos.
+
+## Demonstração rápida com ESP32
+
+O tutorial [Demonstração HiL pela GUI com três loopbacks](docs/guides/demo-loopback-gui.md) apresenta o procedimento completo: ligação `D16→D4`, `D25→D32` e `D18→D33`, construção persistente do Micro-ROS Agent, build ROS da GUI, capability `SCHED_FIFO`, carregamento da FMU e do YAML de exemplo e configuração dos três gráficos de retorno.
+
+Depois do build, a execução diária usa dois terminais. O primeiro mantém o Agent na porta UDP 8888:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/linuxvh/Projects/microHiL/.local/microhil-agent-ws/install/setup.bash
+ros2 run micro_ros_agent micro_ros_agent udp4 -p 8888
+```
+
+O segundo inicia a GUI:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/linuxvh/Projects/microHiL/install-ros2/setup.bash
+/home/linuxvh/Projects/microHiL/.local/microhil-gui-ros/microhil_gui
+```
+
+Use `tests/fixtures/MicroHiL_LoopbackTest.fmu` e `tests/fixtures/MicroHiL_LoopbackTest_profile.yaml`. O executável precisa receber novamente `cap_sys_nice=ep` após cada recompilação.
 
 ## Runner HOST atual
 
