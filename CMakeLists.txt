@@ -115,6 +115,15 @@ if(MICROHIL_BUILD_RUNNER OR MICROHIL_BUILD_GUI)
             set_property(TARGET microhil_gui APPEND PROPERTY BUILD_RPATH "/opt/ros/humble/lib")
             target_link_options(microhil_gui PRIVATE "-Wl,--disable-new-dtags")
         endif()
+        if(BUILD_TESTING)
+            qt_add_executable(test_gui_controller tests/test_gui_controller.cpp gui/gui_controller.cpp)
+            set_target_properties(test_gui_controller PROPERTIES AUTOMOC ON)
+            target_include_directories(test_gui_controller PRIVATE gui)
+            target_link_libraries(test_gui_controller PRIVATE Qt6::Concurrent Qt6::Quick Qt6::QuickControls2 microhil_execution_session)
+            add_test(NAME gui_controller_local_file_urls COMMAND test_gui_controller
+                     "${CMAKE_SOURCE_DIR}/tests/fixtures/MicroHiL_LoopbackTest.fmu"
+                     "${CMAKE_SOURCE_DIR}/tests/fixtures/microhil_loopback_profile.yaml")
+        endif()
     endif()
 
     if(MICROHIL_BUILD_RUNNER)

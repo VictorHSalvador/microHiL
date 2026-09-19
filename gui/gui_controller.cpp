@@ -6,6 +6,12 @@
 #include <QSaveFile>
 #include <QTemporaryFile>
 #include <QTextStream>
+#include <QUrl>
+
+static QString LocalPath(const QString &path) {
+    const QUrl url(path);
+    return url.isLocalFile() ? url.toLocalFile() : path;
+}
 
 GuiController::GuiController(QObject *parent) : QObject(parent), session_(ExecutionSessionCreate()) {}
 GuiController::~GuiController() {
@@ -22,7 +28,8 @@ int GuiController::ProfileId() const { return static_cast<int>(ExecutionSessionP
 int GuiController::ProfileMappingCount() const { return static_cast<int>(ExecutionSessionProfileMappingCount(session_)); }
 QString GuiController::ErrorMessage() const { return error_message_; }
 bool GuiController::LoadFmu(const QString &path) {
-    const QByteArray native_path = path.toLocal8Bit();
+    const QString local_path = LocalPath(path);
+    const QByteArray native_path = local_path.toLocal8Bit();
     if (!session_) {
         error_message_ = QStringLiteral("could not create the execution session");
         emit ErrorChanged();
@@ -39,14 +46,15 @@ bool GuiController::LoadFmu(const QString &path) {
 }
 
 bool GuiController::LoadProfile(const QString &path) {
-    const QByteArray native_path = path.toLocal8Bit();
+    const QString local_path = LocalPath(path);
+    const QByteArray native_path = local_path.toLocal8Bit();
     if (!session_) {
         error_message_ = QStringLiteral("could not create the execution session");
         emit ErrorChanged();
         return false;
     }
     const execution_session_status_t status = ExecutionSessionLoadProfile(session_, native_path.constData());
-    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QString::fromUtf8(ExecutionSessionStatusString(status));
+    error_message_ = status == EXECUTION_SESSION_OK ? QString() : QStringLiteral("%1: %2").arg(QString::fromUtf8(ExecutionSessionStatusString(status)), local_path);
     emit ErrorChanged();
     if (status == EXECUTION_SESSION_OK) emit ProfileChanged();
     return status == EXECUTION_SESSION_OK;
@@ -112,7 +120,7 @@ bool GuiController::SaveProfile(const QString &path, double stepSizeSeconds, dou
         return false;
     }
 
-    QSaveFile destination(path);
+    QSaveFile destination(LocalPath(path));
     if (!destination.open(QIODevice::WriteOnly) || destination.write(document.toUtf8()) < 0 || !destination.commit()) {
         error_message_ = QStringLiteral("could not save the YAML profile");
         emit ErrorChanged();
@@ -329,7 +337,7 @@ QVariantMap GuiController::Result() const {
 bool GuiController::ExportCsv(const QString &path) {
     uint64_t exportedRecords = 0U;
     bool partial = false;
-    const QByteArray nativePath = path.toLocal8Bit();
+    const QByteArray nativePath = LocalPath(path).toLocal8Bit();
     const execution_session_status_t status = ExecutionSessionExportGuiCsv(session_, nativePath.constData(), &exportedRecords, &partial);
     if (status == EXECUTION_SESSION_OK) {
         error_message_ = partial ? QStringLiteral("CSV exportado parcialmente: %1 registro(s)").arg(exportedRecords)

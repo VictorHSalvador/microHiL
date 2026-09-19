@@ -132,7 +132,7 @@ ApplicationWindow {
     FileDialog {
         id: fmuDialog
         nameFilters: ["FMU files (*.fmu)"]
-        onAccepted: guiController.LoadFmu(selectedFile.toString().replace("file://", ""))
+        onAccepted: guiController.LoadFmu(selectedFile.toString())
     }
 
     FileDialog {
@@ -146,7 +146,7 @@ ApplicationWindow {
                 return
             }
             window.profileError = ""
-            guiController.SaveProfile(selectedFile.toString().replace("file://", ""), Number(stepSizeField.text), Number(stopTimeField.text), Number(acquisitionFrequencyField.text), Number(adcResolutionField.text),
+            guiController.SaveProfile(selectedFile.toString(), Number(stepSizeField.text), Number(stopTimeField.text), Number(acquisitionFrequencyField.text), Number(adcResolutionField.text),
                                       [Number(adc32Field.text), Number(adc33Field.text), Number(adc34Field.text), Number(adc35Field.text), Number(adc36Field.text), Number(adc39Field.text)],
                                       [{ frequency_hz: Number(pwm18FrequencyField.text), resolution_bits: Number(pwm18ResolutionField.text) },
                                        { frequency_hz: Number(pwm19FrequencyField.text), resolution_bits: Number(pwm19ResolutionField.text) }], mappings)
@@ -158,14 +158,14 @@ ApplicationWindow {
     FileDialog {
         id: profileDialog
         nameFilters: ["YAML files (*.yaml *.yml)"]
-        onAccepted: guiController.LoadProfile(selectedFile.toString().replace("file://", ""))
+        onAccepted: guiController.LoadProfile(selectedFile.toString())
     }
 
     FileDialog {
         id: saveCsvDialog
         fileMode: FileDialog.SaveFile
         nameFilters: ["CSV files (*.csv)"]
-        onAccepted: guiController.ExportCsv(selectedFile.toString().replace("file://", ""))
+        onAccepted: guiController.ExportCsv(selectedFile.toString())
     }
 
     header: ToolBar {

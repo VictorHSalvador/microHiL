@@ -1,18 +1,18 @@
 # Versionamento do SDD do MICROHIL
 
-Versão vigente: **SDD-MICROHIL 0.29.5**, de 14.09.2026.
+Versão vigente: **SDD-MICROHIL 0.29.6**, de 19.09.2026.
 
-Status da versão: **o runner C completou 200 passos físicos com Agent, DAQC e FMU; a GUI executou Play HiL físico por 500 passos com loopbacks digital, DAC/ADC e PWM/ADC observados no log e reflete o YAML carregado; precisão/carga, duty intermediário PWM, Raspberry Pi e qualificação temporal permanecem pendentes**.
+Status da versão: **o runner C completou 200 passos físicos com Agent, DAQC e FMU; a GUI executou Play HiL físico por 500 passos com loopbacks digital, DAC/ADC e PWM/ADC observados no log, reflete o YAML carregado e normaliza URLs locais do seletor de arquivos; precisão/carga, duty intermediário PWM, Raspberry Pi e qualificação temporal permanecem pendentes**.
 
 Este arquivo é o registro único de versões do conjunto SDD. Ele não substitui a [especificação](spec.md), a [arquitetura](architecture.md), o [ICD](contracts/interfaces.md), as [decisões](decisions.md), o [plano](plan.md), a [rastreabilidade](traceability.md) ou o [plano de verificação](verification/verification-plan.md).
 
 ## Estado da baseline vigente
 
-| Eixo | Estado em 0.29.5 | Evidência/limite |
+| Eixo | Estado em 0.29.6 | Evidência/limite |
 |---|---|---|
 | Especificação | 59 requisitos únicos; decisões DEC-001…012 e Q-01…09 consolidadas; ICD 0.7 vigente | Verificação estrutural e motor onp-spec; critérios do produto ainda são planejados |
 | Implementação | Componentes HOST, runner ROS, GUI Play HiL e firmware ESP32 evoluíram de forma incremental; terminal e GUI usam o mesmo lifecycle DAQC C | GUI ROS e runner compilados; Play HiL físico usou a GUI, Agent, CH340 e DAQC com perfil de seis mapeamentos, que agora é refletido na tela após o carregamento |
-| Verificação | CTest ROS 49/49, Python 20/20, GUI ROS iniciada offscreen, ciclo físico pelo runner e Play HiL físico de 500 passos com três loopbacks observados no log | Duty PWM intermediário, precisão/carga, Raspberry Pi, duração, jitter e hard real-time pendem |
+| Verificação | CTest ROS 49/49 histórico, teste novo do controlador Qt para URL local, Python 20/20, GUI ROS iniciada offscreen, ciclo físico pelo runner e Play HiL físico de 500 passos com três loopbacks observados no log | Duty PWM intermediário, precisão/carga, Raspberry Pi, duração, jitter e hard real-time pendem |
 
 ## Esquema de versão
 
@@ -124,6 +124,7 @@ As versões 0.1.0 a 0.6.0 foram reconstruídas dos históricos internos e evidê
 | 0.29.3 | 14.09.2026 | PATCH | Play HiL da GUI passa a usar o lifecycle DAQC C compartilhado em tarefa Qt concorrente | runtime DAQC, sessão, GUI, build, arquitetura, plano, matriz, evidência, README e SDD | [host-gui-hil-integration-2026-09-14](evidence/host-gui-hil-integration-2026-09-14.md): build ROS, 49 CTests e inicialização offscreen; ensaio físico do botão pendente | d8e6d88 |
 | 0.29.4 | 14.09.2026 | PATCH | FMU de loopback e perfil de seis sinais confirmam Play HiL físico da GUI e registram limites do PWM sem filtro | FMU fixture, perfil YAML, plano, matriz, evidência, README, sdd-versions e teste documental | [gui-three-loopback-2026-09-14](evidence/gui-three-loopback-2026-09-14.md): 500 passos, GPIO16→GPIO4, GPIO25→GPIO32 e observação GPIO18→GPIO33; duty PWM intermediário não qualificado | 838003d |
 | 0.29.5 | 14.09.2026 | PATCH | GUI passa a refletir os canais, escalas e offsets do perfil YAML carregado | sessão, controlador Qt, QML, teste, plano, evidência, sdd-versions e teste documental | [host-gui-profile-mapping-reflection-2026-09-14](evidence/host-gui-profile-mapping-reflection-2026-09-14.md): API testada, GUI compilada e CTest 49/49; inspeção visual pendente | 1edd4f5 |
+| 0.29.6 | 19.09.2026 | PATCH | Seletor Qt encaminha URLs locais intactos ao controlador, que os converte para caminhos locais para FMU, YAML e CSV; falha de perfil informa o caminho avaliado | GUI, CMake, teste Qt, plano, evidência, README e SDD | [host-gui-local-file-url-2026-09-19](evidence/host-gui-local-file-url-2026-09-19.md): CTest do controlador aceita a FMU e o YAML de loopback como URLs `file:///`; nova inspeção visual manual pendente | alterações locais; registrar commit quando criado |
 
 ## Procedimento de atualização
 
